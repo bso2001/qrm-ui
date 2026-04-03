@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { songStore, loadSong, resolveParam } from './lib/songStore';
+  import { songStore, loadSong, resolveParam, getParamLevel } from './lib/songStore';
   import RackUnit from './lib/components/RackUnit.svelte';
   import Knob from './lib/components/Knob.svelte';
   import Display from './lib/components/Display.svelte';
@@ -10,6 +10,7 @@
   const tonics = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
   const modes = ['major', 'minor'];
   const voiceTypes = ['chordal', 'freeform', 'chords'];
+  const logLevels = ['0', '1', '2', '3'];
 
   const initialSong = {
     "name"      : "Afterglowish",
@@ -144,11 +145,63 @@
     {#if $songStore}
       <div class="rack">
         <!-- Master Section -->
-        <RackUnit title="Master Control Section">
-          <Display bind:value={$songStore.name} label="Song Title" width="300px" />
-          <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" />
-          <Knob bind:value={$songStore.loglevel} min={0} max={4} label="Log Level" />
-          <Display bind:value={$songStore.outputDir} label="Output Directory" width="300px" color="#ffaa00" fontSize="12px" />
+        <RackUnit title={loadedFilename || "INITIAL SONG"}>
+          <div class="row">
+            <Display bind:value={$songStore.name} label="Song Title" width="300px" />
+            <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" />
+            <div class="grouped-box">
+              <span class="box-label">LOG</span>
+              <Choice 
+                value={$songStore.loglevel?.toString() || '0'} 
+                options={logLevels}
+                on:change={(e) => {
+                  $songStore.loglevel = parseInt(e.detail);
+                  $songStore = $songStore;
+                }}
+                width="50px" 
+              />
+            </div>
+            <Display bind:value={$songStore.outputDir} label="Output Directory" width="300px" color="#ffaa00" fontSize="12px" />
+          </div>
+
+          <!-- Song Level Defaults -->
+          <div class="row" style="margin-top: 15px; border-top: 2px solid #222; padding-top: 15px;">
+            <div class="grouped-box">
+              <span class="box-label">GLOBAL KEY</span>
+              <Choice 
+                value={$songStore.key?.tonic || 'C'} 
+                options={tonics} 
+                on:change={(e) => {
+                  if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
+                  $songStore.key.tonic = e.detail;
+                  $songStore = $songStore;
+                }}
+                width="50px" 
+              />
+              <Choice 
+                value={$songStore.key?.mode || 'major'} 
+                options={modes} 
+                on:change={(e) => {
+                  if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
+                  $songStore.key.mode = e.detail;
+                  $songStore = $songStore;
+                }}
+                width="100px" 
+              />
+            </div>
+            <div class="grouped-box">
+              <span class="box-label">GLOBAL METER</span>
+              <Display 
+                value="{$songStore.meter?.numerator || 4}/{$songStore.meter?.denominator || 4}" 
+                on:change={(e) => {
+                  const [n, d] = e.detail.split('/');
+                  $songStore.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
+                  $songStore = $songStore;
+                }}
+                width="75px" 
+              />
+            </div>
+          </div>
         </RackUnit>
 
         <!-- Current Part -->
@@ -164,29 +217,23 @@
               <div class="grouped-box">
                 <span class="box-label">KEY</span>
                 <Choice 
-                  value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic} 
+                  value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic || 'C'} 
+                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'key') === 'song'}
                   options={tonics}
                   on:change={(e) => {
-                    let k = resolveParam($songStore, selectedPartIndex, 0, 'key');
-                    if (!k) {
-                      currentPart.key = { tonic: e.detail, mode: 'major' };
-                    } else {
-                      k.tonic = e.detail;
-                    }
+                    if (!currentPart.key) currentPart.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
+                    currentPart.key.tonic = e.detail;
                     $songStore = $songStore;
                   }}
                   width="50px" 
                 />
                 <Choice 
-                  value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode} 
+                  value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode || 'major'} 
+                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'key') === 'song'}
                   options={modes}
                   on:change={(e) => {
-                    let k = resolveParam($songStore, selectedPartIndex, 0, 'key');
-                    if (!k) {
-                      currentPart.key = { tonic: 'C', mode: e.detail };
-                    } else {
-                      k.mode = e.detail;
-                    }
+                    if (!currentPart.key) currentPart.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
+                    currentPart.key.mode = e.detail;
                     $songStore = $songStore;
                   }}
                   width="100px" 
@@ -197,15 +244,10 @@
                 <span class="box-label">METER</span>
                 <Display 
                   value="{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.numerator || 4}/{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.denominator || 4}" 
+                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'meter') === 'song'}
                   on:change={(e) => {
-                    let m = resolveParam($songStore, selectedPartIndex, 0, 'meter');
                     const [n, d] = e.detail.split('/');
-                    if (!m) {
-                      currentPart.meter = { numerator: parseInt(n), denominator: parseInt(d) };
-                    } else {
-                      m.numerator = parseInt(n);
-                      m.denominator = parseInt(d);
-                    }
+                    currentPart.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
                     $songStore = $songStore;
                   }}
                   width="75px" 
@@ -214,9 +256,9 @@
               
               <Knob 
                 value={resolveParam($songStore, selectedPartIndex, 0, 'nMeasures') || 1} 
+                inherited={getParamLevel($songStore, selectedPartIndex, 0, 'nMeasures') === 'song'}
                 on:change={(e) => {
-                  if (currentPart.nMeasures !== undefined) currentPart.nMeasures = e.detail;
-                  else $songStore.nMeasures = e.detail;
+                  currentPart.nMeasures = e.detail;
                   $songStore = $songStore;
                 }}
                 min={1} max={128} label="Measures" 
@@ -225,26 +267,20 @@
               <div class="velocity-box">
                 <Knob 
                   value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[0] || 60} 
+                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'velocity') === 'song'}
                   on:change={(e) => {
-                    let v = resolveParam($songStore, selectedPartIndex, 0, 'velocity');
-                    if (!v) {
-                      currentPart.velocity = [e.detail, 80];
-                    } else {
-                      v[0] = e.detail;
-                    }
+                    if (!currentPart.velocity) currentPart.velocity = [...($songStore.velocity || [60, 80])];
+                    currentPart.velocity[0] = e.detail;
                     $songStore = $songStore;
                   }}
                   min={0} max={127} label="Min" size={25}
                 />
                 <Knob 
                   value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[1] || 80} 
+                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'velocity') === 'song'}
                   on:change={(e) => {
-                    let v = resolveParam($songStore, selectedPartIndex, 0, 'velocity');
-                    if (!v) {
-                      currentPart.velocity = [60, e.detail];
-                    } else {
-                      v[1] = e.detail;
-                    }
+                    if (!currentPart.velocity) currentPart.velocity = [...($songStore.velocity || [60, 80])];
+                    currentPart.velocity[1] = e.detail;
                     $songStore = $songStore;
                   }}
                   min={0} max={127} label="Max" size={25}
@@ -252,7 +288,8 @@
               </div>
 
               <Display 
-                value={resolveParam($songStore, selectedPartIndex, 0, 'duration')} 
+                value={resolveParam($songStore, selectedPartIndex, 0, 'duration') || '1/4'} 
+                inherited={getParamLevel($songStore, selectedPartIndex, 0, 'duration') === 'song'}
                 on:change={(e) => {
                   if (e.detail.startsWith('[')) {
                     try { currentPart.duration = JSON.parse(e.detail); } catch(err) { currentPart.duration = e.detail; }
@@ -267,7 +304,7 @@
 
             <!-- Chords Display -->
             {#if resolveParam($songStore, selectedPartIndex, 0, 'chords')}
-              <div class="chords-row">
+              <div class="chords-row" class:inherited={getParamLevel($songStore, selectedPartIndex, 0, 'chords') === 'song'}>
                 <span class="chords-label">CHORDS:</span>
                 <div class="chord-sequence">
                   {#each resolveParam($songStore, selectedPartIndex, 0, 'chords') as chord}
@@ -283,7 +320,7 @@
                 subModule={true} 
                 title="Voice: {currentVoice.file || 'Internal'}"
                 showNav={true}
-                navLabel="VOICE {selectedVoiceIndex + 1} OF {currentPart.voices.length}"
+                navLabel="VOICE {selectedVoiceIndex + 1} OF {currentPart.voices?.length || 1}"
                 on:next={nextVoice}
                 on:prev={prevVoice}
               >
@@ -291,7 +328,7 @@
                   <div class="grouped-box">
                     <span class="box-label">TYPE</span>
                     <Choice 
-                      value={currentVoice.type} 
+                      value={currentVoice.type || 'chordal'} 
                       options={voiceTypes}
                       on:change={(e) => {
                         currentVoice.type = e.detail;
@@ -303,10 +340,9 @@
                   <Display bind:value={currentVoice.file} label="MIDI File" width="200px" color="#aaa" />
                   <Knob 
                     value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') || 0} 
+                    inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') !== 'voice'}
                     on:change={(e) => {
-                      if (currentVoice.restPct !== undefined) currentVoice.restPct = e.detail;
-                      else if (currentPart.restPct !== undefined) currentPart.restPct = e.detail;
-                      else $songStore.restPct = e.detail;
+                      currentVoice.restPct = e.detail;
                       $songStore = $songStore;
                     }}
                     min={0} max={1} label="Rest %" 
@@ -315,9 +351,9 @@
                   {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== undefined}
                     <Knob 
                       value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct')} 
+                      inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== 'voice'}
                       on:change={(e) => {
-                        if (currentVoice.tonicPct !== undefined) currentVoice.tonicPct = e.detail;
-                        else if (currentPart.tonicPct !== undefined) currentPart.tonicPct = e.detail;
+                        currentVoice.tonicPct = e.detail;
                         $songStore = $songStore;
                       }}
                       min={0} max={1} label="Tonic %" 
@@ -327,9 +363,9 @@
                   {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct') !== undefined}
                     <Knob 
                       value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct')} 
+                      inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct') !== 'voice'}
                       on:change={(e) => {
-                        if (currentVoice.inversionPct !== undefined) currentVoice.inversionPct = e.detail;
-                        else if (currentPart.inversionPct !== undefined) currentPart.inversionPct = e.detail;
+                        currentVoice.inversionPct = e.detail;
                         $songStore = $songStore;
                       }}
                       min={0} max={1} label="Inv %" 
@@ -362,6 +398,9 @@
   }
 
   .sidebar {
+    position: absolute;
+    right: 100%;
+    top: 0;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -488,6 +527,15 @@
     padding: 10px;
     border-radius: 2px;
     border: 1px solid #222;
+    transition: opacity 0.2s;
+  }
+
+  .chords-row.inherited {
+    opacity: 0.4;
+  }
+
+  .chords-row.inherited:hover {
+    opacity: 0.7;
   }
 
   .chords-label {

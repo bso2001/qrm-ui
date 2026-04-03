@@ -18,8 +18,6 @@
             <button class="nav-btn prev" on:click={() => dispatch('prev')} title="Previous">&larr;</button>
             <button class="nav-btn next" on:click={() => dispatch('next')} title="Next">&rarr;</button>
           </div>
-        {:else}
-          <div class="screw"></div>
         {/if}
         <span class="title-text">{title}</span>
       </div>
@@ -27,9 +25,6 @@
       <div class="header-right">
         {#if navLabel}
           <span class="nav-label">{navLabel}</span>
-        {/if}
-        {#if !showNav}
-          <div class="screw"></div>
         {/if}
       </div>
     </div>
@@ -100,15 +95,6 @@
     padding: 2px 8px;
     border-radius: 10px;
     border: 1px solid #333;
-  }
-
-  /* Screw Heads */
-  .screw {
-    width: 8px;
-    height: 8px;
-    background: radial-gradient(circle, #888, #444);
-    border-radius: 50%;
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.5);
   }
 
   /* Nav Buttons Style */

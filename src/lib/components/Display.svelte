@@ -6,6 +6,7 @@
   export let width: string = 'auto';
   export let color: string = '#00ff00';
   export let fontSize: string = '16px';
+  export let inherited: boolean = false;
 
   const dispatch = createEventDispatcher();
 
@@ -15,7 +16,7 @@
   }
 </script>
 
-<div class="display-container" style="--width: {width}">
+<div class="display-container" style="--width: {width}" class:inherited>
   {#if label}
     <span class="display-label">{label}</span>
   {/if}
@@ -23,7 +24,7 @@
     type="text"
     class="display-input" 
     style="--accent: {color}; font-size: {fontSize}"
-    value={typeof value === 'object' ? JSON.stringify(value) : value}
+    value={typeof value === 'object' && value !== null ? JSON.stringify(value) : (value ?? '')}
     on:change={handleChange}
   />
 </div>
@@ -34,6 +35,15 @@
     flex-direction: column;
     margin: 5px;
     width: var(--width);
+    transition: opacity 0.2s;
+  }
+
+  .display-container.inherited {
+    opacity: 0.5;
+  }
+
+  .display-container.inherited:hover {
+    opacity: 0.8;
   }
 
   .display-input {

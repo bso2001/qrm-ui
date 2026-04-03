@@ -5,7 +5,8 @@
   export let min: number = 0;
   export let max: number = 100;
   export let label: string = '';
-  export let size: number = 30; // Standardized to velocity size
+  export let size: number = 30;
+  export let inherited: boolean = false;
 
   const dispatch = createEventDispatcher();
 
@@ -67,7 +68,7 @@
   }
 </script>
 
-<div class="knob-container" style="--size: {size}px">
+<div class="knob-container" style="--size: {size}px" class:inherited>
   <div 
     class="knob" 
     on:mousedown={handleMouseDown}
@@ -94,6 +95,15 @@
     align-items: center;
     margin: 8px;
     user-select: none;
+    transition: opacity 0.2s;
+  }
+
+  .knob-container.inherited {
+    opacity: 0.5;
+  }
+
+  .knob-container.inherited:hover {
+    opacity: 0.8;
   }
 
   .knob {
@@ -129,7 +139,7 @@
     margin-top: 6px;
     background: #000;
     color: var(--accent, #00ff00);
-    font-size: 13px; /* INCREASED */
+    font-size: 13px;
     padding: 3px 6px;
     border-radius: 2px;
     width: 55px;
@@ -147,7 +157,7 @@
   }
 
   .label {
-    font-size: 11px; /* INCREASED */
+    font-size: 11px;
     margin-top: 8px;
     color: #bbb;
     text-transform: uppercase;

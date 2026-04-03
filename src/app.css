@@ -22,11 +22,12 @@
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  justify-content: center;
+  align-items: flex-start; /* Pin to top */
   min-width: 320px;
   min-height: 100vh;
-  justify-content: center;
   padding: 40px;
+  background-attachment: fixed;
 }
 
 #app {

@@ -5,6 +5,7 @@
   export let options: string[] = [];
   export let width: string = 'auto';
   export let color: string = '#00ff00';
+  export let inherited: boolean = false;
 
   const dispatch = createEventDispatcher();
 
@@ -27,6 +28,7 @@
 <div 
   class="choice-container" 
   style="--width: {width}; --accent: {color}"
+  class:inherited
   on:click={next}
   on:contextmenu={prev}
 >
@@ -54,7 +56,15 @@
     user-select: none;
     min-width: 60px;
     width: var(--width);
-    transition: border-color 0.1s;
+    transition: all 0.2s;
+  }
+
+  .choice-container.inherited {
+    opacity: 0.5;
+  }
+
+  .choice-container.inherited:hover {
+    opacity: 0.8;
   }
 
   .choice-container:hover {
