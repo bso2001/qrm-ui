@@ -55,7 +55,8 @@
 
   .sub-module {
     background: #252525;
-    margin-left: 40px;
+    margin: 10px auto 20px auto; /* Centered horizontally */
+    width: 95%; /* Take up most of the width */
     padding: 15px;
   }
 
@@ -142,5 +143,6 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center; /* Center content horizontally */
   }
 </style>

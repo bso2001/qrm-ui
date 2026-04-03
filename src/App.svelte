@@ -131,216 +131,218 @@
 </script>
 
 <main>
-  <div class="sidebar">
-    <div class="logo">QRM<br>RACK</div>
-    <label class="btn sidebar-btn">
-      LOAD
-      <input type="file" accept=".json" on:change={handleFileLoad} hidden />
-    </label>
-    <button class="btn sidebar-btn" on:click={downloadJson}>SAVE</button>
-  </div>
+  <div class="app-container">
+    <div class="sidebar">
+      <div class="logo">QRM<br>RACK</div>
+      <label class="btn sidebar-btn">
+        LOAD
+        <input type="file" accept=".json" on:change={handleFileLoad} hidden />
+      </label>
+      <button class="btn sidebar-btn" on:click={downloadJson}>SAVE</button>
+    </div>
 
-  {#if $songStore}
-    <div class="rack">
-      <!-- Master Section -->
-      <RackUnit title="Master Control Section">
-        <Display bind:value={$songStore.name} label="Song Title" width="300px" />
-        <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" />
-        <Knob bind:value={$songStore.loglevel} min={0} max={4} label="Log Level" />
-        <Display bind:value={$songStore.outputDir} label="Output Directory" width="300px" color="#ffaa00" />
-      </RackUnit>
+    {#if $songStore}
+      <div class="rack">
+        <!-- Master Section -->
+        <RackUnit title="Master Control Section">
+          <Display bind:value={$songStore.name} label="Song Title" width="300px" />
+          <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" />
+          <Knob bind:value={$songStore.loglevel} min={0} max={4} label="Log Level" />
+          <Display bind:value={$songStore.outputDir} label="Output Directory" width="300px" color="#ffaa00" fontSize="12px" />
+        </RackUnit>
 
-      <!-- Current Part -->
-      {#if currentPart}
-        <RackUnit 
-          title="Part: {currentPart.name || 'Part ' + (selectedPartIndex + 1)}" 
-          showNav={true} 
-          navLabel="PART {selectedPartIndex + 1} OF {$songStore.parts.length}"
-          on:next={nextPart}
-          on:prev={prevPart}
-        >
-          <div class="row">
-            <div class="grouped-box">
-              <span class="box-label">KEY</span>
-              <Choice 
-                value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic} 
-                options={tonics}
-                on:change={(e) => {
-                  let k = resolveParam($songStore, selectedPartIndex, 0, 'key');
-                  if (!k) {
-                    currentPart.key = { tonic: e.detail, mode: 'major' };
-                  } else {
-                    k.tonic = e.detail;
-                  }
-                  $songStore = $songStore;
-                }}
-                width="50px" 
-              />
-              <Choice 
-                value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode} 
-                options={modes}
-                on:change={(e) => {
-                  let k = resolveParam($songStore, selectedPartIndex, 0, 'key');
-                  if (!k) {
-                    currentPart.key = { tonic: 'C', mode: e.detail };
-                  } else {
-                    k.mode = e.detail;
-                  }
-                  $songStore = $songStore;
-                }}
-                width="100px" 
-              />
-            </div>
-
-            <div class="grouped-box">
-              <span class="box-label">METER</span>
-              <Display 
-                value="{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.numerator || 4}/{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.denominator || 4}" 
-                on:change={(e) => {
-                  let m = resolveParam($songStore, selectedPartIndex, 0, 'meter');
-                  const [n, d] = e.detail.split('/');
-                  if (!m) {
-                    currentPart.meter = { numerator: parseInt(n), denominator: parseInt(d) };
-                  } else {
-                    m.numerator = parseInt(n);
-                    m.denominator = parseInt(d);
-                  }
-                  $songStore = $songStore;
-                }}
-                width="60px" 
-              />
-            </div>
-            
-            <Knob 
-              value={resolveParam($songStore, selectedPartIndex, 0, 'nMeasures') || 1} 
-              on:change={(e) => {
-                if (currentPart.nMeasures !== undefined) currentPart.nMeasures = e.detail;
-                else $songStore.nMeasures = e.detail;
-                $songStore = $songStore;
-              }}
-              min={1} max={128} label="Measures" 
-            />
-
-            <div class="velocity-box">
-              <Knob 
-                value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[0] || 60} 
-                on:change={(e) => {
-                  let v = resolveParam($songStore, selectedPartIndex, 0, 'velocity');
-                  if (!v) {
-                    currentPart.velocity = [e.detail, 80];
-                  } else {
-                    v[0] = e.detail;
-                  }
-                  $songStore = $songStore;
-                }}
-                min={0} max={127} label="Min" size={25}
-              />
-              <Knob 
-                value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[1] || 80} 
-                on:change={(e) => {
-                  let v = resolveParam($songStore, selectedPartIndex, 0, 'velocity');
-                  if (!v) {
-                    currentPart.velocity = [60, e.detail];
-                  } else {
-                    v[1] = e.detail;
-                  }
-                  $songStore = $songStore;
-                }}
-                min={0} max={127} label="Max" size={25}
-              />
-            </div>
-
-            <Display 
-              value={resolveParam($songStore, selectedPartIndex, 0, 'duration')} 
-              on:change={(e) => {
-                if (e.detail.startsWith('[')) {
-                  try { currentPart.duration = JSON.parse(e.detail); } catch(err) { currentPart.duration = e.detail; }
-                } else {
-                  currentPart.duration = e.detail;
-                }
-                $songStore = $songStore;
-              }}
-              label="Duration" width="80px" color="#00ffff" 
-            />
-          </div>
-
-          <!-- Chords Display -->
-          {#if resolveParam($songStore, selectedPartIndex, 0, 'chords')}
-            <div class="chords-row">
-              <span class="chords-label">CHORDS:</span>
-              <div class="chord-sequence">
-                {#each resolveParam($songStore, selectedPartIndex, 0, 'chords') as chord}
-                  <span class="chord-tag">{chord}</span>
-                {/each}
-              </div>
-            </div>
-          {/if}
-
-          <!-- Current Voice -->
-          {#if currentVoice}
-            <RackUnit 
-              subModule={true} 
-              title="Voice: {currentVoice.file || 'Internal'}"
-              showNav={true}
-              navLabel="VOICE {selectedVoiceIndex + 1} OF {currentPart.voices.length}"
-              on:next={nextVoice}
-              on:prev={prevVoice}
-            >
-              <div class="row">
-                <div class="grouped-box">
-                  <span class="box-label">TYPE</span>
-                  <Choice 
-                    value={currentVoice.type} 
-                    options={voiceTypes}
-                    on:change={(e) => {
-                      currentVoice.type = e.detail;
-                      $songStore = $songStore;
-                    }}
-                    width="100px" 
-                  />
-                </div>
-                <Display bind:value={currentVoice.file} label="MIDI File" width="200px" color="#aaa" />
-                <Knob 
-                  value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') || 0} 
+        <!-- Current Part -->
+        {#if currentPart}
+          <RackUnit 
+            title="Part: {currentPart.name || 'Part ' + (selectedPartIndex + 1)}" 
+            showNav={true} 
+            navLabel="PART {selectedPartIndex + 1} OF {$songStore.parts.length}"
+            on:next={nextPart}
+            on:prev={prevPart}
+          >
+            <div class="row">
+              <div class="grouped-box">
+                <span class="box-label">KEY</span>
+                <Choice 
+                  value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic} 
+                  options={tonics}
                   on:change={(e) => {
-                    if (currentVoice.restPct !== undefined) currentVoice.restPct = e.detail;
-                    else if (currentPart.restPct !== undefined) currentPart.restPct = e.detail;
-                    else $songStore.restPct = e.detail;
+                    let k = resolveParam($songStore, selectedPartIndex, 0, 'key');
+                    if (!k) {
+                      currentPart.key = { tonic: e.detail, mode: 'major' };
+                    } else {
+                      k.tonic = e.detail;
+                    }
                     $songStore = $songStore;
                   }}
-                  min={0} max={1} label="Rest %" 
+                  width="50px" 
                 />
-                
-                {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== undefined}
-                  <Knob 
-                    value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct')} 
-                    on:change={(e) => {
-                      if (currentVoice.tonicPct !== undefined) currentVoice.tonicPct = e.detail;
-                      else if (currentPart.tonicPct !== undefined) currentPart.tonicPct = e.detail;
-                      $songStore = $songStore;
-                    }}
-                    min={0} max={1} label="Tonic %" 
-                  />
-                {/if}
-
-                {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct') !== undefined}
-                  <Knob 
-                    value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct')} 
-                    on:change={(e) => {
-                      if (currentVoice.inversionPct !== undefined) currentVoice.inversionPct = e.detail;
-                      else if (currentPart.inversionPct !== undefined) currentPart.inversionPct = e.detail;
-                      $songStore = $songStore;
-                    }}
-                    min={0} max={1} label="Inv %" 
-                  />
-                {/if}
+                <Choice 
+                  value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode} 
+                  options={modes}
+                  on:change={(e) => {
+                    let k = resolveParam($songStore, selectedPartIndex, 0, 'key');
+                    if (!k) {
+                      currentPart.key = { tonic: 'C', mode: e.detail };
+                    } else {
+                      k.mode = e.detail;
+                    }
+                    $songStore = $songStore;
+                  }}
+                  width="100px" 
+                />
               </div>
-            </RackUnit>
-          {/if}
-        </RackUnit>
-      {/if}
-    </div>
-  {/if}
+
+              <div class="grouped-box">
+                <span class="box-label">METER</span>
+                <Display 
+                  value="{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.numerator || 4}/{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.denominator || 4}" 
+                  on:change={(e) => {
+                    let m = resolveParam($songStore, selectedPartIndex, 0, 'meter');
+                    const [n, d] = e.detail.split('/');
+                    if (!m) {
+                      currentPart.meter = { numerator: parseInt(n), denominator: parseInt(d) };
+                    } else {
+                      m.numerator = parseInt(n);
+                      m.denominator = parseInt(d);
+                    }
+                    $songStore = $songStore;
+                  }}
+                  width="75px" 
+                />
+              </div>
+              
+              <Knob 
+                value={resolveParam($songStore, selectedPartIndex, 0, 'nMeasures') || 1} 
+                on:change={(e) => {
+                  if (currentPart.nMeasures !== undefined) currentPart.nMeasures = e.detail;
+                  else $songStore.nMeasures = e.detail;
+                  $songStore = $songStore;
+                }}
+                min={1} max={128} label="Measures" 
+              />
+
+              <div class="velocity-box">
+                <Knob 
+                  value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[0] || 60} 
+                  on:change={(e) => {
+                    let v = resolveParam($songStore, selectedPartIndex, 0, 'velocity');
+                    if (!v) {
+                      currentPart.velocity = [e.detail, 80];
+                    } else {
+                      v[0] = e.detail;
+                    }
+                    $songStore = $songStore;
+                  }}
+                  min={0} max={127} label="Min" size={25}
+                />
+                <Knob 
+                  value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[1] || 80} 
+                  on:change={(e) => {
+                    let v = resolveParam($songStore, selectedPartIndex, 0, 'velocity');
+                    if (!v) {
+                      currentPart.velocity = [60, e.detail];
+                    } else {
+                      v[1] = e.detail;
+                    }
+                    $songStore = $songStore;
+                  }}
+                  min={0} max={127} label="Max" size={25}
+                />
+              </div>
+
+              <Display 
+                value={resolveParam($songStore, selectedPartIndex, 0, 'duration')} 
+                on:change={(e) => {
+                  if (e.detail.startsWith('[')) {
+                    try { currentPart.duration = JSON.parse(e.detail); } catch(err) { currentPart.duration = e.detail; }
+                  } else {
+                    currentPart.duration = e.detail;
+                  }
+                  $songStore = $songStore;
+                }}
+                label="Duration" width="80px" color="#00ffff" 
+              />
+            </div>
+
+            <!-- Chords Display -->
+            {#if resolveParam($songStore, selectedPartIndex, 0, 'chords')}
+              <div class="chords-row">
+                <span class="chords-label">CHORDS:</span>
+                <div class="chord-sequence">
+                  {#each resolveParam($songStore, selectedPartIndex, 0, 'chords') as chord}
+                    <span class="chord-tag">{chord}</span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+
+            <!-- Current Voice -->
+            {#if currentVoice}
+              <RackUnit 
+                subModule={true} 
+                title="Voice: {currentVoice.file || 'Internal'}"
+                showNav={true}
+                navLabel="VOICE {selectedVoiceIndex + 1} OF {currentPart.voices.length}"
+                on:next={nextVoice}
+                on:prev={prevVoice}
+              >
+                <div class="row" style="justify-content: center;">
+                  <div class="grouped-box">
+                    <span class="box-label">TYPE</span>
+                    <Choice 
+                      value={currentVoice.type} 
+                      options={voiceTypes}
+                      on:change={(e) => {
+                        currentVoice.type = e.detail;
+                        $songStore = $songStore;
+                      }}
+                      width="100px" 
+                    />
+                  </div>
+                  <Display bind:value={currentVoice.file} label="MIDI File" width="200px" color="#aaa" />
+                  <Knob 
+                    value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') || 0} 
+                    on:change={(e) => {
+                      if (currentVoice.restPct !== undefined) currentVoice.restPct = e.detail;
+                      else if (currentPart.restPct !== undefined) currentPart.restPct = e.detail;
+                      else $songStore.restPct = e.detail;
+                      $songStore = $songStore;
+                    }}
+                    min={0} max={1} label="Rest %" 
+                  />
+                  
+                  {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== undefined}
+                    <Knob 
+                      value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct')} 
+                      on:change={(e) => {
+                        if (currentVoice.tonicPct !== undefined) currentVoice.tonicPct = e.detail;
+                        else if (currentPart.tonicPct !== undefined) currentPart.tonicPct = e.detail;
+                        $songStore = $songStore;
+                      }}
+                      min={0} max={1} label="Tonic %" 
+                    />
+                  {/if}
+
+                  {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct') !== undefined}
+                    <Knob 
+                      value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct')} 
+                      on:change={(e) => {
+                        if (currentVoice.inversionPct !== undefined) currentVoice.inversionPct = e.detail;
+                        else if (currentPart.inversionPct !== undefined) currentPart.inversionPct = e.detail;
+                        $songStore = $songStore;
+                      }}
+                      min={0} max={1} label="Inv %" 
+                    />
+                  {/if}
+                </div>
+              </RackUnit>
+            {/if}
+          </RackUnit>
+        {/if}
+      </div>
+    {/if}
+  </div>
 </main>
 
 <style>
@@ -349,23 +351,27 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding-right: 120px;
+    padding: 40px 0;
+  }
+
+  .app-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
   }
 
   .sidebar {
-    position: fixed;
-    right: 30px;
-    top: 50%;
-    transform: translateY(-50%);
     display: flex;
     flex-direction: column;
     gap: 15px;
     background: #222;
     padding: 20px 10px;
     border: 4px solid #000;
-    border-radius: 4px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    z-index: 100;
+    border-right: none;
+    border-radius: 4px 0 0 4px;
+    box-shadow: -10px 10px 30px rgba(0,0,0,0.5);
+    margin-top: 20px;
   }
 
   .logo {
@@ -416,22 +422,23 @@
     background-color: #111;
     border: 8px solid #000;
     padding: 20px;
-    border-radius: 4px;
+    border-radius: 0 4px 4px 0;
     box-shadow: 0 20px 50px rgba(0,0,0,0.8);
     position: relative;
   }
 
-  .rack::before, .rack::after {
+  .rack::after {
     content: "";
     position: absolute;
     top: 0;
+    right: -30px;
     width: 30px;
     height: 100%;
     background: #222;
     z-index: -1;
+    border-radius: 0 4px 4px 0;
+    border-right: 2px solid #333;
   }
-  .rack::before { left: -30px; border-radius: 4px 0 0 4px; border-left: 2px solid #333; }
-  .rack::after { right: -30px; border-radius: 0 4px 4px 0; border-right: 2px solid #333; }
 
   .row {
     display: flex;
@@ -454,7 +461,7 @@
   .grouped-box {
     gap: 5px;
     align-items: flex-end;
-    padding-top: 15px; /* Space for the floating label */
+    padding-top: 15px;
   }
 
   .box-label {

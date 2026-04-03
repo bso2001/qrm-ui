@@ -5,6 +5,7 @@
   export let label: string = '';
   export let width: string = 'auto';
   export let color: string = '#00ff00';
+  export let fontSize: string = '16px';
 
   const dispatch = createEventDispatcher();
 
@@ -21,7 +22,7 @@
   <input 
     type="text"
     class="display-input" 
-    style="--accent: {color}"
+    style="--accent: {color}; font-size: {fontSize}"
     value={typeof value === 'object' ? JSON.stringify(value) : value}
     on:change={handleChange}
   />
@@ -38,17 +39,18 @@
   .display-input {
     background-color: #000;
     color: var(--accent);
-    padding: 8px 10px; /* Reduced padding */
+    padding: 8px 10px;
     border-radius: 2px;
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-    font-size: 16px; /* Balanced size */
     text-shadow: 0 0 8px var(--accent);
     border: 1px solid #222;
     font-family: 'Courier New', Courier, monospace;
-    min-width: 60px;
+    width: 100%;
+    box-sizing: border-box;
     outline: none;
     transition: border-color 0.1s;
     font-weight: bold;
+    min-width: 0;
   }
 
   .display-input:focus {
@@ -56,7 +58,7 @@
   }
 
   .display-label {
-    font-size: 11px; /* Matches Knob label */
+    font-size: 11px;
     color: #eee;
     margin-bottom: 4px;
     text-transform: uppercase;
