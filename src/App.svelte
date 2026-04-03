@@ -5,6 +5,11 @@
   import Knob from './lib/components/Knob.svelte';
   import Display from './lib/components/Display.svelte';
   import Switch from './lib/components/Switch.svelte';
+  import Choice from './lib/components/Choice.svelte';
+
+  const tonics = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const modes = ['major', 'minor'];
+  const voiceTypes = ['chordal', 'freeform', 'chords'];
 
   const initialSong = {
     "name"      : "Afterglowish",
@@ -126,22 +131,23 @@
 </script>
 
 <main>
-  <div class="toolbar">
-    <label class="btn">
-      LOAD JSON
+  <div class="sidebar">
+    <div class="logo">QRM<br>RACK</div>
+    <label class="btn sidebar-btn">
+      LOAD
       <input type="file" accept=".json" on:change={handleFileLoad} hidden />
     </label>
-    <button class="btn" on:click={downloadJson}>SAVE JSON</button>
+    <button class="btn sidebar-btn" on:click={downloadJson}>SAVE</button>
   </div>
 
   {#if $songStore}
     <div class="rack">
       <!-- Master Section -->
       <RackUnit title="Master Control Section">
-        <Display value={$songStore.name || loadedFilename || "-- UNSET --"} label="Song Title" width="300px" />
-        <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" size={60} />
-        <Knob bind:value={$songStore.loglevel} min={0} max={4} label="Log Level" size={40} />
-        <Display value={$songStore.outputDir || "-- UNSET --"} label="Output Directory" width="300px" color="#ffaa00" />
+        <Display bind:value={$songStore.name} label="Song Title" width="300px" />
+        <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" />
+        <Knob bind:value={$songStore.loglevel} min={0} max={4} label="Log Level" />
+        <Display bind:value={$songStore.outputDir} label="Output Directory" width="300px" color="#ffaa00" />
       </RackUnit>
 
       <!-- Current Part -->
@@ -154,12 +160,56 @@
           on:prev={prevPart}
         >
           <div class="row">
-            <Display value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic || "-"} label="Tonic" width="50px" />
-            <Display value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode || "-"} label="Mode" width="100px" />
-            <Display 
-              value="{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.numerator || 4}/{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.denominator || 4}" 
-              label="Meter" width="60px" 
-            />
+            <div class="grouped-box">
+              <span class="box-label">KEY</span>
+              <Choice 
+                value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic} 
+                options={tonics}
+                on:change={(e) => {
+                  let k = resolveParam($songStore, selectedPartIndex, 0, 'key');
+                  if (!k) {
+                    currentPart.key = { tonic: e.detail, mode: 'major' };
+                  } else {
+                    k.tonic = e.detail;
+                  }
+                  $songStore = $songStore;
+                }}
+                width="50px" 
+              />
+              <Choice 
+                value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode} 
+                options={modes}
+                on:change={(e) => {
+                  let k = resolveParam($songStore, selectedPartIndex, 0, 'key');
+                  if (!k) {
+                    currentPart.key = { tonic: 'C', mode: e.detail };
+                  } else {
+                    k.mode = e.detail;
+                  }
+                  $songStore = $songStore;
+                }}
+                width="100px" 
+              />
+            </div>
+
+            <div class="grouped-box">
+              <span class="box-label">METER</span>
+              <Display 
+                value="{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.numerator || 4}/{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.denominator || 4}" 
+                on:change={(e) => {
+                  let m = resolveParam($songStore, selectedPartIndex, 0, 'meter');
+                  const [n, d] = e.detail.split('/');
+                  if (!m) {
+                    currentPart.meter = { numerator: parseInt(n), denominator: parseInt(d) };
+                  } else {
+                    m.numerator = parseInt(n);
+                    m.denominator = parseInt(d);
+                  }
+                  $songStore = $songStore;
+                }}
+                width="60px" 
+              />
+            </div>
             
             <Knob 
               value={resolveParam($songStore, selectedPartIndex, 0, 'nMeasures') || 1} 
@@ -168,7 +218,7 @@
                 else $songStore.nMeasures = e.detail;
                 $songStore = $songStore;
               }}
-              min={1} max={128} label="Measures" size={40} 
+              min={1} max={128} label="Measures" 
             />
 
             <div class="velocity-box">
@@ -183,7 +233,7 @@
                   }
                   $songStore = $songStore;
                 }}
-                min={0} max={127} label="Vel Min" size={30} 
+                min={0} max={127} label="Min" size={25}
               />
               <Knob 
                 value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[1] || 80} 
@@ -196,12 +246,20 @@
                   }
                   $songStore = $songStore;
                 }}
-                min={0} max={127} label="Vel Max" size={30} 
+                min={0} max={127} label="Max" size={25}
               />
             </div>
 
             <Display 
-              value={resolveParam($songStore, selectedPartIndex, 0, 'duration') || "1/4"} 
+              value={resolveParam($songStore, selectedPartIndex, 0, 'duration')} 
+              on:change={(e) => {
+                if (e.detail.startsWith('[')) {
+                  try { currentPart.duration = JSON.parse(e.detail); } catch(err) { currentPart.duration = e.detail; }
+                } else {
+                  currentPart.duration = e.detail;
+                }
+                $songStore = $songStore;
+              }}
               label="Duration" width="80px" color="#00ffff" 
             />
           </div>
@@ -229,8 +287,19 @@
               on:prev={prevVoice}
             >
               <div class="row">
-                <Switch on={currentVoice.type === 'chordal'} label="Chordal" />
-                <Display value={currentVoice.file || "internal"} label="MIDI File" width="200px" color="#aaa" />
+                <div class="grouped-box">
+                  <span class="box-label">TYPE</span>
+                  <Choice 
+                    value={currentVoice.type} 
+                    options={voiceTypes}
+                    on:change={(e) => {
+                      currentVoice.type = e.detail;
+                      $songStore = $songStore;
+                    }}
+                    width="100px" 
+                  />
+                </div>
+                <Display bind:value={currentVoice.file} label="MIDI File" width="200px" color="#aaa" />
                 <Knob 
                   value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') || 0} 
                   on:change={(e) => {
@@ -239,7 +308,7 @@
                     else $songStore.restPct = e.detail;
                     $songStore = $songStore;
                   }}
-                  min={0} max={1} label="Rest %" size={40} 
+                  min={0} max={1} label="Rest %" 
                 />
                 
                 {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== undefined}
@@ -250,7 +319,7 @@
                       else if (currentPart.tonicPct !== undefined) currentPart.tonicPct = e.detail;
                       $songStore = $songStore;
                     }}
-                    min={0} max={1} label="Tonic %" size={40} 
+                    min={0} max={1} label="Tonic %" 
                   />
                 {/if}
 
@@ -262,7 +331,7 @@
                       else if (currentPart.inversionPct !== undefined) currentPart.inversionPct = e.detail;
                       $songStore = $songStore;
                     }}
-                    min={0} max={1} label="Inv %" size={40} 
+                    min={0} max={1} label="Inv %" 
                   />
                 {/if}
               </div>
@@ -278,33 +347,68 @@
   main {
     width: 100%;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    justify-content: center;
+    align-items: flex-start;
+    padding-right: 120px;
   }
 
-  .toolbar {
-    margin-bottom: 20px;
+  .sidebar {
+    position: fixed;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 15px;
+    background: #222;
+    padding: 20px 10px;
+    border: 4px solid #000;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    z-index: 100;
+  }
+
+  .logo {
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--accent);
+    text-align: center;
+    border-bottom: 2px solid #444;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    line-height: 1;
   }
 
   .btn {
     background: #333;
     border: 1px solid #555;
     color: #eee;
-    padding: 8px 16px;
     cursor: pointer;
-    font-size: 12px;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     border-radius: 2px;
   }
 
-  .btn:hover {
-    background: #444;
-    border-color: #666;
+  .sidebar-btn {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #444, #222);
+    border: 2px solid #555;
+    box-shadow: 0 4px 0 #111;
+    transition: all 0.05s;
+  }
+
+  .sidebar-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #000;
+    background: radial-gradient(circle, #333, #111);
   }
 
   .rack {
@@ -337,12 +441,34 @@
     flex-wrap: wrap;
   }
 
-  .velocity-box {
+  .velocity-box, .grouped-box {
     display: flex;
     background: rgba(0,0,0,0.2);
     padding: 5px;
     border-radius: 4px;
     border: 1px solid #333;
+    position: relative;
+    margin-top: 5px;
+  }
+
+  .grouped-box {
+    gap: 5px;
+    align-items: flex-end;
+    padding-top: 15px; /* Space for the floating label */
+  }
+
+  .box-label {
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    font-size: 9px;
+    color: var(--accent);
+    background: #222;
+    padding: 0 5px;
+    font-weight: bold;
+    letter-spacing: 1.2px;
+    border: 1px solid #444;
+    border-radius: 4px;
   }
 
   .chords-row {
