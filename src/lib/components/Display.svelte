@@ -47,34 +47,32 @@
   }
 
   .display-input {
-    background-color: #000;
-    color: var(--accent);
-    padding: 8px 10px;
-    border-radius: 2px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-    text-shadow: 0 0 8px var(--accent);
-    border: 1px solid #222;
-    font-family: 'Courier New', Courier, monospace;
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-input);
+    font-family: inherit;
     width: 100%;
     box-sizing: border-box;
     outline: none;
-    transition: border-color 0.1s;
-    font-weight: bold;
+    transition: all 0.2s;
+    font-weight: 500;
     min-width: 0;
   }
 
   .display-input:focus {
     border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
   }
 
   .display-label {
-    font-size: 11px;
-    color: #eee;
+    font-size: 0.75rem;
+    color: var(--text-muted);
     margin-bottom: 4px;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 900;
-    text-shadow: 0 1px 2px rgba(0,0,0,1);
+    letter-spacing: 0.5px;
+    font-weight: 600;
     text-align: center;
   }
 </style>

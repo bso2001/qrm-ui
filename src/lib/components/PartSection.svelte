@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { songStore, resolveParam, getParamLevel } from '../songStore';
-  import RackUnit from './RackUnit.svelte';
-  import Knob from './Knob.svelte';
+  import Card from './Card.svelte';
+  import Slider from './Slider.svelte';
   import Display from './Display.svelte';
   import Choice from './Choice.svelte';
   import { tonics, modes } from '../constants';
@@ -14,7 +14,7 @@
   const dispatch = createEventDispatcher();
 </script>
 
-<RackUnit 
+<Card 
   title="Part Settings" 
   showNav={true} 
   navLabel="PART {selectedPartIndex + 1} OF {$songStore.parts.length}"
@@ -72,7 +72,7 @@
       />
     </div>
     
-    <Knob 
+    <Slider 
       value={resolveParam($songStore, selectedPartIndex, 0, 'nMeasures') || 1} 
       inherited={getParamLevel($songStore, selectedPartIndex, 0, 'nMeasures') === 'song'}
       on:change={(e) => {
@@ -83,7 +83,7 @@
     />
 
     <div class="velocity-box">
-      <Knob 
+      <Slider 
         value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[0] || 60} 
         inherited={getParamLevel($songStore, selectedPartIndex, 0, 'velocity') === 'song'}
         on:change={(e) => {
@@ -91,9 +91,9 @@
           currentPart.velocity[0] = e.detail;
           $songStore = $songStore;
         }}
-        min={0} max={127} label="Min" size={25}
+        min={0} max={127} label="Min"
       />
-      <Knob 
+      <Slider 
         value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[1] || 80} 
         inherited={getParamLevel($songStore, selectedPartIndex, 0, 'velocity') === 'song'}
         on:change={(e) => {
@@ -101,7 +101,7 @@
           currentPart.velocity[1] = e.detail;
           $songStore = $songStore;
         }}
-        min={0} max={127} label="Max" size={25}
+        min={0} max={127} label="Max"
       />
     </div>
 
@@ -133,7 +133,7 @@
 
   <slot />
 
-</RackUnit>
+</Card>
 
 <style>
   .row {
@@ -146,10 +146,10 @@
 
   .velocity-box, .grouped-box {
     display: flex;
-    background: rgba(0,0,0,0.2);
+    background: var(--bg-sub);
     padding: 5px;
     border-radius: 4px;
-    border: 1px solid #333;
+    border: 1px solid var(--border-main);
     position: relative;
     margin-top: 5px;
   }
@@ -165,23 +165,22 @@
     top: -8px;
     left: 10px;
     font-size: 9px;
-    color: var(--accent, #00ff00);
-    background: #222;
+    color: var(--text-muted);
+    background: var(--bg-card);
     padding: 0 5px;
     font-weight: bold;
     letter-spacing: 1.2px;
-    border: 1px solid #444;
+    border: 1px solid var(--border-main);
     border-radius: 4px;
   }
 
   .inner-label {
     font-size: 11px;
-    color: #eee;
+    color: var(--text-muted);
     margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 900;
-    text-shadow: 0 1px 2px rgba(0,0,0,1);
     text-align: center;
   }
 
@@ -191,28 +190,27 @@
     align-items: center;
     gap: 10px;
     width: 100%;
-    background: rgba(0,0,0,0.3);
+    background: var(--bg-sub);
     padding: 10px;
-    border-radius: 2px;
-    border: 1px solid #222;
+    border-radius: 6px;
+    border: 1px solid var(--border-main);
     transition: opacity 0.2s;
   }
 
   .chords-row.inherited {
-    opacity: 0.4;
+    opacity: 0.5;
   }
 
   .chords-row.inherited:hover {
-    opacity: 0.7;
+    opacity: 0.8;
   }
 
   .chords-label {
     font-size: 11px;
-    color: #bbb;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 900;
-    text-shadow: 0 1px 2px rgba(0,0,0,1);
     min-width: 80px;
   }
 
@@ -223,13 +221,13 @@
   }
 
   .chord-tag {
-    background: #000;
-    color: var(--accent, #00ff00);
-    border: 1px solid #333;
-    padding: 2px 8px;
+    background: var(--bg-input);
+    color: var(--accent);
+    border: 1px solid var(--border-input);
+    padding: 4px 10px;
     font-size: 14px;
-    border-radius: 2px;
-    text-shadow: 0 0 5px var(--accent, #00ff00);
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+    border-radius: 4px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
   }
 </style>

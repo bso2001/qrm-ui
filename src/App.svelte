@@ -7,6 +7,96 @@
   import MasterSection from './lib/components/MasterSection.svelte';
   import PartSection from './lib/components/PartSection.svelte';
   import VoiceSection from './lib/components/VoiceSection.svelte';
+  import Choice from './lib/components/Choice.svelte';
+
+  let currentTheme = 'light';
+  const themes = ['light', 'dark'];
+  
+  let history: string[] = [];
+  let historyIndex = -1;
+  let isUndoing = false;
+  let saveTimeout: ReturnType<typeof setTimeout>;
+
+  function saveState() {
+    if (!$songStore) return;
+    const serialized = JSON.stringify($songStore);
+    
+    localStorage.setItem('qrm_autosave', serialized);
+
+    if (isUndoing) {
+      isUndoing = false;
+      return;
+    }
+
+    if (historyIndex < history.length - 1) {
+      history = history.slice(0, historyIndex + 1);
+    }
+
+    if (history.length === 0 || history[history.length - 1] !== serialized) {
+      history = [...history, serialized];
+      historyIndex = history.length - 1;
+      if (history.length > 50) {
+        history.shift();
+        historyIndex--;
+      }
+    }
+  }
+
+  $: if ($songStore && typeof localStorage !== 'undefined') {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveState, 200);
+  }
+
+  function handleUndo() {
+    if (historyIndex > 0) {
+      isUndoing = true;
+      historyIndex--;
+      $songStore = JSON.parse(history[historyIndex]);
+      validateIndices();
+    }
+  }
+
+  function handleRedo() {
+    if (historyIndex < history.length - 1) {
+      isUndoing = true;
+      historyIndex++;
+      $songStore = JSON.parse(history[historyIndex]);
+      validateIndices();
+    }
+  }
+
+  function validateIndices() {
+    if (!$songStore || !$songStore.parts) return;
+    if (selectedPartIndex >= $songStore.parts.length) {
+      selectedPartIndex = Math.max(0, $songStore.parts.length - 1);
+    }
+    const currentPart = $songStore.parts[selectedPartIndex];
+    if (currentPart && currentPart.voices && selectedVoiceIndex >= currentPart.voices.length) {
+      selectedVoiceIndex = Math.max(0, currentPart.voices.length - 1);
+    }
+  }
+
+  function handleGlobalKeydown(e: KeyboardEvent) {
+    if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (e.shiftKey) {
+        handleRedo();
+      } else {
+        handleUndo();
+      }
+    } else if (e.key === 'y' && e.ctrlKey) {
+      e.preventDefault();
+      handleRedo();
+    }
+  }
+
+  $: if (typeof document !== 'undefined') {
+    // Remove all known theme classes first
+    themes.forEach(t => document.body.classList.remove(t));
+    if (currentTheme !== 'light') {
+      document.body.classList.add(currentTheme);
+    }
+  }
 
   const initialSong = {
     "name"      : "Afterglowish",
@@ -68,7 +158,7 @@
   };
 
   let selectedPartIndex = 0;
-  let selectedVoiceIndex = 0;
+  let selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
   let loadedFilename = "";
 
   $: currentPart = $songStore?.parts?.[selectedPartIndex];
@@ -76,12 +166,12 @@
 
   function nextPart() {
     selectedPartIndex = (selectedPartIndex + 1) % $songStore.parts.length;
-    selectedVoiceIndex = 0;
+    selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
   }
 
   function prevPart() {
     selectedPartIndex = (selectedPartIndex - 1 + $songStore.parts.length) % $songStore.parts.length;
-    selectedVoiceIndex = 0;
+    selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
   }
 
   function nextVoice() {
@@ -101,7 +191,7 @@
     
     $songStore = addPart($songStore, idx);
     selectedPartIndex = idx;
-    selectedVoiceIndex = 0;
+    selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
   }
 
   function handleRemovePart() {
@@ -116,7 +206,7 @@
     }
     
     selectedPartIndex = newIndex;
-    selectedVoiceIndex = 0;
+    selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
     
     // Now update the store using the captured index
     $songStore = removePart($songStore, indexToDelete);
@@ -149,11 +239,21 @@
   }
 
   onMount(() => {
-    loadSong(initialSong);
+    const saved = localStorage.getItem('qrm_autosave');
+    if (saved) {
+      try {
+        loadSong(JSON.parse(saved));
+      } catch (err) {
+        loadSong(initialSong);
+      }
+    } else {
+      loadSong(initialSong);
+    }
   });
 
   function handleFileLoad(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (file) {
       loadedFilename = file.name;
       const reader = new FileReader();
@@ -162,10 +262,11 @@
           const json = JSON.parse(e.target?.result as string);
           loadSong(json);
           selectedPartIndex = 0;
-          selectedVoiceIndex = 0;
-          (event.target as HTMLInputElement).value = "";
+          selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
         } catch (err) {
           alert("Error parsing JSON file");
+        } finally {
+          target.value = "";
         }
       };
       reader.readAsText(file);
@@ -183,6 +284,8 @@
   }
 </script>
 
+<svelte:window on:keydown={handleGlobalKeydown} />
+
 <main>
   <div class="app-container">
     <div class="sidebar">
@@ -192,10 +295,26 @@
         <input type="file" accept=".json" on:change={handleFileLoad} hidden />
       </label>
       <button class="btn sidebar-btn" on:click={downloadJson}>SAVE</button>
+      
+      <button 
+        class="btn sidebar-btn" 
+        on:click={handleUndo} 
+        disabled={historyIndex <= 0}
+        style="opacity: {historyIndex <= 0 ? '0.5' : '1'}; cursor: {historyIndex <= 0 ? 'not-allowed' : 'pointer'}"
+      >UNDO</button>
+      
+      <div style="margin-top: auto; display: flex; flex-direction: column; align-items: center;">
+        <Choice 
+          bind:value={currentTheme} 
+          options={themes} 
+          width="80px"
+        />
+        <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: bold; text-transform: uppercase;">Theme</span>
+      </div>
     </div>
 
     {#if $songStore}
-      <div class="rack">
+      <div class="main-content">
         
         <MasterSection {loadedFilename} />
 
@@ -225,100 +344,123 @@
 </main>
 
 <style>
+  :global(body) {
+    --bg-main: #f4f6f8;
+    --bg-card: #ffffff;
+    --bg-sub: #f8f9fa;
+    --bg-hover: #e9ecef;
+    --bg-input: #ffffff;
+    --text-main: #333333;
+    --text-muted: #6c757d;
+    --text-heading: #2c3e50;
+    --border-main: #e0e0e0;
+    --border-sub: #e9ecef;
+    --border-input: #ced4da;
+    --accent: #4dabf7;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  :global(body.dark) {
+    --bg-main: #121212;
+    --bg-card: #1e1e1e;
+    --bg-sub: #252525;
+    --bg-hover: #333333;
+    --bg-input: #2a2a2a;
+    --text-main: #e0e0e0;
+    --text-muted: #a0a0a0;
+    --text-heading: #ffffff;
+    --border-main: #333333;
+    --border-sub: #444444;
+    --border-input: #555555;
+    --accent: #3b82f6;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  }
+
   main {
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 40px 0;
+    padding: 40px 20px;
+    box-sizing: border-box;
   }
 
   .app-container {
     display: flex;
     align-items: flex-start;
-    gap: 0;
-    position: relative;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
   }
 
   .sidebar {
-    position: absolute;
-    right: 100%;
-    top: 0;
+    flex: 0 0 100px;
     display: flex;
     flex-direction: column;
     gap: 15px;
-    background: #222;
-    padding: 20px 10px;
-    border: 4px solid #000;
-    border-right: none;
-    border-radius: 4px 0 0 4px;
-    box-shadow: -10px 10px 30px rgba(0,0,0,0.5);
-    margin-top: 20px;
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-main);
   }
 
   .logo {
-    font-size: 14px;
-    font-weight: 900;
-    color: var(--accent);
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-heading);
     text-align: center;
-    border-bottom: 2px solid #444;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-    line-height: 1;
+    border-bottom: 2px solid var(--border-sub);
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+    line-height: 1.2;
+    letter-spacing: 1px;
   }
 
   .btn {
-    background: #333;
-    border: 1px solid #555;
-    color: #eee;
+    background: var(--bg-sub);
+    border: 1px solid var(--border-input);
+    color: var(--text-main);
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 2px;
+    letter-spacing: 0.5px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
   }
 
   .sidebar-btn {
-    width: 60px;
-    height: 60px;
+    width: 100%;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    font-size: 10px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #444, #222);
-    border: 2px solid #555;
-    box-shadow: 0 4px 0 #111;
-    transition: all 0.05s;
+    font-size: 11px;
   }
 
-  .sidebar-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #000;
-    background: radial-gradient(circle, #333, #111);
+  .btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--text-muted);
   }
 
-  .rack {
-    width: 900px;
-    background-color: #111;
-    border: 8px solid #000;
-    padding: 20px;
-    border-radius: 0 4px 4px 0;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-    position: relative;
+  .btn:active {
+    transform: translateY(1px);
   }
 
-  .rack::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: -30px;
-    width: 30px;
-    height: 100%;
-    background: #222;
-    z-index: -1;
-    border-radius: 0 4px 4px 0;
-    border-right: 2px solid #333;
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
   }
 </style>

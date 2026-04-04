@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { songStore, resolveParam, getParamLevel } from '../songStore';
-  import RackUnit from './RackUnit.svelte';
-  import Knob from './Knob.svelte';
+  import Card from './Card.svelte';
+  import Slider from './Slider.svelte';
   import Display from './Display.svelte';
   import Choice from './Choice.svelte';
   import { voiceTypes } from '../constants';
@@ -16,7 +16,7 @@
   const dispatch = createEventDispatcher();
 </script>
 
-<RackUnit 
+<Card 
   subModule={true} 
   title="Voice: {currentVoice.file || 'Internal'}"
   showNav={true}
@@ -42,41 +42,41 @@
       />
     </div>
     <Display bind:value={currentVoice.file} label="MIDI File" width="200px" color="#aaa" />
-    <Knob 
+    <Slider 
       value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') || 0} 
       inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') !== 'voice'}
       on:change={(e) => {
         currentVoice.restPct = e.detail;
         $songStore = $songStore;
       }}
-      min={0} max={1} label="Rest %" 
+      min={0} max={1} step={0.01} label="Rest %" 
     />
     
     {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== undefined}
-      <Knob 
+      <Slider 
         value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct')} 
         inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== 'voice'}
         on:change={(e) => {
           currentVoice.tonicPct = e.detail;
           $songStore = $songStore;
         }}
-        min={0} max={1} label="Tonic %" 
+        min={0} max={1} step={0.01} label="Tonic %" 
       />
     {/if}
 
     {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct') !== undefined}
-      <Knob 
+      <Slider 
         value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct')} 
         inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct') !== 'voice'}
         on:change={(e) => {
           currentVoice.inversionPct = e.detail;
           $songStore = $songStore;
         }}
-        min={0} max={1} label="Inv %" 
+        min={0} max={1} step={0.01} label="Inv %" 
       />
     {/if}
   </div>
-</RackUnit>
+</Card>
 
 <style>
   .row {
@@ -89,10 +89,10 @@
 
   .grouped-box {
     display: flex;
-    background: rgba(0,0,0,0.2);
+    background: var(--bg-sub);
     padding: 5px;
     border-radius: 4px;
-    border: 1px solid #333;
+    border: 1px solid var(--border-main);
     position: relative;
     margin-top: 5px;
     gap: 5px;
@@ -105,12 +105,12 @@
     top: -8px;
     left: 10px;
     font-size: 9px;
-    color: var(--accent, #00ff00);
-    background: #222;
+    color: var(--text-muted);
+    background: var(--bg-card);
     padding: 0 5px;
     font-weight: bold;
     letter-spacing: 1.2px;
-    border: 1px solid #444;
+    border: 1px solid var(--border-main);
     border-radius: 4px;
   }
 </style>

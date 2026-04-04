@@ -1,7 +1,7 @@
 <script lang="ts">
   import { songStore } from '../songStore';
-  import RackUnit from './RackUnit.svelte';
-  import Knob from './Knob.svelte';
+  import Card from './Card.svelte';
+  import Slider from './Slider.svelte';
   import Display from './Display.svelte';
   import Choice from './Choice.svelte';
   import { tonics, modes, logLevels } from '../constants';
@@ -9,14 +9,14 @@
   export let loadedFilename = "";
 </script>
 
-<RackUnit title={loadedFilename || "GLOBAL DEFAULTS"}>
+<Card title={loadedFilename || "GLOBAL DEFAULTS"}>
   <div class="row" style="gap: 15px; align-items: flex-end;">
     <div style="display: flex; flex-direction: column; gap: 0;">
       <Display bind:value={$songStore.name} label="Title" width="250px" fontSize="12px" />
       <Display bind:value={$songStore.outputDir} label="Output" width="250px" color="#ffaa00" fontSize="10px" />
     </div>
     
-    <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" size={25} />
+    <Slider bind:value={$songStore.tempo} min={40} max={240} label="Tempo" />
     
     <div class="grouped-box" style="margin-top: 0; padding-top: 10px;">
       <span class="box-label">LOG</span>
@@ -70,7 +70,7 @@
       </div>
     </div>
   </div>
-</RackUnit>
+</Card>
 
 <style>
   .row {
@@ -83,10 +83,10 @@
 
   .grouped-box {
     display: flex;
-    background: rgba(0,0,0,0.2);
+    background: var(--bg-sub);
     padding: 5px;
     border-radius: 4px;
-    border: 1px solid #333;
+    border: 1px solid var(--border-main);
     position: relative;
     margin-top: 5px;
     gap: 5px;
@@ -98,23 +98,22 @@
     top: -8px;
     left: 10px;
     font-size: 9px;
-    color: var(--accent, #00ff00);
-    background: #222;
+    color: var(--text-muted);
+    background: var(--bg-card);
     padding: 0 5px;
     font-weight: bold;
     letter-spacing: 1.2px;
-    border: 1px solid #444;
+    border: 1px solid var(--border-main);
     border-radius: 4px;
   }
 
   .inner-label {
     font-size: 11px;
-    color: #eee;
+    color: var(--text-muted);
     margin-bottom: 4px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 900;
-    text-shadow: 0 1px 2px rgba(0,0,0,1);
     text-align: center;
   }
 </style>

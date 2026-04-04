@@ -46,12 +46,11 @@
   .choice-container {
     display: flex;
     flex-direction: column;
-    background-color: #000;
-    color: var(--accent);
-    padding: 8px 10px;
-    border-radius: 2px;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
-    border: 1px solid #222;
+    background-color: var(--bg-input);
+    color: var(--text-main);
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-input);
     cursor: pointer;
     user-select: none;
     min-width: 60px;
@@ -68,34 +67,32 @@
   }
 
   .choice-container:hover {
-    border-color: #444;
+    border-color: var(--text-muted);
+    background-color: var(--bg-hover);
   }
 
   .display {
-    font-size: 16px;
-    text-shadow: 0 0 8px var(--accent);
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: bold;
+    font-size: 1rem;
+    font-weight: 500;
     text-align: center;
-    text-transform: uppercase;
   }
 
   .indicators {
     display: flex;
     justify-content: center;
-    gap: 3px;
-    margin-top: 4px;
+    gap: 4px;
+    margin-top: 6px;
   }
 
   .dot {
-    width: 4px;
-    height: 4px;
-    background: #222;
+    width: 6px;
+    height: 6px;
+    background: var(--border-input);
     border-radius: 50%;
+    transition: background-color 0.2s;
   }
 
   .dot.active {
     background: var(--accent);
-    box-shadow: 0 0 4px var(--accent);
   }
 </style>
