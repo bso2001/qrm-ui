@@ -145,11 +145,16 @@
     {#if $songStore}
       <div class="rack">
         <!-- Master Section -->
-        <RackUnit title={loadedFilename || "INITIAL SONG"}>
-          <div class="row">
-            <Display bind:value={$songStore.name} label="Song Title" width="300px" />
-            <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" />
-            <div class="grouped-box">
+        <RackUnit title={loadedFilename || "GLOBAL DEFAULTS"}>
+          <div class="row" style="gap: 15px; align-items: flex-end;">
+            <div style="display: flex; flex-direction: column; gap: 0;">
+              <Display bind:value={$songStore.name} label="Title" width="250px" fontSize="12px" />
+              <Display bind:value={$songStore.outputDir} label="Output" width="250px" color="#ffaa00" fontSize="10px" />
+            </div>
+            
+            <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" size={25} />
+            
+            <div class="grouped-box" style="margin-top: 0; padding-top: 10px;">
               <span class="box-label">LOG</span>
               <Choice 
                 value={$songStore.loglevel?.toString() || '0'} 
@@ -158,48 +163,47 @@
                   $songStore.loglevel = parseInt(e.detail);
                   $songStore = $songStore;
                 }}
-                width="50px" 
+                width="40px" 
               />
             </div>
-            <Display bind:value={$songStore.outputDir} label="Output Directory" width="300px" color="#ffaa00" fontSize="12px" />
-          </div>
 
-          <!-- Song Level Defaults -->
-          <div class="row" style="margin-top: 15px; border-top: 2px solid #222; padding-top: 15px;">
-            <div class="grouped-box">
-              <span class="box-label">GLOBAL KEY</span>
-              <Choice 
-                value={$songStore.key?.tonic || 'C'} 
-                options={tonics} 
-                on:change={(e) => {
-                  if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
-                  $songStore.key.tonic = e.detail;
-                  $songStore = $songStore;
-                }}
-                width="50px" 
-              />
-              <Choice 
-                value={$songStore.key?.mode || 'major'} 
-                options={modes} 
-                on:change={(e) => {
-                  if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
-                  $songStore.key.mode = e.detail;
-                  $songStore = $songStore;
-                }}
-                width="100px" 
-              />
-            </div>
-            <div class="grouped-box">
-              <span class="box-label">GLOBAL METER</span>
-              <Display 
-                value="{$songStore.meter?.numerator || 4}/{$songStore.meter?.denominator || 4}" 
-                on:change={(e) => {
-                  const [n, d] = e.detail.split('/');
-                  $songStore.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
-                  $songStore = $songStore;
-                }}
-                width="75px" 
-              />
+            <div class="grouped-box" style="margin-top: 0; padding-top: 10px;">
+              <span class="box-label">DEFAULT</span>
+              <div style="display: flex; gap: 5px; align-items: flex-end;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  <span class="inner-label" style="font-size: 9px;">KEY</span>
+                  <Choice 
+                    value={$songStore.key?.tonic || 'C'} 
+                    options={tonics} 
+                    on:change={(e) => {
+                      if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
+                      $songStore.key.tonic = e.detail;
+                      $songStore = $songStore;
+                    }}
+                    width="45px" 
+                  />
+                </div>
+                <Choice 
+                  value={$songStore.key?.mode || 'major'} 
+                  options={modes} 
+                  on:change={(e) => {
+                    if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
+                    $songStore.key.mode = e.detail;
+                    $songStore = $songStore;
+                  }}
+                  width="80px" 
+                />
+                <Display 
+                  value="{$songStore.meter?.numerator || 4}/{$songStore.meter?.denominator || 4}" 
+                  label="METER"
+                  on:change={(e) => {
+                    const [n, d] = e.detail.split('/');
+                    $songStore.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
+                    $songStore = $songStore;
+                  }}
+                  width="60px" 
+                />
+              </div>
             </div>
           </div>
         </RackUnit>
@@ -215,35 +219,39 @@
           >
             <div class="row">
               <div class="grouped-box">
-                <span class="box-label">KEY</span>
-                <Choice 
-                  value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic || 'C'} 
-                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'key') === 'song'}
-                  options={tonics}
-                  on:change={(e) => {
-                    if (!currentPart.key) currentPart.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
-                    currentPart.key.tonic = e.detail;
-                    $songStore = $songStore;
-                  }}
-                  width="50px" 
-                />
-                <Choice 
-                  value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode || 'major'} 
-                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'key') === 'song'}
-                  options={modes}
-                  on:change={(e) => {
-                    if (!currentPart.key) currentPart.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
-                    currentPart.key.mode = e.detail;
-                    $songStore = $songStore;
-                  }}
-                  width="100px" 
-                />
-              </div>
+                <span class="box-label">OVERRIDES</span>
+                
+                <div style="display: flex; gap: 5px; align-items: flex-end; margin: 5px;">
+                  <div style="display: flex; flex-direction: column; align-items: center;">
+                    <span class="inner-label">KEY</span>
+                    <Choice 
+                      value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic || 'C'} 
+                      inherited={getParamLevel($songStore, selectedPartIndex, 0, 'key') === 'song'}
+                      options={tonics}
+                      on:change={(e) => {
+                        if (!currentPart.key) currentPart.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
+                        currentPart.key.tonic = e.detail;
+                        $songStore = $songStore;
+                      }}
+                      width="50px" 
+                    />
+                  </div>
+                  <Choice 
+                    value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode || 'major'} 
+                    inherited={getParamLevel($songStore, selectedPartIndex, 0, 'key') === 'song'}
+                    options={modes}
+                    on:change={(e) => {
+                      if (!currentPart.key) currentPart.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
+                      currentPart.key.mode = e.detail;
+                      $songStore = $songStore;
+                    }}
+                    width="100px" 
+                  />
+                </div>
 
-              <div class="grouped-box">
-                <span class="box-label">METER</span>
                 <Display 
                   value="{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.numerator || 4}/{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.denominator || 4}" 
+                  label="METER"
                   inherited={getParamLevel($songStore, selectedPartIndex, 0, 'meter') === 'song'}
                   on:change={(e) => {
                     const [n, d] = e.detail.split('/');
@@ -501,6 +509,23 @@
     gap: 5px;
     align-items: flex-end;
     padding-top: 15px;
+  }
+
+  .inner-group {
+    display: flex;
+    flex-direction: column;
+    margin: 5px;
+  }
+
+  .inner-label {
+    font-size: 11px;
+    color: #eee;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 900;
+    text-shadow: 0 1px 2px rgba(0,0,0,1);
+    text-align: center;
   }
 
   .box-label {

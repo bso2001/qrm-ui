@@ -75,5 +75,6 @@
     letter-spacing: 1.5px;
     font-weight: 900;
     text-shadow: 0 1px 2px rgba(0,0,0,1);
+    text-align: center;
   }
 </style>
