@@ -5,6 +5,8 @@
   export let subModule: boolean = false;
   export let showNav: boolean = false;
   export let navLabel: string = '';
+  export let showInsert: boolean = false;
+  export let showDelete: boolean = false;
 
   const dispatch = createEventDispatcher();
 </script>
@@ -26,6 +28,19 @@
         {#if navLabel}
           <span class="nav-label">{navLabel}</span>
         {/if}
+        
+        <div class="action-controls">
+          {#if showInsert}
+            <div class="insert-group">
+              <button class="action-btn insert-btn" on:click={() => dispatch('insert', 'start')} title="Insert at Start">&lt;</button>
+              <button class="action-btn insert-btn" on:click={() => dispatch('insert', 'current')} title="Insert at Current Position">^</button>
+              <button class="action-btn insert-btn" on:click={() => dispatch('insert', 'end')} title="Insert at End">&gt;</button>
+            </div>
+          {/if}
+          {#if showDelete}
+            <button class="action-btn delete-btn" on:click={() => dispatch('delete')} title="Delete">×</button>
+          {/if}
+        </div>
       </div>
     </div>
   {/if}
@@ -123,6 +138,56 @@
   .nav-btn:active {
     transform: scale(0.95);
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  .action-controls {
+    display: flex;
+    gap: 8px;
+    margin-left: 10px;
+  }
+
+  .action-btn {
+    width: 22px;
+    height: 22px;
+    background: #111;
+    border: 1px solid #444;
+    color: #888;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.1s;
+    line-height: 1;
+  }
+
+  .insert-group {
+    display: flex;
+    gap: 2px;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 2px;
+  }
+
+  .insert-group .action-btn {
+    border: none;
+    background: transparent;
+    width: 20px;
+    height: 20px;
+  }
+
+  .insert-btn:hover {
+    background: #222;
+    color: #00ff00;
+  }
+
+  .delete-btn:hover {
+    border-color: #ff3333;
+    color: #ff3333;
+    box-shadow: 0 0 10px rgba(255,51,51,0.3);
   }
 
   .content {

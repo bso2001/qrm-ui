@@ -1,16 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { songStore, loadSong, resolveParam, getParamLevel } from './lib/songStore';
-  import RackUnit from './lib/components/RackUnit.svelte';
-  import Knob from './lib/components/Knob.svelte';
-  import Display from './lib/components/Display.svelte';
-  import Switch from './lib/components/Switch.svelte';
-  import Choice from './lib/components/Choice.svelte';
-
-  const tonics = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const modes = ['major', 'minor'];
-  const voiceTypes = ['chordal', 'freeform', 'chords'];
-  const logLevels = ['0', '1', '2', '3'];
+  import { 
+    songStore, loadSong, resolveParam, getParamLevel,
+    addPart, removePart, addVoice, removeVoice 
+  } from './lib/songStore';
+  import MasterSection from './lib/components/MasterSection.svelte';
+  import PartSection from './lib/components/PartSection.svelte';
+  import VoiceSection from './lib/components/VoiceSection.svelte';
 
   const initialSong = {
     "name"      : "Afterglowish",
@@ -96,6 +92,62 @@
     selectedVoiceIndex = (selectedVoiceIndex - 1 + currentPart.voices.length) % currentPart.voices.length;
   }
 
+  function handleInsertPart(event: CustomEvent<string>) {
+    const pos = event.detail;
+    let idx = $songStore.parts.length;
+    if (pos === 'start') idx = 0;
+    else if (pos === 'current') idx = selectedPartIndex;
+    else idx = $songStore.parts.length;
+    
+    $songStore = addPart($songStore, idx);
+    selectedPartIndex = idx;
+    selectedVoiceIndex = 0;
+  }
+
+  function handleRemovePart() {
+    if ($songStore.parts.length <= 1) return;
+    
+    const indexToDelete = selectedPartIndex;
+    
+    // Calculate new index before mutating the store
+    let newIndex = selectedPartIndex;
+    if (selectedPartIndex >= $songStore.parts.length - 1) {
+      newIndex = $songStore.parts.length - 2;
+    }
+    
+    selectedPartIndex = newIndex;
+    selectedVoiceIndex = 0;
+    
+    // Now update the store using the captured index
+    $songStore = removePart($songStore, indexToDelete);
+  }
+
+  function handleInsertVoice(event: CustomEvent<string>) {
+    const pos = event.detail;
+    let idx = currentPart.voices.length;
+    if (pos === 'start') idx = 0;
+    else if (pos === 'current') idx = selectedVoiceIndex;
+    else idx = currentPart.voices.length;
+    
+    $songStore = addVoice($songStore, selectedPartIndex, idx);
+    selectedVoiceIndex = idx;
+  }
+
+  function handleRemoveVoice() {
+    if (currentPart.voices.length <= 1) return;
+    
+    const indexToDelete = selectedVoiceIndex;
+    
+    let newIndex = selectedVoiceIndex;
+    if (selectedVoiceIndex >= currentPart.voices.length - 1) {
+      newIndex = currentPart.voices.length - 2;
+    }
+    
+    selectedVoiceIndex = newIndex;
+    
+    $songStore = removeVoice($songStore, selectedPartIndex, indexToDelete);
+  }
+
   onMount(() => {
     loadSong(initialSong);
   });
@@ -144,245 +196,28 @@
 
     {#if $songStore}
       <div class="rack">
-        <!-- Master Section -->
-        <RackUnit title={loadedFilename || "GLOBAL DEFAULTS"}>
-          <div class="row" style="gap: 15px; align-items: flex-end;">
-            <div style="display: flex; flex-direction: column; gap: 0;">
-              <Display bind:value={$songStore.name} label="Title" width="250px" fontSize="12px" />
-              <Display bind:value={$songStore.outputDir} label="Output" width="250px" color="#ffaa00" fontSize="10px" />
-            </div>
-            
-            <Knob bind:value={$songStore.tempo} min={40} max={240} label="Tempo" size={25} />
-            
-            <div class="grouped-box" style="margin-top: 0; padding-top: 10px;">
-              <span class="box-label">LOG</span>
-              <Choice 
-                value={$songStore.loglevel?.toString() || '0'} 
-                options={logLevels}
-                on:change={(e) => {
-                  $songStore.loglevel = parseInt(e.detail);
-                  $songStore = $songStore;
-                }}
-                width="40px" 
-              />
-            </div>
+        
+        <MasterSection {loadedFilename} />
 
-            <div class="grouped-box" style="margin-top: 0; padding-top: 10px;">
-              <span class="box-label">DEFAULT</span>
-              <div style="display: flex; gap: 5px; align-items: flex-end;">
-                <div style="display: flex; flex-direction: column; align-items: center;">
-                  <span class="inner-label" style="font-size: 9px;">KEY</span>
-                  <Choice 
-                    value={$songStore.key?.tonic || 'C'} 
-                    options={tonics} 
-                    on:change={(e) => {
-                      if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
-                      $songStore.key.tonic = e.detail;
-                      $songStore = $songStore;
-                    }}
-                    width="45px" 
-                  />
-                </div>
-                <Choice 
-                  value={$songStore.key?.mode || 'major'} 
-                  options={modes} 
-                  on:change={(e) => {
-                    if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
-                    $songStore.key.mode = e.detail;
-                    $songStore = $songStore;
-                  }}
-                  width="80px" 
-                />
-                <Display 
-                  value="{$songStore.meter?.numerator || 4}/{$songStore.meter?.denominator || 4}" 
-                  label="METER"
-                  on:change={(e) => {
-                    const [n, d] = e.detail.split('/');
-                    $songStore.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
-                    $songStore = $songStore;
-                  }}
-                  width="60px" 
-                />
-              </div>
-            </div>
-          </div>
-        </RackUnit>
-
-        <!-- Current Part -->
         {#if currentPart}
-          <RackUnit 
-            title="Part: {currentPart.name || 'Part ' + (selectedPartIndex + 1)}" 
-            showNav={true} 
-            navLabel="PART {selectedPartIndex + 1} OF {$songStore.parts.length}"
+          <PartSection 
+            {selectedPartIndex}
             on:next={nextPart}
             on:prev={prevPart}
+            on:insert={handleInsertPart}
+            on:delete={handleRemovePart}
           >
-            <div class="row">
-              <div class="grouped-box">
-                <span class="box-label">OVERRIDES</span>
-                
-                <div style="display: flex; gap: 5px; align-items: flex-end; margin: 5px;">
-                  <div style="display: flex; flex-direction: column; align-items: center;">
-                    <span class="inner-label">KEY</span>
-                    <Choice 
-                      value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.tonic || 'C'} 
-                      inherited={getParamLevel($songStore, selectedPartIndex, 0, 'key') === 'song'}
-                      options={tonics}
-                      on:change={(e) => {
-                        if (!currentPart.key) currentPart.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
-                        currentPart.key.tonic = e.detail;
-                        $songStore = $songStore;
-                      }}
-                      width="50px" 
-                    />
-                  </div>
-                  <Choice 
-                    value={resolveParam($songStore, selectedPartIndex, 0, 'key')?.mode || 'major'} 
-                    inherited={getParamLevel($songStore, selectedPartIndex, 0, 'key') === 'song'}
-                    options={modes}
-                    on:change={(e) => {
-                      if (!currentPart.key) currentPart.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
-                      currentPart.key.mode = e.detail;
-                      $songStore = $songStore;
-                    }}
-                    width="100px" 
-                  />
-                </div>
-
-                <Display 
-                  value="{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.numerator || 4}/{resolveParam($songStore, selectedPartIndex, 0, 'meter')?.denominator || 4}" 
-                  label="METER"
-                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'meter') === 'song'}
-                  on:change={(e) => {
-                    const [n, d] = e.detail.split('/');
-                    currentPart.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
-                    $songStore = $songStore;
-                  }}
-                  width="75px" 
-                />
-              </div>
-              
-              <Knob 
-                value={resolveParam($songStore, selectedPartIndex, 0, 'nMeasures') || 1} 
-                inherited={getParamLevel($songStore, selectedPartIndex, 0, 'nMeasures') === 'song'}
-                on:change={(e) => {
-                  currentPart.nMeasures = e.detail;
-                  $songStore = $songStore;
-                }}
-                min={1} max={128} label="Measures" 
-              />
-
-              <div class="velocity-box">
-                <Knob 
-                  value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[0] || 60} 
-                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'velocity') === 'song'}
-                  on:change={(e) => {
-                    if (!currentPart.velocity) currentPart.velocity = [...($songStore.velocity || [60, 80])];
-                    currentPart.velocity[0] = e.detail;
-                    $songStore = $songStore;
-                  }}
-                  min={0} max={127} label="Min" size={25}
-                />
-                <Knob 
-                  value={resolveParam($songStore, selectedPartIndex, 0, 'velocity')?.[1] || 80} 
-                  inherited={getParamLevel($songStore, selectedPartIndex, 0, 'velocity') === 'song'}
-                  on:change={(e) => {
-                    if (!currentPart.velocity) currentPart.velocity = [...($songStore.velocity || [60, 80])];
-                    currentPart.velocity[1] = e.detail;
-                    $songStore = $songStore;
-                  }}
-                  min={0} max={127} label="Max" size={25}
-                />
-              </div>
-
-              <Display 
-                value={resolveParam($songStore, selectedPartIndex, 0, 'duration') || '1/4'} 
-                inherited={getParamLevel($songStore, selectedPartIndex, 0, 'duration') === 'song'}
-                on:change={(e) => {
-                  if (e.detail.startsWith('[')) {
-                    try { currentPart.duration = JSON.parse(e.detail); } catch(err) { currentPart.duration = e.detail; }
-                  } else {
-                    currentPart.duration = e.detail;
-                  }
-                  $songStore = $songStore;
-                }}
-                label="Duration" width="80px" color="#00ffff" 
-              />
-            </div>
-
-            <!-- Chords Display -->
-            {#if resolveParam($songStore, selectedPartIndex, 0, 'chords')}
-              <div class="chords-row" class:inherited={getParamLevel($songStore, selectedPartIndex, 0, 'chords') === 'song'}>
-                <span class="chords-label">CHORDS:</span>
-                <div class="chord-sequence">
-                  {#each resolveParam($songStore, selectedPartIndex, 0, 'chords') as chord}
-                    <span class="chord-tag">{chord}</span>
-                  {/each}
-                </div>
-              </div>
-            {/if}
-
-            <!-- Current Voice -->
             {#if currentVoice}
-              <RackUnit 
-                subModule={true} 
-                title="Voice: {currentVoice.file || 'Internal'}"
-                showNav={true}
-                navLabel="VOICE {selectedVoiceIndex + 1} OF {currentPart.voices?.length || 1}"
+              <VoiceSection 
+                {selectedPartIndex}
+                {selectedVoiceIndex}
                 on:next={nextVoice}
                 on:prev={prevVoice}
-              >
-                <div class="row" style="justify-content: center;">
-                  <div class="grouped-box">
-                    <span class="box-label">TYPE</span>
-                    <Choice 
-                      value={currentVoice.type || 'chordal'} 
-                      options={voiceTypes}
-                      on:change={(e) => {
-                        currentVoice.type = e.detail;
-                        $songStore = $songStore;
-                      }}
-                      width="100px" 
-                    />
-                  </div>
-                  <Display bind:value={currentVoice.file} label="MIDI File" width="200px" color="#aaa" />
-                  <Knob 
-                    value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') || 0} 
-                    inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'restPct') !== 'voice'}
-                    on:change={(e) => {
-                      currentVoice.restPct = e.detail;
-                      $songStore = $songStore;
-                    }}
-                    min={0} max={1} label="Rest %" 
-                  />
-                  
-                  {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== undefined}
-                    <Knob 
-                      value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct')} 
-                      inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'tonicPct') !== 'voice'}
-                      on:change={(e) => {
-                        currentVoice.tonicPct = e.detail;
-                        $songStore = $songStore;
-                      }}
-                      min={0} max={1} label="Tonic %" 
-                    />
-                  {/if}
-
-                  {#if resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct') !== undefined}
-                    <Knob 
-                      value={resolveParam($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct')} 
-                      inherited={getParamLevel($songStore, selectedPartIndex, selectedVoiceIndex, 'inversionPct') !== 'voice'}
-                      on:change={(e) => {
-                        currentVoice.inversionPct = e.detail;
-                        $songStore = $songStore;
-                      }}
-                      min={0} max={1} label="Inv %" 
-                    />
-                  {/if}
-                </div>
-              </RackUnit>
+                on:insert={handleInsertVoice}
+                on:delete={handleRemoveVoice}
+              />
             {/if}
-          </RackUnit>
+          </PartSection>
         {/if}
       </div>
     {/if}
@@ -485,108 +320,5 @@
     z-index: -1;
     border-radius: 0 4px 4px 0;
     border-right: 2px solid #333;
-  }
-
-  .row {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .velocity-box, .grouped-box {
-    display: flex;
-    background: rgba(0,0,0,0.2);
-    padding: 5px;
-    border-radius: 4px;
-    border: 1px solid #333;
-    position: relative;
-    margin-top: 5px;
-  }
-
-  .grouped-box {
-    gap: 5px;
-    align-items: flex-end;
-    padding-top: 15px;
-  }
-
-  .inner-group {
-    display: flex;
-    flex-direction: column;
-    margin: 5px;
-  }
-
-  .inner-label {
-    font-size: 11px;
-    color: #eee;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 900;
-    text-shadow: 0 1px 2px rgba(0,0,0,1);
-    text-align: center;
-  }
-
-  .box-label {
-    position: absolute;
-    top: -8px;
-    left: 10px;
-    font-size: 9px;
-    color: var(--accent);
-    background: #222;
-    padding: 0 5px;
-    font-weight: bold;
-    letter-spacing: 1.2px;
-    border: 1px solid #444;
-    border-radius: 4px;
-  }
-
-  .chords-row {
-    margin-top: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    background: rgba(0,0,0,0.3);
-    padding: 10px;
-    border-radius: 2px;
-    border: 1px solid #222;
-    transition: opacity 0.2s;
-  }
-
-  .chords-row.inherited {
-    opacity: 0.4;
-  }
-
-  .chords-row.inherited:hover {
-    opacity: 0.7;
-  }
-
-  .chords-label {
-    font-size: 11px;
-    color: #bbb;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 900;
-    text-shadow: 0 1px 2px rgba(0,0,0,1);
-    min-width: 80px;
-  }
-
-  .chord-sequence {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-  }
-
-  .chord-tag {
-    background: #000;
-    color: var(--accent);
-    border: 1px solid #333;
-    padding: 2px 8px;
-    font-size: 14px;
-    border-radius: 2px;
-    text-shadow: 0 0 5px var(--accent);
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
   }
 </style>
