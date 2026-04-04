@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { songStore } from '../songStore';
 
-  export let selectedArrangerIndex: number;
+  export let selectedTimelineIndex: number;
 
   const dispatch = createEventDispatcher();
 
@@ -11,7 +11,7 @@
   }
 </script>
 
-<div class="arranger-sidebar">
+<div class="timeline-sidebar">
   <div class="sidebar-header">
     <span class="label">Timeline</span>
     <div class="header-actions">
@@ -20,17 +20,17 @@
   </div>
   
   <div class="sections-list">
-    {#each $songStore?.arranger || [] as section, i}
+    {#each $songStore?.timeline || [] as section, i}
       <div 
         class="section-item" 
-        class:active={selectedArrangerIndex === i}
+        class:active={selectedTimelineIndex === i}
         on:click={() => select(i)}
       >
         <div class="section-info">
           <span class="section-name">{section.name || 'Untitled'}</span>
           <span class="section-measures">{section.nMeasures} {section.nMeasures === 1 ? 'bar' : 'bars'}</span>
         </div>
-        {#if $songStore.arranger.length > 1}
+        {#if $songStore.timeline.length > 1}
             <button class="delete-btn" on:click|stopPropagation={() => dispatch('delete', i)}>×</button>
         {/if}
       </div>
@@ -39,7 +39,7 @@
 </div>
 
 <style>
-  .arranger-sidebar {
+  .timeline-sidebar {
     display: flex;
     flex-direction: column;
     background: var(--bg-card);

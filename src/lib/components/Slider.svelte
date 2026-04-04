@@ -7,6 +7,7 @@
   export let step: number = 1;
   export let label: string = '';
   export let inherited: boolean = false;
+  export let compact: boolean = false;
 
   const dispatch = createEventDispatcher();
 
@@ -19,7 +20,7 @@
   }
 </script>
 
-<div class="slider-container" class:inherited>
+<div class="slider-container" class:inherited class:compact>
   {#if label}
     <div class="header">
       <span class="label">{label}</span>
@@ -49,6 +50,11 @@
     transition: opacity 0.2s;
   }
 
+  .slider-container.compact {
+    margin: 4px 6px;
+    min-width: 90px;
+  }
+
   .slider-container.inherited {
     opacity: 0.5;
   }
@@ -64,12 +70,20 @@
     margin-bottom: 8px;
   }
 
+  .compact .header {
+    margin-bottom: 4px;
+  }
+
   .label {
     font-size: 0.75rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 600;
+  }
+
+  .compact .label {
+    font-size: 0.65rem;
   }
 
   .value {
@@ -80,6 +94,11 @@
     padding: 2px 6px;
     border-radius: 4px;
     border: 1px solid var(--border-sub);
+  }
+
+  .compact .value {
+    font-size: 0.75rem;
+    padding: 1px 4px;
   }
 
   .slider {
@@ -109,6 +128,11 @@
     transition: transform 0.1s;
   }
 
+  .compact .slider::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+  }
+
   .slider::-webkit-slider-thumb:hover {
     transform: scale(1.15);
   }
@@ -122,6 +146,11 @@
     box-shadow: var(--shadow-sm);
     border: none;
     transition: transform 0.1s;
+  }
+
+  .compact .slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
   }
 
   .slider::-moz-range-thumb:hover {

@@ -9,7 +9,7 @@
   export let loadedFilename = "";
 </script>
 
-<Card title={loadedFilename || "GLOBAL DEFAULTS"}>
+<Card title={loadedFilename || "SONG INFO"}>
   <div class="row" style="gap: 15px; align-items: flex-end;">
     <div style="display: flex; flex-direction: column; gap: 0;">
       <Display bind:value={$songStore.name} label="Title" width="250px" fontSize="12px" />

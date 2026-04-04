@@ -6,22 +6,21 @@
   import Choice from './Choice.svelte';
   import { tonics, modes } from '../constants';
 
-  export let selectedArrangerIndex: number;
+  export let selectedTimelineIndex: number;
 
-  $: currentSection = $songStore?.arranger?.[selectedArrangerIndex] || {};
+  $: currentSection = $songStore?.timeline?.[selectedTimelineIndex] || {};
 
   const dispatch = createEventDispatcher();
 </script>
 
-<div class="arranger-editor">
+<div class="timeline-editor">
   <div class="editor-header">
     <div class="title-group">
-        <h2 class="section-title">Timeline Editor</h2>
-        <span class="nav-label">Editing Section {selectedArrangerIndex + 1}</span>
+        <h2 class="section-title">EDITING: {currentSection.name || 'Untitled'}</h2>
     </div>
     
     <div class="header-controls">
-        <Display bind:value={currentSection.name} label="Section Name" width="200px" />
+        <Display bind:value={currentSection.name} label="Rename Section" width="180px" />
         <Display bind:value={currentSection.nMeasures} label="Bars" width="60px" />
     </div>
   </div>
@@ -88,7 +87,7 @@
 </div>
 
 <style>
-  .arranger-editor {
+  .timeline-editor {
     background: var(--bg-card);
     border: 1px solid var(--border-main);
     border-radius: 8px;

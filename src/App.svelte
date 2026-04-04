@@ -2,13 +2,12 @@
   import { onMount } from 'svelte';
   import { 
     songStore, loadSong, resolveParam, getParamLevel,
-    addArrangerSection, removeArrangerSection, addTrack, removeTrack 
+    addTimelineSection, removeTimelineSection, addPlayer, removePlayer 
   } from './lib/songStore';
   import MasterSection from './lib/components/MasterSection.svelte';
-  import ArrangerSidebar from './lib/components/ArrangerSidebar.svelte';
-  import ArrangerEditor from './lib/components/ArrangerEditor.svelte';
-  import TrackSection from './lib/components/TrackSection.svelte';
-  import ClipSection from './lib/components/ClipSection.svelte';
+  import TimelineSidebar from './lib/components/TimelineSidebar.svelte';
+  import TimelineEditor from './lib/components/TimelineEditor.svelte';
+  import PerformerSection from './lib/components/PerformerSection.svelte';
   import Choice from './lib/components/Choice.svelte';
 
   let currentTheme = 'light';
@@ -69,11 +68,11 @@
 
   function validateIndices() {
     if (!$songStore) return;
-    if ($songStore.arranger && selectedArrangerIndex >= $songStore.arranger.length) {
-      selectedArrangerIndex = Math.max(0, $songStore.arranger.length - 1);
+    if ($songStore.timeline && selectedTimelineIndex >= $songStore.timeline.length) {
+      selectedTimelineIndex = Math.max(0, $songStore.timeline.length - 1);
     }
-    if ($songStore.tracks && selectedTrackIndex >= $songStore.tracks.length) {
-      selectedTrackIndex = Math.max(0, $songStore.tracks.length - 1);
+    if ($songStore.performers && selectedPerformerIndex >= $songStore.performers.length) {
+      selectedPerformerIndex = Math.max(0, $songStore.performers.length - 1);
     }
   }
 
@@ -106,7 +105,7 @@
     "loglevel"  : 0,
     "key"       : { "tonic": "G", "mode": "major" },
     "meter"     : { "numerator": 4, "denominator": 4 },
-    "arranger"  : [
+    "timeline"  : [
       {
         "name"      : "intro",
         "nMeasures" : 1,
@@ -119,22 +118,20 @@
         "chords"    : [ "D", "Dmaj7", "G", "Gm", "D", "Dmaj7", "G", "A" ]
       }
     ],
-    "tracks" : [
+    "performers" : [
       {
         "name"     : "Bass",
         "type"     : "chordal",
         "velocity" : [ 70, 80 ],
         "duration" : "1/2",
-        "clips"    : [
+        "performances" : [
           {
             "file"     : "afglo-bass-1.mid",
-            "range"    : [ "E1", "E3" ],
             "restPct"  : 0,
             "tonicPct" : 0.75
           },
           {
             "file"     : "afglo-bass-2.mid",
-            "range"    : [ "E1", "E3" ],
             "restPct"  : 0,
             "tonicPct" : 0.75,
             "velocity" : [ 80, 90 ]
@@ -145,17 +142,15 @@
         "name"     : "Chords",
         "type"     : "chords",
         "duration" : "1/2",
-        "clips"    : [
+        "performances" : [
           {
             "file"         : "afglo-chords-1.mid",
             "inversionPct" : 0.25,
-            "range"        : [ "C3", "C5" ],
             "restPct"      : 0
           },
           {
             "file"         : "afglo-chords-2.mid",
             "inversionPct" : 0.5,
-            "range"        : [ "C3", "C5" ],
             "restPct"      : 0,
             "velocity"     : [ 80, 90 ]
           }
@@ -164,44 +159,44 @@
     ]
   };
 
-  let selectedArrangerIndex = 0;
-  let selectedTrackIndex = 0;
+  let selectedTimelineIndex = 0;
+  let selectedPerformerIndex = 0;
   let loadedFilename = "";
 
-  function handleInsertArranger(event: CustomEvent<string>) {
+  function handleInsertTimeline(event: CustomEvent<string>) {
     const pos = event.detail;
-    let idx = $songStore.arranger.length;
+    let idx = $songStore.timeline.length;
     if (pos === 'start') idx = 0;
-    else if (pos === 'current') idx = selectedArrangerIndex;
+    else if (pos === 'current') idx = selectedTimelineIndex;
     
-    $songStore = addArrangerSection($songStore, idx);
-    selectedArrangerIndex = idx;
+    $songStore = addTimelineSection($songStore, idx);
+    selectedTimelineIndex = idx;
   }
 
-  function handleRemoveArranger(index: number) {
-    if ($songStore.arranger.length <= 1) return;
-    $songStore = removeArrangerSection($songStore, index);
+  function handleRemoveTimeline(index: number) {
+    if ($songStore.timeline.length <= 1) return;
+    $songStore = removeTimelineSection($songStore, index);
     validateIndices();
   }
 
-  function handleInsertTrack(event: CustomEvent<string>) {
+  function handleInsertPerformer(event: CustomEvent<string>) {
     const pos = event.detail;
-    let idx = $songStore.tracks.length;
+    let idx = $songStore.performers.length;
     if (pos === 'start') idx = 0;
-    else if (pos === 'current') idx = selectedTrackIndex;
+    else if (pos === 'current') idx = selectedPerformerIndex;
     
-    $songStore = addTrack($songStore, idx);
-    selectedTrackIndex = idx;
+    $songStore = addPlayer($songStore, idx);
+    selectedPerformerIndex = idx;
   }
 
-  function handleRemoveTrack(index: number) {
-    if ($songStore.tracks.length <= 1) return;
-    $songStore = removeTrack($songStore, index);
+  function handleRemovePerformer(index: number) {
+    if ($songStore.performers.length <= 1) return;
+    $songStore = removePlayer($songStore, index);
     validateIndices();
   }
 
-  function handleAddTrackAtEnd() {
-    handleInsertTrack({ detail: 'end' } as CustomEvent<string>);
+  function handleAddPerformerAtEnd() {
+    handleInsertPerformer({ detail: 'end' } as CustomEvent<string>);
   }
 
   onMount(() => {
@@ -209,7 +204,7 @@
     if (saved) {
       try {
         const json = JSON.parse(saved);
-        if (json.arranger && json.tracks) {
+        if (json.timeline && json.performers) {
           loadSong(json);
         } else {
           loadSong(initialSong);
@@ -232,8 +227,8 @@
         try {
           const json = JSON.parse(e.target?.result as string);
           loadSong(json);
-          selectedArrangerIndex = 0;
-          selectedTrackIndex = 0;
+          selectedTimelineIndex = 0;
+          selectedPerformerIndex = 0;
         } catch (err) {
           alert("Error parsing JSON file");
         } finally {
@@ -260,7 +255,7 @@
 <main>
   <div class="app-container">
     <div class="sidebar">
-      <div class="logo">QRM<br>RACK</div>
+      <div class="logo">QRM</div>
       <label class="btn sidebar-btn">
         LOAD
         <input type="file" accept=".json" on:change={handleFileLoad} hidden />
@@ -289,33 +284,28 @@
         <MasterSection {loadedFilename} />
 
         <div class="workspace">
-          <ArrangerSidebar 
-            {selectedArrangerIndex}
-            on:select={(e) => selectedArrangerIndex = e.detail}
-            on:insert={handleInsertArranger}
-            on:delete={(e) => handleRemoveArranger(e.detail)}
+          <TimelineSidebar 
+            {selectedTimelineIndex}
+            on:select={(e) => selectedTimelineIndex = e.detail}
+            on:insert={handleInsertTimeline}
+            on:delete={(e) => handleRemoveTimeline(e.detail)}
           />
 
           <div class="stage">
-            <ArrangerEditor {selectedArrangerIndex} />
+            <TimelineEditor {selectedTimelineIndex} />
 
-            <div class="tracks-list">
-              <div class="tracks-header">
-                <h2 class="section-title">Instruments</h2>
-                <button class="btn add-track-btn" on:click={handleAddTrackAtEnd}>+ Add Track</button>
+            <div class="performers-list">
+              <div class="list-header">
+                <h2 class="section-title">Ensemble</h2>
+                <button class="btn add-btn" on:click={handleAddPerformerAtEnd}>+ Add Performer</button>
               </div>
 
-              {#each $songStore.tracks as track, i}
-                <TrackSection 
-                  selectedTrackIndex={i}
-                  on:insert={handleInsertTrack}
-                  on:delete={() => handleRemoveTrack(i)}
-                >
-                  <ClipSection 
-                    {selectedArrangerIndex}
-                    selectedTrackIndex={i}
-                  />
-                </TrackSection>
+              {#each $songStore.performers as performer, i}
+                <PerformerSection 
+                  selectedPerformerIndex={i}
+                  {selectedTimelineIndex}
+                  on:delete={() => handleRemovePerformer(i)}
+                />
               {/each}
             </div>
           </div>
@@ -394,6 +384,9 @@
     border-radius: 8px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-main);
+    height: calc(100vh - 80px);
+    position: sticky;
+    top: 40px;
   }
 
   .logo {
@@ -459,13 +452,13 @@
     min-width: 0;
   }
 
-  .tracks-list {
+  .performers-list {
     display: flex;
     flex-direction: column;
     gap: 15px;
   }
 
-  .tracks-header {
+  .list-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -480,7 +473,7 @@
     margin: 0;
   }
 
-  .add-track-btn {
+  .add-btn {
     padding: 6px 12px;
     font-size: 0.75rem;
   }

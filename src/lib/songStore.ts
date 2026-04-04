@@ -7,115 +7,116 @@ export function loadSong(json: any) {
 }
 
 /**
- * Resolves a parameter value by looking at the clip level, 
- * then the track level, then the arranger section level, then the root (song).
+ * Resolves a parameter value by looking at the performance level (local), 
+ * then the player level (default), then the timeline section level (global structure), then the root (song).
  */
-export function resolveParam(song: any, arrangerIndex: number, trackIndex: number, key: string) {
-  const arrangerSection = song?.arranger?.[arrangerIndex];
-  const track = song?.tracks?.[trackIndex];
-  const clip = track?.clips?.[arrangerIndex]; // clips map 1:1 with arranger sections
+export function resolveParam(song: any, timelineIndex: number, playerIndex: number, key: string) {
+  const section = song?.timeline?.[timelineIndex];
+  const player = song?.players?.[playerIndex];
+  const performance = player?.performances?.[timelineIndex]; // performances map 1:1 with timeline sections
 
-  // Musical structure params should resolve from Arranger before Track
+  // Musical structure params should resolve from Timeline before Player
   if (['key', 'meter', 'chords', 'nMeasures'].includes(key)) {
-    if (clip && clip[key] !== undefined) return clip[key];
-    if (arrangerSection && arrangerSection[key] !== undefined) return arrangerSection[key];
-    if (track && track[key] !== undefined) return track[key];
+    if (performance && performance[key] !== undefined) return performance[key];
+    if (section && section[key] !== undefined) return section[key];
+    if (player && player[key] !== undefined) return player[key];
     if (song && song[key] !== undefined) return song[key];
     return undefined;
   }
 
-  // Instrument/Performance params should resolve from Track before Arranger
-  if (clip && clip[key] !== undefined) return clip[key];
-  if (track && track[key] !== undefined) return track[key];
-  if (arrangerSection && arrangerSection[key] !== undefined) return arrangerSection[key];
+  // Player/Performance params should resolve from Player before Timeline
+  if (performance && performance[key] !== undefined) return performance[key];
+  if (player && player[key] !== undefined) return player[key];
+  if (section && section[key] !== undefined) return section[key];
   if (song && song[key] !== undefined) return song[key];
 
   return undefined;
 }
 
 /**
- * Returns 'clip', 'track', 'arranger', or 'song' depending on where the param is actually defined.
+ * Returns 'performance', 'player', 'timeline', or 'song' depending on where the param is actually defined.
  */
-export function getParamLevel(song: any, arrangerIndex: number, trackIndex: number, key: string) {
-  const arrangerSection = song?.arranger?.[arrangerIndex];
-  const track = song?.tracks?.[trackIndex];
-  const clip = track?.clips?.[arrangerIndex];
+export function getParamLevel(song: any, timelineIndex: number, playerIndex: number, key: string) {
+  const section = song?.timeline?.[timelineIndex];
+  const player = song?.players?.[playerIndex];
+  const performance = player?.performances?.[timelineIndex];
 
   if (['key', 'meter', 'chords', 'nMeasures'].includes(key)) {
-    if (clip && clip[key] !== undefined) return 'clip';
-    if (arrangerSection && arrangerSection[key] !== undefined) return 'arranger';
-    if (track && track[key] !== undefined) return 'track';
+    if (performance && performance[key] !== undefined) return 'performance';
+    if (section && section[key] !== undefined) return 'timeline';
+    if (player && player[key] !== undefined) return 'player';
     if (song && song[key] !== undefined) return 'song';
     return 'none';
   }
 
-  if (clip && clip[key] !== undefined) return 'clip';
-  if (track && track[key] !== undefined) return 'track';
-  if (arrangerSection && arrangerSection[key] !== undefined) return 'arranger';
+  if (performance && performance[key] !== undefined) return 'performance';
+  if (player && player[key] !== undefined) return 'player';
+  if (section && section[key] !== undefined) return 'timeline';
   if (song && song[key] !== undefined) return 'song';
   return 'none';
 }
 
-export function addArrangerSection(song: any, index?: number) {
+export function addTimelineSection(song: any, index?: number) {
   const newSection = {
     name: "New Section",
     nMeasures: 4
   };
   
-  const arranger = song.arranger ? [...song.arranger] : [];
-  let insertIdx = index !== undefined ? index : arranger.length;
-  arranger.splice(insertIdx, 0, newSection);
+  const timeline = song.timeline ? [...song.timeline] : [];
+  let insertIdx = index !== undefined ? index : timeline.length;
+  timeline.splice(insertIdx, 0, newSection);
   
-  // Keep all tracks synced with the new timeline section
-  const tracks = song.tracks ? song.tracks.map((t: any) => {
-    const clips = t.clips ? [...t.clips] : [];
-    clips.splice(insertIdx, 0, {}); // Insert empty clip
-    return { ...t, clips };
+  // Keep all players synced with the new timeline section
+  const players = song.players ? song.players.map((p: any) => {
+    const performances = p.performances ? [...p.performances] : [];
+    performances.splice(insertIdx, 0, {}); // Insert empty performance
+    return { ...p, performances };
   }) : [];
 
-  return { ...song, arranger, tracks };
+  return { ...song, timeline, players };
 }
 
-export function removeArrangerSection(song: any, index: number) {
-  if (song.arranger && song.arranger.length > 1) {
-    const arranger = [...song.arranger];
-    arranger.splice(index, 1);
+export function removeTimelineSection(song: any, index: number) {
+  if (song.timeline && song.timeline.length > 1) {
+    const timeline = [...song.timeline];
+    timeline.splice(index, 1);
     
-    // Remove corresponding clip from all tracks
-    const tracks = song.tracks ? song.tracks.map((t: any) => {
-      const clips = t.clips ? [...t.clips] : [];
-      clips.splice(index, 1);
-      return { ...t, clips };
+    // Remove corresponding performance from all players
+    const players = song.players ? song.players.map((p: any) => {
+      const performances = p.performances ? [...p.performances] : [];
+      performances.splice(index, 1);
+      return { ...p, performances };
     }) : [];
 
-    return { ...song, arranger, tracks };
+    return { ...song, timeline, players };
   }
   return song;
 }
 
-export function addTrack(song: any, index?: number) {
-  const arrangerLen = song.arranger ? song.arranger.length : 1;
-  const newTrack = {
-    name: "New Track",
+export function addPlayer(song: any, index?: number) {
+  const timelineLen = song.timeline ? song.timeline.length : 1;
+  const newPlayer = {
+    name: "New Player",
     type: "chordal",
-    clips: Array(arrangerLen).fill({}) // Fill with empty clips
+    performances: Array(timelineLen).fill({}).map(() => ({})) // Fill with unique empty performance objects
   };
   
-  const tracks = song.tracks ? [...song.tracks] : [];
+  const players = song.players ? [...song.players] : [];
   if (index !== undefined) {
-    tracks.splice(index, 0, newTrack);
+    players.splice(index, 0, newPlayer);
   } else {
-    tracks.push(newTrack);
+    players.push(newPlayer);
   }
-  return { ...song, tracks };
+  return { ...song, players };
 }
 
-export function removeTrack(song: any, index: number) {
-  if (song.tracks && song.tracks.length > 1) {
-    const tracks = [...song.tracks];
-    tracks.splice(index, 1);
-    return { ...song, tracks };
+export function removePlayer(song: any, index: number) {
+  if (song.players && song.players.length > 1) {
+    const players = [...song.players];
+    players.splice(index, 1);
+    return { ...song, players };
   }
   return song;
 }
+
 
