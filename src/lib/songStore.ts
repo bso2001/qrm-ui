@@ -7,91 +7,114 @@ export function loadSong(json: any) {
 }
 
 /**
- * Resolves a parameter value by looking at the current level (voice), 
- * then the parent level (part), then the root (song).
+ * Resolves a parameter value by looking at the clip level, 
+ * then the track level, then the arranger section level, then the root (song).
  */
-export function resolveParam(song: any, partIndex: number, voiceIndex: number, key: string) {
-  const part = song?.parts?.[partIndex];
-  const voice = part?.voices?.[voiceIndex];
+export function resolveParam(song: any, arrangerIndex: number, trackIndex: number, key: string) {
+  const arrangerSection = song?.arranger?.[arrangerIndex];
+  const track = song?.tracks?.[trackIndex];
+  const clip = track?.clips?.[arrangerIndex]; // clips map 1:1 with arranger sections
 
-  if (voice && voice[key] !== undefined) return voice[key];
-  if (part && part[key] !== undefined) return part[key];
+  // Musical structure params should resolve from Arranger before Track
+  if (['key', 'meter', 'chords', 'nMeasures'].includes(key)) {
+    if (clip && clip[key] !== undefined) return clip[key];
+    if (arrangerSection && arrangerSection[key] !== undefined) return arrangerSection[key];
+    if (track && track[key] !== undefined) return track[key];
+    if (song && song[key] !== undefined) return song[key];
+    return undefined;
+  }
+
+  // Instrument/Performance params should resolve from Track before Arranger
+  if (clip && clip[key] !== undefined) return clip[key];
+  if (track && track[key] !== undefined) return track[key];
+  if (arrangerSection && arrangerSection[key] !== undefined) return arrangerSection[key];
   if (song && song[key] !== undefined) return song[key];
 
   return undefined;
 }
 
 /**
- * Returns 'voice', 'part', or 'song' depending on where the param is actually defined.
+ * Returns 'clip', 'track', 'arranger', or 'song' depending on where the param is actually defined.
  */
-export function getParamLevel(song: any, partIndex: number, voiceIndex: number, key: string) {
-  const part = song?.parts?.[partIndex];
-  const voice = part?.voices?.[voiceIndex];
+export function getParamLevel(song: any, arrangerIndex: number, trackIndex: number, key: string) {
+  const arrangerSection = song?.arranger?.[arrangerIndex];
+  const track = song?.tracks?.[trackIndex];
+  const clip = track?.clips?.[arrangerIndex];
 
-  if (voice && voice[key] !== undefined) return 'voice';
-  if (part && part[key] !== undefined) return 'part';
+  if (['key', 'meter', 'chords', 'nMeasures'].includes(key)) {
+    if (clip && clip[key] !== undefined) return 'clip';
+    if (arrangerSection && arrangerSection[key] !== undefined) return 'arranger';
+    if (track && track[key] !== undefined) return 'track';
+    if (song && song[key] !== undefined) return 'song';
+    return 'none';
+  }
+
+  if (clip && clip[key] !== undefined) return 'clip';
+  if (track && track[key] !== undefined) return 'track';
+  if (arrangerSection && arrangerSection[key] !== undefined) return 'arranger';
   if (song && song[key] !== undefined) return 'song';
   return 'none';
 }
 
-export function addPart(song: any, index?: number) {
-  const newPart = {
-    name: "new part",
-    voices: [
-      {
-        type: "chordal",
-        restPct: 0.5
-      }
-    ]
+export function addArrangerSection(song: any, index?: number) {
+  const newSection = {
+    name: "New Section",
+    nMeasures: 4
   };
-  const parts = song.parts ? [...song.parts] : [];
-  if (index !== undefined) {
-    parts.splice(index, 0, newPart);
-  } else {
-    parts.push(newPart);
-  }
-  return { ...song, parts };
+  
+  const arranger = song.arranger ? [...song.arranger] : [];
+  let insertIdx = index !== undefined ? index : arranger.length;
+  arranger.splice(insertIdx, 0, newSection);
+  
+  // Keep all tracks synced with the new timeline section
+  const tracks = song.tracks ? song.tracks.map((t: any) => {
+    const clips = t.clips ? [...t.clips] : [];
+    clips.splice(insertIdx, 0, {}); // Insert empty clip
+    return { ...t, clips };
+  }) : [];
+
+  return { ...song, arranger, tracks };
 }
 
-export function removePart(song: any, index: number) {
-  if (song.parts && song.parts.length > 1) {
-    const parts = [...song.parts];
-    parts.splice(index, 1); console.log("spliced!", parts.length);
-    return { ...song, parts };
+export function removeArrangerSection(song: any, index: number) {
+  if (song.arranger && song.arranger.length > 1) {
+    const arranger = [...song.arranger];
+    arranger.splice(index, 1);
+    
+    // Remove corresponding clip from all tracks
+    const tracks = song.tracks ? song.tracks.map((t: any) => {
+      const clips = t.clips ? [...t.clips] : [];
+      clips.splice(index, 1);
+      return { ...t, clips };
+    }) : [];
+
+    return { ...song, arranger, tracks };
   }
   return song;
 }
 
-export function addVoice(song: any, partIndex: number, index?: number) {
-  const parts = [...(song.parts || [])];
-  const part = { ...parts[partIndex] };
-  if (!part) return song;
-  
-  const newVoice = {
+export function addTrack(song: any, index?: number) {
+  const arrangerLen = song.arranger ? song.arranger.length : 1;
+  const newTrack = {
+    name: "New Track",
     type: "chordal",
-    restPct: 0.5
+    clips: Array(arrangerLen).fill({}) // Fill with empty clips
   };
   
-  const voices = part.voices ? [...part.voices] : [];
+  const tracks = song.tracks ? [...song.tracks] : [];
   if (index !== undefined) {
-    voices.splice(index, 0, newVoice);
+    tracks.splice(index, 0, newTrack);
   } else {
-    voices.push(newVoice);
+    tracks.push(newTrack);
   }
-  part.voices = voices;
-  parts[partIndex] = part;
-  return { ...song, parts };
+  return { ...song, tracks };
 }
 
-export function removeVoice(song: any, partIndex: number, voiceIndex: number) {
-  const parts = [...(song.parts || [])];
-  const part = { ...parts[partIndex] };
-  if (part && part.voices && part.voices.length > 1) {
-    const voices = [...part.voices];
-    voices.splice(voiceIndex, 1);
-    part.voices = voices;
-    parts[partIndex] = part;
-    return { ...song, parts };
+export function removeTrack(song: any, index: number) {
+  if (song.tracks && song.tracks.length > 1) {
+    const tracks = [...song.tracks];
+    tracks.splice(index, 1);
+    return { ...song, tracks };
   }
   return song;
 }

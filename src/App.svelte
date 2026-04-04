@@ -2,11 +2,13 @@
   import { onMount } from 'svelte';
   import { 
     songStore, loadSong, resolveParam, getParamLevel,
-    addPart, removePart, addVoice, removeVoice 
+    addArrangerSection, removeArrangerSection, addTrack, removeTrack 
   } from './lib/songStore';
   import MasterSection from './lib/components/MasterSection.svelte';
-  import PartSection from './lib/components/PartSection.svelte';
-  import VoiceSection from './lib/components/VoiceSection.svelte';
+  import ArrangerSidebar from './lib/components/ArrangerSidebar.svelte';
+  import ArrangerEditor from './lib/components/ArrangerEditor.svelte';
+  import TrackSection from './lib/components/TrackSection.svelte';
+  import ClipSection from './lib/components/ClipSection.svelte';
   import Choice from './lib/components/Choice.svelte';
 
   let currentTheme = 'light';
@@ -66,13 +68,12 @@
   }
 
   function validateIndices() {
-    if (!$songStore || !$songStore.parts) return;
-    if (selectedPartIndex >= $songStore.parts.length) {
-      selectedPartIndex = Math.max(0, $songStore.parts.length - 1);
+    if (!$songStore) return;
+    if ($songStore.arranger && selectedArrangerIndex >= $songStore.arranger.length) {
+      selectedArrangerIndex = Math.max(0, $songStore.arranger.length - 1);
     }
-    const currentPart = $songStore.parts[selectedPartIndex];
-    if (currentPart && currentPart.voices && selectedVoiceIndex >= currentPart.voices.length) {
-      selectedVoiceIndex = Math.max(0, currentPart.voices.length - 1);
+    if ($songStore.tracks && selectedTrackIndex >= $songStore.tracks.length) {
+      selectedTrackIndex = Math.max(0, $songStore.tracks.length - 1);
     }
   }
 
@@ -103,146 +104,116 @@
     "outputDir" : "/Users/bert.olsson/Desktop/ag",
     "tempo"     : 60,
     "loglevel"  : 0,
-    "parts" : [
+    "key"       : { "tonic": "G", "mode": "major" },
+    "meter"     : { "numerator": 4, "denominator": 4 },
+    "arranger"  : [
       {
         "name"      : "intro",
-        "key"       : { "tonic" : "G", "mode" : "major" },
-        "meter"     : { "numerator" : 4, "denominator" : 4 },
         "nMeasures" : 1,
-        "chords"    : [ "G", "Gmaj7", "G", "Gmaj7", "G", "C", "A" ],
-        "velocity"  : [ 70, 80 ],
-        "duration"  : "1/2",
-        "voices" : [
+        "chords"    : [ "G", "Gmaj7", "G", "Gmaj7", "G", "C", "A" ]
+      },
+      {
+        "name"      : "outro",
+        "key"       : { "tonic": "D", "mode": "major" },
+        "nMeasures" : 32,
+        "chords"    : [ "D", "Dmaj7", "G", "Gm", "D", "Dmaj7", "G", "A" ]
+      }
+    ],
+    "tracks" : [
+      {
+        "name"     : "Bass",
+        "type"     : "chordal",
+        "velocity" : [ 70, 80 ],
+        "duration" : "1/2",
+        "clips"    : [
           {
             "file"     : "afglo-bass-1.mid",
-            "type"     : "chordal",
             "range"    : [ "E1", "E3" ],
             "restPct"  : 0,
             "tonicPct" : 0.75
           },
           {
-            "file"         : "afglo-chords-1.mid",
-            "type"         : "chords",
-            "inversionPct" : 0.25,
-            "range"        : [ "C3", "C5" ],
-            "restPct"      : 0
+            "file"     : "afglo-bass-2.mid",
+            "range"    : [ "E1", "E3" ],
+            "restPct"  : 0,
+            "tonicPct" : 0.75,
+            "velocity" : [ 80, 90 ]
           }
         ]
       },
       {
-        "name"      : "outro",
-        "key"       : { "tonic" : "D", "mode" : "major" },
-        "meter"     : { "numerator" : 4, "denominator" : 4 },
-        "nMeasures" : 32,
-        "chords"    : [ "D", "Dmaj7", "G", "Gm", "D", "Dmaj7", "G", "A" ],
-        "velocity"  : [ 80, 90 ],
-        "duration"  : "1/2",
-        "voices" : [
+        "name"     : "Chords",
+        "type"     : "chords",
+        "duration" : "1/2",
+        "clips"    : [
           {
-            "file"     : "afglo-bass-2.mid",
-            "type"     : "chordal",
-            "range"    : [ "E1", "E3" ],
-            "restPct"  : 0,
-            "tonicPct" : 0.75
+            "file"         : "afglo-chords-1.mid",
+            "inversionPct" : 0.25,
+            "range"        : [ "C3", "C5" ],
+            "restPct"      : 0
           },
           {
             "file"         : "afglo-chords-2.mid",
-            "type"         : "chords",
             "inversionPct" : 0.5,
             "range"        : [ "C3", "C5" ],
-            "restPct"      : 0
+            "restPct"      : 0,
+            "velocity"     : [ 80, 90 ]
           }
         ]
       }
     ]
   };
 
-  let selectedPartIndex = 0;
-  let selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
+  let selectedArrangerIndex = 0;
+  let selectedTrackIndex = 0;
   let loadedFilename = "";
 
-  $: currentPart = $songStore?.parts?.[selectedPartIndex];
-  $: currentVoice = currentPart?.voices?.[selectedVoiceIndex];
-
-  function nextPart() {
-    selectedPartIndex = (selectedPartIndex + 1) % $songStore.parts.length;
-    selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
-  }
-
-  function prevPart() {
-    selectedPartIndex = (selectedPartIndex - 1 + $songStore.parts.length) % $songStore.parts.length;
-    selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
-  }
-
-  function nextVoice() {
-    selectedVoiceIndex = (selectedVoiceIndex + 1) % currentPart.voices.length;
-  }
-
-  function prevVoice() {
-    selectedVoiceIndex = (selectedVoiceIndex - 1 + currentPart.voices.length) % currentPart.voices.length;
-  }
-
-  function handleInsertPart(event: CustomEvent<string>) {
+  function handleInsertArranger(event: CustomEvent<string>) {
     const pos = event.detail;
-    let idx = $songStore.parts.length;
+    let idx = $songStore.arranger.length;
     if (pos === 'start') idx = 0;
-    else if (pos === 'current') idx = selectedPartIndex;
-    else idx = $songStore.parts.length;
+    else if (pos === 'current') idx = selectedArrangerIndex;
     
-    $songStore = addPart($songStore, idx);
-    selectedPartIndex = idx;
-    selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
+    $songStore = addArrangerSection($songStore, idx);
+    selectedArrangerIndex = idx;
   }
 
-  function handleRemovePart() {
-    if ($songStore.parts.length <= 1) return;
-    
-    const indexToDelete = selectedPartIndex;
-    
-    // Calculate new index before mutating the store
-    let newIndex = selectedPartIndex;
-    if (selectedPartIndex >= $songStore.parts.length - 1) {
-      newIndex = $songStore.parts.length - 2;
-    }
-    
-    selectedPartIndex = newIndex;
-    selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
-    
-    // Now update the store using the captured index
-    $songStore = removePart($songStore, indexToDelete);
+  function handleRemoveArranger(index: number) {
+    if ($songStore.arranger.length <= 1) return;
+    $songStore = removeArrangerSection($songStore, index);
+    validateIndices();
   }
 
-  function handleInsertVoice(event: CustomEvent<string>) {
+  function handleInsertTrack(event: CustomEvent<string>) {
     const pos = event.detail;
-    let idx = currentPart.voices.length;
+    let idx = $songStore.tracks.length;
     if (pos === 'start') idx = 0;
-    else if (pos === 'current') idx = selectedVoiceIndex;
-    else idx = currentPart.voices.length;
+    else if (pos === 'current') idx = selectedTrackIndex;
     
-    $songStore = addVoice($songStore, selectedPartIndex, idx);
-    selectedVoiceIndex = idx;
+    $songStore = addTrack($songStore, idx);
+    selectedTrackIndex = idx;
   }
 
-  function handleRemoveVoice() {
-    if (currentPart.voices.length <= 1) return;
-    
-    const indexToDelete = selectedVoiceIndex;
-    
-    let newIndex = selectedVoiceIndex;
-    if (selectedVoiceIndex >= currentPart.voices.length - 1) {
-      newIndex = currentPart.voices.length - 2;
-    }
-    
-    selectedVoiceIndex = newIndex;
-    
-    $songStore = removeVoice($songStore, selectedPartIndex, indexToDelete);
+  function handleRemoveTrack(index: number) {
+    if ($songStore.tracks.length <= 1) return;
+    $songStore = removeTrack($songStore, index);
+    validateIndices();
+  }
+
+  function handleAddTrackAtEnd() {
+    handleInsertTrack({ detail: 'end' } as CustomEvent<string>);
   }
 
   onMount(() => {
     const saved = localStorage.getItem('qrm_autosave');
     if (saved) {
       try {
-        loadSong(JSON.parse(saved));
+        const json = JSON.parse(saved);
+        if (json.arranger && json.tracks) {
+          loadSong(json);
+        } else {
+          loadSong(initialSong);
+        }
       } catch (err) {
         loadSong(initialSong);
       }
@@ -261,8 +232,8 @@
         try {
           const json = JSON.parse(e.target?.result as string);
           loadSong(json);
-          selectedPartIndex = 0;
-          selectedVoiceIndex = 0; window.__songStorePartsLength = $songStore?.parts?.length;
+          selectedArrangerIndex = 0;
+          selectedTrackIndex = 0;
         } catch (err) {
           alert("Error parsing JSON file");
         } finally {
@@ -315,29 +286,40 @@
 
     {#if $songStore}
       <div class="main-content">
-        
         <MasterSection {loadedFilename} />
 
-        {#if currentPart}
-          <PartSection 
-            {selectedPartIndex}
-            on:next={nextPart}
-            on:prev={prevPart}
-            on:insert={handleInsertPart}
-            on:delete={handleRemovePart}
-          >
-            {#if currentVoice}
-              <VoiceSection 
-                {selectedPartIndex}
-                {selectedVoiceIndex}
-                on:next={nextVoice}
-                on:prev={prevVoice}
-                on:insert={handleInsertVoice}
-                on:delete={handleRemoveVoice}
-              />
-            {/if}
-          </PartSection>
-        {/if}
+        <div class="workspace">
+          <ArrangerSidebar 
+            {selectedArrangerIndex}
+            on:select={(e) => selectedArrangerIndex = e.detail}
+            on:insert={handleInsertArranger}
+            on:delete={(e) => handleRemoveArranger(e.detail)}
+          />
+
+          <div class="stage">
+            <ArrangerEditor {selectedArrangerIndex} />
+
+            <div class="tracks-list">
+              <div class="tracks-header">
+                <h2 class="section-title">Instruments</h2>
+                <button class="btn add-track-btn" on:click={handleAddTrackAtEnd}>+ Add Track</button>
+              </div>
+
+              {#each $songStore.tracks as track, i}
+                <TrackSection 
+                  selectedTrackIndex={i}
+                  on:insert={handleInsertTrack}
+                  on:delete={() => handleRemoveTrack(i)}
+                >
+                  <ClipSection 
+                    {selectedArrangerIndex}
+                    selectedTrackIndex={i}
+                  />
+                </TrackSection>
+              {/each}
+            </div>
+          </div>
+        </div>
       </div>
     {/if}
   </div>
@@ -460,7 +442,46 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px;
     min-width: 0;
+  }
+
+  .workspace {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .tracks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .tracks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    padding: 0 5px;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin: 0;
+  }
+
+  .add-track-btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
   }
 </style>
