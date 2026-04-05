@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { songStore } from '../songStore';
 
-  export let selectedTimelineIndex: number;
+  export let selectedSectionIndex: number;
 
   const dispatch = createEventDispatcher();
 
@@ -11,26 +11,26 @@
   }
 </script>
 
-<div class="timeline-sidebar">
+<div class="section-sidebar">
   <div class="sidebar-header">
-    <span class="label">Timeline</span>
+    <span class="label">SECTIONS</span>
     <div class="header-actions">
         <button class="add-btn" on:click={() => dispatch('insert', 'end')} title="Add Section">+</button>
     </div>
   </div>
   
   <div class="sections-list">
-    {#each $songStore?.timeline || [] as section, i}
+    {#each $songStore?.sections || [] as section, i}
       <div 
         class="section-item" 
-        class:active={selectedTimelineIndex === i}
+        class:active={selectedSectionIndex === i}
         on:click={() => select(i)}
       >
         <div class="section-info">
           <span class="section-name">{section.name || 'Untitled'}</span>
           <span class="section-measures">{section.nMeasures} {section.nMeasures === 1 ? 'bar' : 'bars'}</span>
         </div>
-        {#if $songStore.timeline.length > 1}
+        {#if $songStore.sections.length > 1}
             <button class="delete-btn" on:click|stopPropagation={() => dispatch('delete', i)}>×</button>
         {/if}
       </div>
@@ -39,7 +39,7 @@
 </div>
 
 <style>
-  .timeline-sidebar {
+  .section-sidebar {
     display: flex;
     flex-direction: column;
     background: var(--bg-card);
@@ -52,20 +52,17 @@
   }
 
   .sidebar-header {
-    padding: 12px 16px;
+    padding: 8px 12px;
     background: var(--bg-sub);
-    border-bottom: 1px solid var(--border-main);
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
   .label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-heading);
   }
 
   .add-btn {

@@ -1,27 +1,26 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { songStore } from '../songStore';
-  import Card from './Card.svelte';
   import Display from './Display.svelte';
   import Choice from './Choice.svelte';
   import { tonics, modes } from '../constants';
 
-  export let selectedTimelineIndex: number;
+  export let sectionIndex: number;
 
-  $: currentSection = $songStore?.timeline?.[selectedTimelineIndex] || {};
+  $: currentSection = $songStore?.sections?.[sectionIndex] || {};
 
   const dispatch = createEventDispatcher();
 </script>
 
-<div class="timeline-editor">
+<div class="section-editor">
   <div class="editor-header">
     <div class="title-group">
-        <h2 class="section-title">EDITING: {currentSection.name || 'Untitled'}</h2>
+        <h2 class="section-title">EDITING SECTION <span class="highlight">[{currentSection.name || 'Untitled'}]</span></h2>
     </div>
     
     <div class="header-controls">
-        <Display bind:value={currentSection.name} label="Rename Section" width="180px" />
-        <Display bind:value={currentSection.nMeasures} label="Bars" width="60px" />
+        <Display bind:value={currentSection.name} label="SECTION NAME" width="220px" layout="row" />
+        <Display bind:value={currentSection.nMeasures} label="BARS" width="100px" layout="row" />
     </div>
   </div>
 
@@ -74,7 +73,7 @@
 
     {#if currentSection.chords}
         <div class="chords-area">
-            <span class="chords-label">Global Chords for this Section</span>
+            <span class="chords-label">SECTION CHORDS</span>
             <div class="chord-sequence">
                 {#each currentSection.chords as chord}
                     <span class="chord-tag">{chord}</span>
@@ -87,37 +86,33 @@
 </div>
 
 <style>
-  .timeline-editor {
+  .section-editor {
     background: var(--bg-card);
     border: 1px solid var(--border-main);
     border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 12px 20px;
+    margin-bottom: 16px;
     box-shadow: var(--shadow-sm);
   }
 
   .editor-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-sub);
-    padding-bottom: 15px;
+    align-items: center;
+    margin-bottom: 8px;
   }
 
   .section-title {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
     margin: 0;
     color: var(--text-heading);
   }
 
-  .nav-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  .highlight {
+    color: var(--accent);
+    font-family: monospace;
+    font-weight: 800;
   }
 
   .header-controls {

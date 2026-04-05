@@ -12,7 +12,7 @@
 </script>
 
 <div class="card" class:sub-module={subModule}>
-  {#if title}
+  {#if title || $$slots['header-left-extra'] || $$slots['header-right-extra']}
     <div class="card-header">
       <div class="header-left">
         {#if showNav}
@@ -21,10 +21,14 @@
             <button class="icon-btn" on:click={() => dispatch('next')} title="Next">❯</button>
           </div>
         {/if}
-        <h3 class="title-text">{title}</h3>
+        {#if title}
+          <h3 class="title-text">{title}</h3>
+        {/if}
+        <slot name="header-left-extra" />
       </div>
       
       <div class="header-right">
+        <slot name="header-right-extra" />
         {#if navLabel}
           <span class="nav-label">{navLabel}</span>
         {/if}
@@ -54,9 +58,9 @@
     background: var(--bg-card);
     border: 1px solid var(--border-main);
     border-radius: 8px;
-    margin-bottom: 24px;
-    padding: 24px;
-    box-shadow: var(--shadow-md);
+    margin-bottom: 16px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -65,8 +69,8 @@
 
   .sub-module {
     background: var(--bg-sub);
-    margin: 16px 0 0 0;
-    padding: 20px;
+    margin: 12px 0 0 0;
+    padding: 16px;
     border-color: var(--border-sub);
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
   }
@@ -75,9 +79,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border-sub);
-    padding-bottom: 12px;
+    margin-bottom: 8px;
+  }
+
+  .card-header:last-child {
+    margin-bottom: 0;
+  }
+
+  .card-content:empty {
+    display: none;
   }
 
   .header-left, .header-right {

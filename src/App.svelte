@@ -1,14 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { 
-    songStore, loadSong, resolveParam, getParamLevel,
-    addTimelineSection, removeTimelineSection, addPlayer, removePlayer 
+    songStore, loadSong, exportSong, resolveParam, getParamLevel,
+    addSection, removeSection, addInstrument, removeInstrument 
   } from './lib/songStore';
   import MasterSection from './lib/components/MasterSection.svelte';
-  import TimelineSidebar from './lib/components/TimelineSidebar.svelte';
-  import TimelineEditor from './lib/components/TimelineEditor.svelte';
-  import PerformerSection from './lib/components/PerformerSection.svelte';
+  import SectionSidebar from './lib/components/SectionSidebar.svelte';
+  import SectionEditor from './lib/components/SectionEditor.svelte';
+  import InstrumentSection from './lib/components/InstrumentSection.svelte';
   import Choice from './lib/components/Choice.svelte';
+  import Display from './lib/components/Display.svelte';
 
   let currentTheme = 'light';
   const themes = ['light', 'dark'];
@@ -68,11 +69,11 @@
 
   function validateIndices() {
     if (!$songStore) return;
-    if ($songStore.timeline && selectedTimelineIndex >= $songStore.timeline.length) {
-      selectedTimelineIndex = Math.max(0, $songStore.timeline.length - 1);
+    if ($songStore.sections && selectedSectionIndex >= $songStore.sections.length) {
+      selectedSectionIndex = Math.max(0, $songStore.sections.length - 1);
     }
-    if ($songStore.performers && selectedPerformerIndex >= $songStore.performers.length) {
-      selectedPerformerIndex = Math.max(0, $songStore.performers.length - 1);
+    if ($songStore.instruments && selectedInstrumentIndex >= $songStore.instruments.length) {
+      selectedInstrumentIndex = Math.max(0, $songStore.instruments.length - 1);
     }
   }
 
@@ -99,104 +100,109 @@
   }
 
   const initialSong = {
-    "name"      : "Afterglowish",
-    "outputDir" : "/Users/bert.olsson/Desktop/ag",
-    "tempo"     : 60,
-    "loglevel"  : 0,
-    "key"       : { "tonic": "G", "mode": "major" },
-    "meter"     : { "numerator": 4, "denominator": 4 },
-    "timeline"  : [
+    "name": "Afterglowish",
+    "outputDir": "/Users/bert.olsson/Desktop/ag",
+    "tempo": 60,
+    "velocity": [ 60, 80 ],
+    "key": { "tonic": "G", "mode": "major" },
+    "meter": { "numerator": 4, "denominator": 4 },
+    "sections": [
       {
-        "name"      : "intro",
-        "nMeasures" : 1,
-        "chords"    : [ "G", "Gmaj7", "G", "Gmaj7", "G", "C", "A" ]
-      },
-      {
-        "name"      : "outro",
-        "key"       : { "tonic": "D", "mode": "major" },
-        "nMeasures" : 32,
-        "chords"    : [ "D", "Dmaj7", "G", "Gm", "D", "Dmaj7", "G", "A" ]
-      }
-    ],
-    "performers" : [
-      {
-        "name"     : "Bass",
-        "type"     : "chordal",
-        "velocity" : [ 70, 80 ],
-        "duration" : "1/2",
-        "performances" : [
+        "name": "intro",
+        "nMeasures": 1,
+        "chords": [ "G", "Gmaj7", "G", "Gmaj7", "G", "C", "A" ],
+        "instruments": [
           {
-            "file"     : "afglo-bass-1.mid",
-            "restPct"  : 0,
-            "tonicPct" : 0.75
+            "name": "Bass",
+            "type": "chordal",
+            "duration": "1/2",
+            "range": [ "E1", "E3" ],
+            "file": "afglo-bass-1.mid",
+            "restPct": 0,
+            "tonicPct": 0.75,
+            "velocity": [ 70, 80 ]
           },
           {
-            "file"     : "afglo-bass-2.mid",
-            "restPct"  : 0,
-            "tonicPct" : 0.75,
-            "velocity" : [ 80, 90 ]
+            "name": "Chords",
+            "type": "chords",
+            "duration": "1/2",
+            "range": [ "C3", "C5" ],
+            "file": "afglo-chords-1.mid",
+            "inversionPct": 0.25,
+            "restPct": 0,
+            "velocity": [ 60, 75 ]
           }
         ]
       },
       {
-        "name"     : "Chords",
-        "type"     : "chords",
-        "duration" : "1/2",
-        "performances" : [
+        "name": "outro",
+        "key": { "tonic": "D", "mode": "major" },
+        "nMeasures": 32,
+        "chords": [ "D", "Dmaj7", "G", "Gm", "D", "Dmaj7", "G", "A" ],
+        "instruments": [
           {
-            "file"         : "afglo-chords-1.mid",
-            "inversionPct" : 0.25,
-            "restPct"      : 0
+            "name": "Bass",
+            "type": "chordal",
+            "duration": "1/2",
+            "range": [ "E1", "E3" ],
+            "file": "afglo-bass-2.mid",
+            "restPct": 0,
+            "tonicPct": 0.75,
+            "velocity": [ 80, 90 ]
           },
           {
-            "file"         : "afglo-chords-2.mid",
-            "inversionPct" : 0.5,
-            "restPct"      : 0,
-            "velocity"     : [ 80, 90 ]
+            "name": "Chords",
+            "type": "chords",
+            "duration": "1/2",
+            "range": [ "C3", "C5" ],
+            "file": "afglo-chords-2.mid",
+            "inversionPct": 0.5,
+            "restPct": 0,
+            "velocity": [ 80, 90 ]
           }
         ]
       }
     ]
   };
 
-  let selectedTimelineIndex = 0;
-  let selectedPerformerIndex = 0;
+  let selectedSectionIndex = 0;
+  let selectedInstrumentIndex = 0;
   let loadedFilename = "";
 
-  function handleInsertTimeline(event: CustomEvent<string>) {
+  function handleInsertSection(event: CustomEvent<string>) {
     const pos = event.detail;
-    let idx = $songStore.timeline.length;
+    let idx = $songStore.sections.length;
     if (pos === 'start') idx = 0;
-    else if (pos === 'current') idx = selectedTimelineIndex;
+    else if (pos === 'current') idx = selectedSectionIndex;
     
-    $songStore = addTimelineSection($songStore, idx);
-    selectedTimelineIndex = idx;
+    $songStore = addSection($songStore, idx);
+    selectedSectionIndex = idx;
   }
 
-  function handleRemoveTimeline(index: number) {
-    if ($songStore.timeline.length <= 1) return;
-    $songStore = removeTimelineSection($songStore, index);
+  function handleRemoveSection(index: number) {
+    if ($songStore.sections.length <= 1) return;
+    $songStore = removeSection($songStore, index);
     validateIndices();
   }
 
-  function handleInsertPerformer(event: CustomEvent<string>) {
+  function handleInsertInstrument(event: CustomEvent<string>) {
     const pos = event.detail;
-    let idx = $songStore.performers.length;
+    let idx = $songStore.instruments.length;
     if (pos === 'start') idx = 0;
-    else if (pos === 'current') idx = selectedPerformerIndex;
+    else if (pos === 'current') idx = selectedInstrumentIndex;
     
-    $songStore = addPlayer($songStore, idx);
-    selectedPerformerIndex = idx;
+    $songStore = addInstrument($songStore, idx);
+    selectedInstrumentIndex = idx;
   }
 
-  function handleRemovePerformer(index: number) {
-    if ($songStore.performers.length <= 1) return;
-    $songStore = removePlayer($songStore, index);
+  function handleRemoveInstrument(index: number) {
+    if ($songStore.instruments.length <= 1) return;
+    $songStore = removeInstrument($songStore, index);
     validateIndices();
   }
 
-  function handleAddPerformerAtEnd() {
-    handleInsertPerformer({ detail: 'end' } as CustomEvent<string>);
+  function handleAddInstrumentAtEnd() {
+    handleInsertInstrument({ detail: 'end' } as CustomEvent<string>);
   }
 
   onMount(() => {
@@ -204,7 +210,7 @@
     if (saved) {
       try {
         const json = JSON.parse(saved);
-        if (json.timeline && json.performers) {
+        if (json.sections || json.timeline) {
           loadSong(json);
         } else {
           loadSong(initialSong);
@@ -217,6 +223,31 @@
     }
   });
 
+  let generating = false;
+
+  async function handleGenerate() {
+    if (!$songStore) return;
+    generating = true;
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(exportSong($songStore))
+      });
+      if (res.ok) {
+        // Success indicator
+        setTimeout(() => generating = false, 1000);
+      } else {
+        alert('Generation failed');
+        generating = false;
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error during generation');
+      generating = false;
+    }
+  }
+
   function handleFileLoad(event: Event) {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
@@ -227,8 +258,8 @@
         try {
           const json = JSON.parse(e.target?.result as string);
           loadSong(json);
-          selectedTimelineIndex = 0;
-          selectedPerformerIndex = 0;
+          selectedSectionIndex = 0;
+          selectedInstrumentIndex = 0;
         } catch (err) {
           alert("Error parsing JSON file");
         } finally {
@@ -239,8 +270,25 @@
     }
   }
 
+  function webkitDir(node: HTMLInputElement) {
+    node.setAttribute('webkitdirectory', '');
+    node.setAttribute('directory', '');
+    return {};
+  }
+
+  function handleDirSelect(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (file) {
+      // Get the relative path or absolute path if available in this environment
+      const path = (file as any).path || file.webkitRelativePath.split('/')[0] || file.name;
+      // Depending on the environment (like Electron), file.path has the full absolute path
+      $songStore.outputDir = path.substring(0, path.lastIndexOf('/')) || path;
+    }
+  }
+
   function downloadJson() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify($songStore, null, 2));
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportSong($songStore), null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href",     dataStr);
     downloadAnchorNode.setAttribute("download", ($songStore.name || loadedFilename || "song") + ".json");
@@ -256,18 +304,43 @@
   <div class="app-container">
     <div class="sidebar">
       <div class="logo">QRM</div>
+      
+      {#if $songStore}
+        <button 
+          class="btn sidebar-btn generate-btn" 
+          class:generating
+          on:click={handleGenerate}
+          disabled={generating}
+        >
+          {generating ? 'DONE!' : 'GENERATE'}
+        </button>
+
+        <div style="height: 10px;"></div>
+      {/if}
+
       <label class="btn sidebar-btn">
         LOAD
         <input type="file" accept=".json" on:change={handleFileLoad} hidden />
       </label>
-      <button class="btn sidebar-btn" on:click={downloadJson}>SAVE</button>
       
-      <button 
-        class="btn sidebar-btn" 
-        on:click={handleUndo} 
-        disabled={historyIndex <= 0}
-        style="opacity: {historyIndex <= 0 ? '0.5' : '1'}; cursor: {historyIndex <= 0 ? 'not-allowed' : 'pointer'}"
-      >UNDO</button>
+      {#if $songStore}
+        <button class="btn sidebar-btn" on:click={downloadJson}>SAVE</button>
+        
+        <button 
+          class="btn sidebar-btn" 
+          on:click={handleUndo} 
+          disabled={historyIndex <= 0}
+          style="opacity: {historyIndex <= 0 ? '0.5' : '1'}; cursor: {historyIndex <= 0 ? 'not-allowed' : 'pointer'}"
+        >UNDO</button>
+        
+        <div style="margin-top: 20px;">
+          <label class="btn sidebar-btn" style="margin-bottom: 5px;">
+            OUTPUT
+            <input type="file" use:webkitDir hidden on:change={handleDirSelect} />
+          </label>
+          <Display bind:value={$songStore.outputDir} label="" width="100%" color="#ffaa00" fontSize="10px" />
+        </div>
+      {/if}
       
       <div style="margin-top: auto; display: flex; flex-direction: column; align-items: center;">
         <Choice 
@@ -275,7 +348,7 @@
           options={themes} 
           width="80px"
         />
-        <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: bold; text-transform: uppercase;">Theme</span>
+        <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: bold; text-transform: uppercase;">THEME</span>
       </div>
     </div>
 
@@ -284,27 +357,27 @@
         <MasterSection {loadedFilename} />
 
         <div class="workspace">
-          <TimelineSidebar 
-            {selectedTimelineIndex}
-            on:select={(e) => selectedTimelineIndex = e.detail}
-            on:insert={handleInsertTimeline}
-            on:delete={(e) => handleRemoveTimeline(e.detail)}
+          <SectionSidebar 
+            selectedSectionIndex={selectedSectionIndex}
+            on:select={(e) => selectedSectionIndex = e.detail}
+            on:insert={handleInsertSection}
+            on:delete={(e) => handleRemoveSection(e.detail)}
           />
 
           <div class="stage">
-            <TimelineEditor {selectedTimelineIndex} />
+            <SectionEditor sectionIndex={selectedSectionIndex} />
 
             <div class="performers-list">
               <div class="list-header">
-                <h2 class="section-title">Ensemble</h2>
-                <button class="btn add-btn" on:click={handleAddPerformerAtEnd}>+ Add Performer</button>
+                <h2 class="section-title">ENSEMBLE</h2>
+                <button class="btn add-btn" on:click={handleAddInstrumentAtEnd}>+ Add Instrument</button>
               </div>
 
-              {#each $songStore.performers as performer, i}
-                <PerformerSection 
-                  selectedPerformerIndex={i}
-                  {selectedTimelineIndex}
-                  on:delete={() => handleRemovePerformer(i)}
+              {#each $songStore.instruments as instrument, i}
+                <InstrumentSection 
+                  instrumentIndex={i}
+                  sectionIndex={selectedSectionIndex}
+                  on:delete={() => handleRemoveInstrument(i)}
                 />
               {/each}
             </div>
@@ -362,14 +435,14 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 40px 20px;
+    padding: 20px;
     box-sizing: border-box;
   }
 
   .app-container {
     display: flex;
     align-items: flex-start;
-    gap: 20px;
+    gap: 16px;
     width: 100%;
     max-width: 1200px;
   }
@@ -378,27 +451,25 @@
     flex: 0 0 100px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     background: var(--bg-card);
-    padding: 20px;
+    padding: 16px;
     border-radius: 8px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-main);
-    height: calc(100vh - 80px);
+    height: calc(100vh - 40px);
     position: sticky;
-    top: 40px;
+    top: 20px;
   }
 
   .logo {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 800;
     color: var(--text-heading);
     text-align: center;
-    border-bottom: 2px solid var(--border-sub);
-    padding-bottom: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     line-height: 1.2;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
   }
 
   .btn {
@@ -408,18 +479,38 @@
     cursor: pointer;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     border-radius: 6px;
     transition: all 0.2s ease;
   }
 
   .sidebar-btn {
     width: 100%;
-    height: 40px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 11px;
+  }
+
+  .generate-btn {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    font-weight: 800;
+    box-shadow: 0 2px 4px rgba(77, 171, 247, 0.3);
+  }
+
+  .generate-btn:hover {
+    filter: brightness(1.1);
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .generate-btn.generating {
+    background: #40c057 !important;
+    border-color: #40c057 !important;
+    box-shadow: 0 2px 8px rgba(64, 192, 87, 0.4);
   }
 
   .btn:hover {
@@ -435,13 +526,13 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
     min-width: 0;
   }
 
   .workspace {
     display: flex;
-    gap: 20px;
+    gap: 16px;
     align-items: flex-start;
   }
 
@@ -455,7 +546,7 @@
   .performers-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
   }
 
   .list-header {
