@@ -18,13 +18,27 @@
 
 <Card 
   title="" 
+  subModule={true}
   showDelete={$songStore?.parts?.length > 1}
   on:delete={() => dispatch('delete')}
 >
+  <div slot="header-left-extra" class="title-group">
+    <h3 class="part-title">PART <span class="bracket">[</span>
+      <div class="input-sizer" data-value={part.name || 'Untitled'}>
+        <input 
+            class="name-input highlight" 
+            bind:value={part.name} 
+            placeholder="Untitled"
+            on:input={() => $songStore = $songStore}
+            size="1"
+        />
+      </div>
+    <span class="bracket">]</span></h3>
+  </div>
+
   <div class="part-compact">
     <!-- Top Row: Identity and File -->
     <div class="top-row">
-        <Display bind:value={part.name} label="PART NAME" width="140px" />
         <Choice 
             value={part.type || 'chordal'} 
             label="MODE"
@@ -44,7 +58,7 @@
                 $songStore = $songStore;
             }}
         />
-        <Display bind:value={performance.file} label="OUTPUT FILE" width="180px" color="#aaa" fontSize="11px" />
+        <Display bind:value={performance.file} label="MIDI FILE" width="180px" color="#aaa" fontSize="11px" />
         <Display bind:value={part.duration} label="DURATION" width="70px" color="#00ffff" />
     </div>
 
@@ -130,5 +144,67 @@
     align-items: flex-end;
     flex-wrap: nowrap;
     overflow-x: auto;
+  }
+
+  .part-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .input-sizer {
+    display: inline-grid;
+    align-items: center;
+  }
+
+  .input-sizer::after,
+  .name-input {
+    min-width: 0;
+    grid-area: 1 / 1;
+    font-family: monospace;
+    font-weight: 800;
+    font-size: 1.1rem;
+    padding: 0;
+    margin: 0;
+    resize: none;
+    background: none;
+    appearance: none;
+    border: none;
+    text-align: center;
+  }
+
+  .name-input {
+    width: 100%;
+    color: var(--accent);
+    outline: none;
+  }
+
+  .input-sizer::after {
+    width: auto;
+    content: attr(data-value);
+    visibility: hidden;
+    white-space: pre;
+  }
+
+  .name-input:focus {
+    background: var(--bg-sub);
+    border-radius: 4px;
+    box-shadow: 0 0 0 2px var(--bg-sub); /* Faux padding for focus */
+  }
+
+  .bracket {
+    color: var(--text-muted);
+    font-family: monospace;
+    font-weight: 400;
+  }
+
+  .highlight {
+    color: var(--accent);
+    font-family: monospace;
+    font-weight: 800;
   }
 </style>

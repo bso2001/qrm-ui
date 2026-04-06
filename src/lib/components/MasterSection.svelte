@@ -25,9 +25,18 @@
   }
 </script>
 
-<Card title="SONG">
-  <div slot="header-left-extra">
-    <Display bind:value={$songStore.name} label="" width="220px" fontSize="14px" />
+<Card title="">
+  <div slot="header-left-extra" class="title-group">
+    <h2 class="song-title">SONG <span class="bracket">[</span>
+      <div class="input-sizer" data-value={$songStore.name || 'Untitled'}>
+        <input 
+            class="name-input highlight" 
+            bind:value={$songStore.name} 
+            placeholder="Untitled"
+            size="1"
+        />
+      </div>
+    <span class="bracket">]</span></h2>
   </div>
 
   <div slot="header-right-extra" class="header-controls">
@@ -38,7 +47,7 @@
     <Slider bind:value={$songStore.tempo} min={40} max={240} label="Tempo" compact={true} />
     
     <div class="header-group">
-      <span class="group-label">DEFAULT</span>
+      <span class="group-label">DEFAULTS</span>
       <div class="group-content">
         <Choice 
           value={$songStore.key?.tonic || 'C'} 
@@ -96,17 +105,25 @@
     flex-direction: column;
     align-items: center;
     background: var(--bg-sub);
-    padding: 2px 8px 4px 8px;
+    padding: 10px 8px 4px 8px;
     border-radius: 4px;
     border: 1px solid var(--border-main);
+    position: relative;
     gap: 2px;
   }
 
   .group-label {
-    font-size: 8px;
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    font-size: 9px;
     color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 0 5px;
     font-weight: bold;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
+    border: 1px solid var(--border-main);
+    border-radius: 4px;
   }
 
   .group-content {
@@ -155,6 +172,68 @@
     background: var(--bg-hover);
     border-color: var(--accent);
     color: var(--accent);
+  }
+
+  .song-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .input-sizer {
+    display: inline-grid;
+    align-items: center;
+  }
+
+  .input-sizer::after,
+  .name-input {
+    min-width: 0;
+    grid-area: 1 / 1;
+    font-family: monospace;
+    font-weight: 800;
+    font-size: 1.2rem;
+    padding: 0;
+    margin: 0;
+    resize: none;
+    background: none;
+    appearance: none;
+    border: none;
+    text-align: center;
+  }
+
+  .name-input {
+    width: 100%;
+    color: var(--accent);
+    outline: none;
+  }
+
+  .input-sizer::after {
+    width: auto;
+    content: attr(data-value);
+    visibility: hidden;
+    white-space: pre;
+  }
+
+  .name-input:focus {
+    background: var(--bg-sub);
+    border-radius: 4px;
+    box-shadow: 0 0 0 2px var(--bg-sub); /* Faux padding for focus */
+  }
+
+  .bracket {
+    color: var(--text-muted);
+    font-family: monospace;
+    font-weight: 400;
+  }
+
+  .highlight {
+    color: var(--accent);
+    font-family: monospace;
+    font-weight: 800;
   }
 
   :global(.header-controls .slider-container) {

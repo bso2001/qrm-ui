@@ -12,6 +12,7 @@
   import Choice from './lib/components/Choice.svelte';
   import Display from './lib/components/Display.svelte';
   import LibraryModal from './lib/components/LibraryModal.svelte';
+  import Card from './lib/components/Card.svelte';
 
   // Toggle for raw JSON file LOAD/SAVE (Admin/Testing functionality)
   const ENABLE_ADMIN_FILE_IO = false;
@@ -114,65 +115,27 @@
   }
 
   const initialSong = {
-    "name": "Afterglowish",
-    "outputDir": "/Users/bert.olsson/Desktop/ag",
-    "tempo": 60,
+    "name": "Untitled",
+    "outputDir": "",
+    "tempo": 120,
     "velocity": [ 60, 80 ],
-    "key": { "tonic": "G", "mode": "major" },
+    "key": { "tonic": "C", "mode": "major" },
     "meter": { "numerator": 4, "denominator": 4 },
     "sections": [
       {
-        "name": "intro",
-        "nMeasures": 1,
-        "chords": [ "G", "Gmaj7", "G", "Gmaj7", "G", "C", "A" ],
+        "name": "Section A",
+        "nMeasures": 4,
         "parts": [
           {
-            "name": "Bass",
+            "name": "Part 1",
             "type": "chordal",
-            "duration": "1/2",
-            "range": [ "E1", "E3" ],
-            "file": "afglo-bass-1.mid",
-            "restPct": 0,
-            "tonicPct": 0.75,
-            "velocity": [ 70, 80 ]
-          },
-          {
-            "name": "Chords",
-            "type": "chords",
-            "duration": "1/2",
+            "duration": "1/4",
             "range": [ "C3", "C5" ],
-            "file": "afglo-chords-1.mid",
-            "inversionPct": 0.25,
+            "file": "part1.mid",
             "restPct": 0,
-            "velocity": [ 60, 75 ]
-          }
-        ]
-      },
-      {
-        "name": "outro",
-        "key": { "tonic": "D", "mode": "major" },
-        "nMeasures": 32,
-        "chords": [ "D", "Dmaj7", "G", "Gm", "D", "Dmaj7", "G", "A" ],
-        "parts": [
-          {
-            "name": "Bass",
-            "type": "chordal",
-            "duration": "1/2",
-            "range": [ "E1", "E3" ],
-            "file": "afglo-bass-2.mid",
-            "restPct": 0,
-            "tonicPct": 0.75,
-            "velocity": [ 80, 90 ]
-          },
-          {
-            "name": "Chords",
-            "type": "chords",
-            "duration": "1/2",
-            "range": [ "C3", "C5" ],
-            "file": "afglo-chords-2.mid",
-            "inversionPct": 0.5,
-            "restPct": 0,
-            "velocity": [ 80, 90 ]
+            "tonicPct": 0,
+            "inversionPct": 0,
+            "velocity": [ 70, 90 ]
           }
         ]
       }
@@ -404,19 +367,22 @@
           <div class="stage">
             <SectionEditor sectionIndex={selectedSectionIndex} />
 
-            <div class="parts-list">
-              <div class="list-header">
-                <h2 class="section-title">PARTS</h2>
-                <button class="btn add-btn" on:click={handleAddPartAtEnd}>+ Add Part</button>
-              </div>
-
-              {#each $songStore.parts as part, i}
-                <PartSection 
-                  partIndex={i}
-                  sectionIndex={selectedSectionIndex}
-                  on:delete={() => handleRemovePart(i)}
-                />
-              {/each}
+            <div class="parts-container">
+              <Card title="PARTS">
+                <div slot="header-right-extra">
+                  <button class="btn add-btn" on:click={handleAddPartAtEnd}>+ ADD PART</button>
+                </div>
+                
+                <div class="parts-list">
+                  {#each $songStore.parts as part, i}
+                    <PartSection 
+                      partIndex={i}
+                      sectionIndex={selectedSectionIndex}
+                      on:delete={() => handleRemovePart(i)}
+                    />
+                  {/each}
+                </div>
+              </Card>
             </div>
           </div>
         </div>
@@ -580,25 +546,17 @@
     min-width: 0;
   }
 
+  .parts-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
   .parts-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
-  }
-
-  .list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    padding: 0 5px;
-  }
-
-  .section-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-heading);
-    margin: 0;
+    width: 100%;
   }
 
   .add-btn {

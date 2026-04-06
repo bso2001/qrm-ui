@@ -15,34 +15,40 @@
 <div class="section-editor">
   <div class="editor-header">
     <div class="title-group">
-        <h2 class="section-title">SECTION <span class="highlight">[{currentSection.name || 'Untitled'}]</span></h2>
+        <h2 class="section-title">SECTION <span class="bracket">[</span>
+          <div class="input-sizer" data-value={currentSection.name || 'Untitled'}>
+            <input 
+                class="name-input highlight" 
+                bind:value={currentSection.name} 
+                placeholder="Untitled"
+                on:input={() => $songStore = $songStore}
+                size="1"
+            />
+          </div>
+        <span class="bracket">]</span></h2>
     </div>
     
     <div class="header-controls">
-        <Display bind:value={currentSection.name} label="SECTION NAME" width="220px" layout="row" />
         <Display bind:value={currentSection.nMeasures} label="BARS" width="100px" layout="row" />
     </div>
   </div>
 
   <div class="editor-grid">
     <div class="grouped-box">
-      <span class="box-label">GLOBAL HARMONY</span>
+      <span class="box-label">DEFAULTS</span>
       
-      <div style="display: flex; gap: 8px; align-items: flex-end;">
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <span class="inner-label">KEY</span>
-          <Choice 
-            value={currentSection.key?.tonic || $songStore.key?.tonic || 'C'} 
-            inherited={!currentSection.key}
-            options={tonics}
-            on:change={(e) => {
-              if (!currentSection.key) currentSection.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
-              currentSection.key.tonic = e.detail;
-              $songStore = $songStore;
-            }}
-            width="50px" 
-          />
-        </div>
+      <div style="display: flex; gap: 8px; align-items: flex-end; padding-top: 5px;">
+        <Choice 
+          value={currentSection.key?.tonic || $songStore.key?.tonic || 'C'} 
+          inherited={!currentSection.key}
+          options={tonics}
+          on:change={(e) => {
+            if (!currentSection.key) currentSection.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
+            currentSection.key.tonic = e.detail;
+            $songStore = $songStore;
+          }}
+          width="50px" 
+        />
         <Choice 
           value={currentSection.key?.mode || $songStore.key?.mode || 'major'} 
           inherited={!currentSection.key}
@@ -58,7 +64,7 @@
         <div style="margin-left: 10px;">
             <Display 
                 value="{currentSection.meter?.numerator || $songStore.meter?.numerator || 4}/{currentSection.meter?.denominator || $songStore.meter?.denominator || 4}" 
-                label="METER"
+                label=""
                 inherited={!currentSection.meter}
                 on:change={(e) => {
                     const [n, d] = e.detail.split('/');
@@ -107,6 +113,55 @@
     font-weight: 700;
     margin: 0;
     color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .input-sizer {
+    display: inline-grid;
+    align-items: center;
+  }
+
+  .input-sizer::after,
+  .name-input {
+    min-width: 0;
+    grid-area: 1 / 1;
+    font-family: monospace;
+    font-weight: 800;
+    font-size: 1.1rem;
+    padding: 0;
+    margin: 0;
+    resize: none;
+    background: none;
+    appearance: none;
+    border: none;
+    text-align: center;
+  }
+
+  .name-input {
+    width: 100%;
+    color: var(--accent);
+    outline: none;
+  }
+
+  .input-sizer::after {
+    width: auto;
+    content: attr(data-value);
+    visibility: hidden;
+    white-space: pre;
+  }
+
+  .name-input:focus {
+    background: var(--bg-sub);
+    border-radius: 4px;
+    box-shadow: 0 0 0 2px var(--bg-sub); /* Faux padding for focus */
+  }
+
+  .bracket {
+    color: var(--text-muted);
+    font-family: monospace;
+    font-weight: 400;
   }
 
   .highlight {
