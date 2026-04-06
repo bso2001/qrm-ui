@@ -37,7 +37,7 @@
     <div class="grouped-box">
       <span class="box-label">DEFAULTS</span>
       
-      <div style="display: flex; gap: 8px; align-items: flex-end; padding-top: 5px;">
+      <div style="display: flex; gap: 8px; align-items: flex-end; padding-top: 5px; flex-wrap: wrap;">
         <Choice 
           value={currentSection.key?.tonic || $songStore.key?.tonic || 'C'} 
           inherited={!currentSection.key}
@@ -74,20 +74,27 @@
                 width="75px" 
             />
         </div>
+
+        <div style="margin-left: 10px; flex: 1; min-width: 200px;">
+            <Display 
+                value={(currentSection.chords || $songStore.chords || []).join(' ')} 
+                label="CHORDS"
+                inherited={!currentSection.chords}
+                on:change={(e) => {
+                    const val = e.detail.trim();
+                    if (val) {
+                        currentSection.chords = val.split(/[,\s]+/).filter(c => c);
+                    } else {
+                        delete currentSection.chords;
+                    }
+                    $songStore = $songStore;
+                }}
+                width="100%" 
+                layout="row"
+            />
+        </div>
       </div>
     </div>
-
-    {#if currentSection.chords}
-        <div class="chords-area">
-            <span class="chords-label">SECTION CHORDS</span>
-            <div class="chord-sequence">
-                {#each currentSection.chords as chord}
-                    <span class="chord-tag">{chord}</span>
-                {/each}
-                <button class="add-chord-btn">+</button>
-            </div>
-        </div>
-    {/if}
   </div>
 </div>
 

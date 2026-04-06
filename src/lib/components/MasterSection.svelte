@@ -14,13 +14,28 @@
     return {};
   }
 
+  async function handleDirPick() {
+    if ('showDirectoryPicker' in window) {
+      try {
+        const handle = await (window as any).showDirectoryPicker();
+        $songStore.outputDir = handle.name;
+      } catch (err) {
+        // User cancelled
+      }
+    } else {
+      // Fallback to hidden input click
+      const input = document.getElementById('dir-input');
+      if (input) input.click();
+    }
+  }
+
   function handleDirSelect(event: Event) {
     const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file) {
-      // Get the relative path or absolute path if available in this environment
-      const path = (file as any).path || file.webkitRelativePath.split('/')[0] || file.name;
-      $songStore.outputDir = path.substring(0, path.lastIndexOf('/')) || path;
+    const files = target.files;
+    if (files && files.length > 0) {
+      const firstFile = files[0];
+      const path = (firstFile as any).path || firstFile.webkitRelativePath.split('/')[0] || firstFile.name;
+      $songStore.outputDir = path;
     }
   }
 </script>
@@ -79,16 +94,36 @@
           }}
           width="60px" 
         />
+        <Display 
+          value={($songStore.chords || []).join(' ')} 
+          label="CHORDS"
+          on:change={(e) => {
+            const val = e.detail.trim();
+            if (val) {
+              $songStore.chords = val.split(/[,\s]+/).filter(c => c);
+            } else {
+              delete $songStore.chords;
+            }
+            $songStore = $songStore;
+          }}
+          width="120px" 
+        />
       </div>
     </div>
   </div>
 
   <!-- Body of the Card for Output Dir -->
   <div class="output-dir-row">
-    <label class="dir-btn">
+    <button class="dir-btn" on:click={handleDirPick}>
       OUTPUT DIR
-      <input type="file" use:webkitDir hidden on:change={handleDirSelect} />
-    </label>
+    </button>
+    <input 
+      id="dir-input"
+      type="file" 
+      use:webkitDir 
+      hidden 
+      on:change={handleDirSelect} 
+    />
     <Display bind:value={$songStore.outputDir} label="" width="100%" color="#ffaa00" fontSize="11px" />
   </div>
 </Card>

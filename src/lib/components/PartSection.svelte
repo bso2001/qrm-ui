@@ -59,6 +59,23 @@
             }}
         />
         <Display bind:value={performance.file} label="MIDI FILE" width="180px" color="#aaa" fontSize="11px" />
+        
+        <Display 
+            value={(resolveParam($songStore, sectionIndex, partIndex, 'chords') || []).join(' ')} 
+            label="CHORDS"
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'chords') !== 'performance'}
+            on:change={(e) => {
+                const val = e.detail.trim();
+                if (val) {
+                    performance.chords = val.split(/[,\s]+/).filter(c => c);
+                } else {
+                    delete performance.chords;
+                }
+                $songStore = $songStore;
+            }}
+            width="120px" 
+        />
+        
         <Display bind:value={part.duration} label="DURATION" width="70px" color="#00ffff" />
     </div>
 

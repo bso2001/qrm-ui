@@ -82,6 +82,15 @@
     }
   }
 
+  function handleRevert() {
+    if (history.length > 0) {
+      isUndoing = true;
+      historyIndex = 0;
+      $songStore = JSON.parse(history[0]);
+      validateIndices();
+    }
+  }
+
   function validateIndices() {
     if (!$songStore) return;
     if ($songStore.sections && selectedSectionIndex >= $songStore.sections.length) {
@@ -304,7 +313,7 @@
 
 <main>
   <div class="app-container">
-    <div class="sidebar">
+    <div class="header-sidebar">
       <div class="logo">QRM</div>
       
       {#if $songStore}
@@ -316,8 +325,6 @@
         >
           {generating ? 'DONE!' : 'GENERATE'}
         </button>
-
-        <div style="height: 10px;"></div>
       {/if}
 
       <button class="btn sidebar-btn" on:click={() => showLibrary = true}>LIBRARY</button>
@@ -334,21 +341,30 @@
           <button class="btn sidebar-btn" on:click={downloadJson}>SAVE FILE</button>
         {/if}
         
-        <button 
-          class="btn sidebar-btn" 
-          on:click={handleUndo} 
-          disabled={historyIndex <= 0}
-          style="opacity: {historyIndex <= 0 ? '0.5' : '1'}; cursor: {historyIndex <= 0 ? 'not-allowed' : 'pointer'}; margin-top: 10px;"
-        >UNDO</button>
+        <div class="history-controls">
+          <button 
+            class="btn sidebar-btn undo-btn" 
+            on:click={handleUndo} 
+            disabled={historyIndex <= 0}
+            title="UNDO (Ctrl+Z)"
+          >UNDO</button>
+          
+          <button 
+            class="btn sidebar-btn revert-btn" 
+            on:click={handleRevert} 
+            disabled={historyIndex <= 0}
+            title="REVERT TO ORIGINAL"
+          >REVERT</button>
+        </div>
       {/if}
       
-      <div style="margin-top: auto; display: flex; flex-direction: column; align-items: center;">
+      <div class="theme-picker">
         <Choice 
           bind:value={currentTheme} 
           options={themes} 
           width="80px"
         />
-        <span style="font-size: 10px; color: var(--text-muted); margin-top: 4px; font-weight: bold; text-transform: uppercase;">THEME</span>
+        <span class="theme-label">THEME</span>
       </div>
     </div>
 
@@ -438,41 +454,44 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 20px;
+    padding: 10px;
     box-sizing: border-box;
   }
 
   .app-container {
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
     gap: 16px;
     width: 100%;
     max-width: 1200px;
   }
 
-  .sidebar {
-    flex: 0 0 100px;
+  .header-sidebar {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     gap: 12px;
     background: var(--bg-card);
-    padding: 16px;
+    padding: 8px 16px;
     border-radius: 8px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-main);
-    height: calc(100vh - 40px);
+    width: 100%;
+    box-sizing: border-box;
     position: sticky;
-    top: 20px;
+    top: 10px;
+    z-index: 100;
   }
 
   .logo {
-    font-size: 14px;
-    font-weight: 800;
+    font-size: 16px;
+    font-weight: 900;
     color: var(--text-heading);
-    text-align: center;
-    margin-bottom: 12px;
-    line-height: 1.2;
-    letter-spacing: 2px;
+    line-height: 1;
+    letter-spacing: 3px;
+    margin-right: 12px;
+    padding-right: 20px;
+    border-right: 2px solid var(--border-sub);
   }
 
   .btn {
@@ -488,12 +507,13 @@
   }
 
   .sidebar-btn {
-    width: 100%;
+    padding: 0 16px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 11px;
+    white-space: nowrap;
   }
 
   .generate-btn {
@@ -506,14 +526,48 @@
 
   .generate-btn:hover {
     filter: brightness(1.1);
-    background: var(--accent);
-    border-color: var(--accent);
   }
 
   .generate-btn.generating {
     background: #40c057 !important;
     border-color: #40c057 !important;
     box-shadow: 0 2px 8px rgba(64, 192, 87, 0.4);
+  }
+
+  .history-controls {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .undo-btn, .revert-btn {
+    font-size: 10px;
+    padding: 0 10px;
+    height: 32px;
+  }
+
+  .undo-btn:disabled, .revert-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .revert-btn:hover:not(:disabled) {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+  }
+
+  .theme-picker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .theme-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: bold;
+    text-transform: uppercase;
   }
 
   .btn:hover {
@@ -562,5 +616,34 @@
   .add-btn {
     padding: 6px 12px;
     font-size: 0.75rem;
+  }
+
+  @media (max-width: 800px) {
+    .header-sidebar {
+      flex-wrap: wrap;
+      justify-content: center;
+      position: static;
+    }
+
+    .workspace {
+      flex-direction: column;
+    }
+
+    :global(.section-sidebar) {
+      width: 100% !important;
+    }
+
+    .history-controls {
+      margin-left: 0;
+    }
+    
+    .logo {
+      border-right: none;
+      width: 100%;
+      text-align: center;
+      margin-right: 0;
+      padding-right: 0;
+      margin-bottom: 8px;
+    }
   }
 </style>
