@@ -2,14 +2,19 @@
   import { onMount } from 'svelte';
   import { 
     songStore, loadSong, exportSong, resolveParam, getParamLevel,
-    addSection, removeSection, addInstrument, removeInstrument 
+    addSection, removeSection, addPart, removePart 
   } from './lib/songStore';
+  import { initCatalog, saveToCatalog, loadFromCatalog } from './lib/catalogStore';
   import MasterSection from './lib/components/MasterSection.svelte';
   import SectionSidebar from './lib/components/SectionSidebar.svelte';
   import SectionEditor from './lib/components/SectionEditor.svelte';
-  import InstrumentSection from './lib/components/InstrumentSection.svelte';
+  import PartSection from './lib/components/PartSection.svelte';
   import Choice from './lib/components/Choice.svelte';
   import Display from './lib/components/Display.svelte';
+  import LibraryModal from './lib/components/LibraryModal.svelte';
+
+  // Toggle for raw JSON file LOAD/SAVE (Admin/Testing functionality)
+  const ENABLE_ADMIN_FILE_IO = false;
 
   let currentTheme = 'light';
   const themes = ['light', 'dark'];
@@ -19,11 +24,20 @@
   let isUndoing = false;
   let saveTimeout: ReturnType<typeof setTimeout>;
 
+  let showLibrary = false;
+  let currentCatalogId: string | null = null;
+
   function saveState() {
     if (!$songStore) return;
     const serialized = JSON.stringify($songStore);
     
     localStorage.setItem('qrm_autosave', serialized);
+    // Also remember the active library ID so a refresh doesn't disconnect it
+    if (currentCatalogId) {
+      localStorage.setItem('qrm_active_catalog_id', currentCatalogId);
+    } else {
+      localStorage.removeItem('qrm_active_catalog_id');
+    }
 
     if (isUndoing) {
       isUndoing = false;
@@ -72,8 +86,8 @@
     if ($songStore.sections && selectedSectionIndex >= $songStore.sections.length) {
       selectedSectionIndex = Math.max(0, $songStore.sections.length - 1);
     }
-    if ($songStore.instruments && selectedInstrumentIndex >= $songStore.instruments.length) {
-      selectedInstrumentIndex = Math.max(0, $songStore.instruments.length - 1);
+    if ($songStore.parts && selectedPartIndex >= $songStore.parts.length) {
+      selectedPartIndex = Math.max(0, $songStore.parts.length - 1);
     }
   }
 
@@ -111,7 +125,7 @@
         "name": "intro",
         "nMeasures": 1,
         "chords": [ "G", "Gmaj7", "G", "Gmaj7", "G", "C", "A" ],
-        "instruments": [
+        "parts": [
           {
             "name": "Bass",
             "type": "chordal",
@@ -139,7 +153,7 @@
         "key": { "tonic": "D", "mode": "major" },
         "nMeasures": 32,
         "chords": [ "D", "Dmaj7", "G", "Gm", "D", "Dmaj7", "G", "A" ],
-        "instruments": [
+        "parts": [
           {
             "name": "Bass",
             "type": "chordal",
@@ -166,7 +180,7 @@
   };
 
   let selectedSectionIndex = 0;
-  let selectedInstrumentIndex = 0;
+  let selectedPartIndex = 0;
   let loadedFilename = "";
 
   function handleInsertSection(event: CustomEvent<string>) {
@@ -185,28 +199,31 @@
     validateIndices();
   }
 
-  function handleInsertInstrument(event: CustomEvent<string>) {
+  function handleInsertPart(event: CustomEvent<string>) {
     const pos = event.detail;
-    let idx = $songStore.instruments.length;
+    let idx = $songStore.parts.length;
     if (pos === 'start') idx = 0;
-    else if (pos === 'current') idx = selectedInstrumentIndex;
+    else if (pos === 'current') idx = selectedPartIndex;
     
-    $songStore = addInstrument($songStore, idx);
-    selectedInstrumentIndex = idx;
+    $songStore = addPart($songStore, idx);
+    selectedPartIndex = idx;
   }
 
-  function handleRemoveInstrument(index: number) {
-    if ($songStore.instruments.length <= 1) return;
-    $songStore = removeInstrument($songStore, index);
+  function handleRemovePart(index: number) {
+    if ($songStore.parts.length <= 1) return;
+    $songStore = removePart($songStore, index);
     validateIndices();
   }
 
-  function handleAddInstrumentAtEnd() {
-    handleInsertInstrument({ detail: 'end' } as CustomEvent<string>);
+  function handleAddPartAtEnd() {
+    handleInsertPart({ detail: 'end' } as CustomEvent<string>);
   }
 
   onMount(() => {
+    initCatalog();
     const saved = localStorage.getItem('qrm_autosave');
+    currentCatalogId = localStorage.getItem('qrm_active_catalog_id');
+
     if (saved) {
       try {
         const json = JSON.parse(saved);
@@ -222,6 +239,34 @@
       loadSong(initialSong);
     }
   });
+
+  // --- Library Methods ---
+  function saveCurrentToLibrary() {
+    if (!$songStore) return;
+    currentCatalogId = saveToCatalog(exportSong($songStore));
+  }
+
+  function overwriteCurrentInLibrary() {
+    if (!$songStore || !currentCatalogId) return;
+    saveToCatalog(exportSong($songStore), currentCatalogId);
+  }
+
+  function loadFromLibrary(event: CustomEvent<string>) {
+    const id = event.detail;
+    const songData = loadFromCatalog(id);
+    if (songData) {
+      loadSong(songData);
+      currentCatalogId = id;
+      selectedSectionIndex = 0;
+      selectedPartIndex = 0;
+      showLibrary = false;
+    }
+  }
+
+  function handleLibraryClearedCurrent() {
+    currentCatalogId = null;
+  }
+  // ----------------------
 
   let generating = false;
 
@@ -258,8 +303,9 @@
         try {
           const json = JSON.parse(e.target?.result as string);
           loadSong(json);
+          currentCatalogId = null; // Loading a file disconnects from library
           selectedSectionIndex = 0;
-          selectedInstrumentIndex = 0;
+          selectedPartIndex = 0;
         } catch (err) {
           alert("Error parsing JSON file");
         } finally {
@@ -267,23 +313,6 @@
         }
       };
       reader.readAsText(file);
-    }
-  }
-
-  function webkitDir(node: HTMLInputElement) {
-    node.setAttribute('webkitdirectory', '');
-    node.setAttribute('directory', '');
-    return {};
-  }
-
-  function handleDirSelect(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file) {
-      // Get the relative path or absolute path if available in this environment
-      const path = (file as any).path || file.webkitRelativePath.split('/')[0] || file.name;
-      // Depending on the environment (like Electron), file.path has the full absolute path
-      $songStore.outputDir = path.substring(0, path.lastIndexOf('/')) || path;
     }
   }
 
@@ -299,6 +328,16 @@
 </script>
 
 <svelte:window on:keydown={handleGlobalKeydown} />
+
+<LibraryModal 
+  show={showLibrary} 
+  currentSongId={currentCatalogId}
+  on:close={() => showLibrary = false}
+  on:load={loadFromLibrary}
+  on:saveNew={saveCurrentToLibrary}
+  on:saveOverwrite={overwriteCurrentInLibrary}
+  on:clearedCurrent={handleLibraryClearedCurrent}
+/>
 
 <main>
   <div class="app-container">
@@ -318,28 +357,26 @@
         <div style="height: 10px;"></div>
       {/if}
 
-      <label class="btn sidebar-btn">
-        LOAD
-        <input type="file" accept=".json" on:change={handleFileLoad} hidden />
-      </label>
+      <button class="btn sidebar-btn" on:click={() => showLibrary = true}>LIBRARY</button>
+
+      {#if ENABLE_ADMIN_FILE_IO}
+        <label class="btn sidebar-btn">
+          LOAD FILE
+          <input type="file" accept=".json" on:change={handleFileLoad} hidden />
+        </label>
+      {/if}
       
       {#if $songStore}
-        <button class="btn sidebar-btn" on:click={downloadJson}>SAVE</button>
+        {#if ENABLE_ADMIN_FILE_IO}
+          <button class="btn sidebar-btn" on:click={downloadJson}>SAVE FILE</button>
+        {/if}
         
         <button 
           class="btn sidebar-btn" 
           on:click={handleUndo} 
           disabled={historyIndex <= 0}
-          style="opacity: {historyIndex <= 0 ? '0.5' : '1'}; cursor: {historyIndex <= 0 ? 'not-allowed' : 'pointer'}"
+          style="opacity: {historyIndex <= 0 ? '0.5' : '1'}; cursor: {historyIndex <= 0 ? 'not-allowed' : 'pointer'}; margin-top: 10px;"
         >UNDO</button>
-        
-        <div style="margin-top: 20px;">
-          <label class="btn sidebar-btn" style="margin-bottom: 5px;">
-            OUTPUT
-            <input type="file" use:webkitDir hidden on:change={handleDirSelect} />
-          </label>
-          <Display bind:value={$songStore.outputDir} label="" width="100%" color="#ffaa00" fontSize="10px" />
-        </div>
       {/if}
       
       <div style="margin-top: auto; display: flex; flex-direction: column; align-items: center;">
@@ -367,17 +404,17 @@
           <div class="stage">
             <SectionEditor sectionIndex={selectedSectionIndex} />
 
-            <div class="performers-list">
+            <div class="parts-list">
               <div class="list-header">
-                <h2 class="section-title">ENSEMBLE</h2>
-                <button class="btn add-btn" on:click={handleAddInstrumentAtEnd}>+ Add Instrument</button>
+                <h2 class="section-title">PARTS</h2>
+                <button class="btn add-btn" on:click={handleAddPartAtEnd}>+ Add Part</button>
               </div>
 
-              {#each $songStore.instruments as instrument, i}
-                <InstrumentSection 
-                  instrumentIndex={i}
+              {#each $songStore.parts as part, i}
+                <PartSection 
+                  partIndex={i}
                   sectionIndex={selectedSectionIndex}
-                  on:delete={() => handleRemoveInstrument(i)}
+                  on:delete={() => handleRemovePart(i)}
                 />
               {/each}
             </div>
@@ -543,7 +580,7 @@
     min-width: 0;
   }
 
-  .performers-list {
+  .parts-list {
     display: flex;
     flex-direction: column;
     gap: 12px;

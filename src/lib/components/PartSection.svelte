@@ -7,53 +7,53 @@
   import Choice from './Choice.svelte';
   import { voiceTypes } from '../constants';
 
-  export let instrumentIndex: number;
+  export let partIndex: number;
   export let sectionIndex: number;
 
-  $: instrument = $songStore?.instruments?.[instrumentIndex] || {};
-  $: performance = instrument?.performances?.[sectionIndex] || {};
+  $: part = $songStore?.parts?.[partIndex] || {};
+  $: performance = part?.performances?.[sectionIndex] || {};
 
   const dispatch = createEventDispatcher();
 </script>
 
 <Card 
   title="" 
-  showDelete={$songStore?.instruments?.length > 1}
+  showDelete={$songStore?.parts?.length > 1}
   on:delete={() => dispatch('delete')}
 >
-  <div class="instrument-compact">
+  <div class="part-compact">
     <!-- Top Row: Identity and File -->
     <div class="top-row">
-        <Display bind:value={instrument.name} label="INSTRUMENT" width="140px" />
+        <Display bind:value={part.name} label="PART NAME" width="140px" />
         <Choice 
-            value={instrument.type || 'chordal'} 
+            value={part.type || 'chordal'} 
             label="MODE"
             options={voiceTypes}
             on:change={(e) => {
-                instrument.type = e.detail;
+                part.type = e.detail;
                 $songStore = $songStore;
             }}
             width="90px" 
         />
         <Display 
-            value={instrument.range ? instrument.range.join('-') : 'C1-C8'} 
+            value={part.range ? part.range.join('-') : 'C1-C8'} 
             label="RANGE" 
             width="100px" 
             on:change={(e) => {
-                instrument.range = e.detail.split('-').map(s => s.trim());
+                part.range = e.detail.split('-').map(s => s.trim());
                 $songStore = $songStore;
             }}
         />
         <Display bind:value={performance.file} label="OUTPUT FILE" width="180px" color="#aaa" fontSize="11px" />
-        <Display bind:value={instrument.duration} label="DURATION" width="70px" color="#00ffff" />
+        <Display bind:value={part.duration} label="DURATION" width="70px" color="#00ffff" />
     </div>
 
     <!-- Bottom Row: ALL Performance Sliders on one line -->
     <div class="performance-row">
         <Slider 
             compact={true}
-            value={resolveParam($songStore, sectionIndex, instrumentIndex, 'restPct') ?? 0.5} 
-            inherited={getParamLevel($songStore, sectionIndex, instrumentIndex, 'restPct') === 'instrument'}
+            value={resolveParam($songStore, sectionIndex, partIndex, 'restPct') ?? 0.5} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'restPct') === 'part'}
             on:change={(e) => {
                 performance.restPct = e.detail;
                 $songStore = $songStore;
@@ -63,8 +63,8 @@
         
         <Slider 
             compact={true}
-            value={resolveParam($songStore, sectionIndex, instrumentIndex, 'tonicPct') ?? 0} 
-            inherited={getParamLevel($songStore, sectionIndex, instrumentIndex, 'tonicPct') === 'instrument'}
+            value={resolveParam($songStore, sectionIndex, partIndex, 'tonicPct') ?? 0} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'tonicPct') === 'part'}
             on:change={(e) => {
                 performance.tonicPct = e.detail;
                 $songStore = $songStore;
@@ -74,8 +74,8 @@
 
         <Slider 
             compact={true}
-            value={resolveParam($songStore, sectionIndex, instrumentIndex, 'inversionPct') ?? 0} 
-            inherited={getParamLevel($songStore, sectionIndex, instrumentIndex, 'inversionPct') === 'instrument'}
+            value={resolveParam($songStore, sectionIndex, partIndex, 'inversionPct') ?? 0} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'inversionPct') === 'part'}
             on:change={(e) => {
                 performance.inversionPct = e.detail;
                 $songStore = $songStore;
@@ -85,8 +85,8 @@
 
         <Slider 
             compact={true}
-            value={resolveParam($songStore, sectionIndex, instrumentIndex, 'velocity')?.[0] ?? 60} 
-            inherited={getParamLevel($songStore, sectionIndex, instrumentIndex, 'velocity') === 'instrument'}
+            value={resolveParam($songStore, sectionIndex, partIndex, 'velocity')?.[0] ?? 60} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'velocity') === 'part'}
             on:change={(e) => {
                 if (!performance.velocity) performance.velocity = [60, 80];
                 performance.velocity[0] = e.detail;
@@ -96,8 +96,8 @@
         />
         <Slider 
             compact={true}
-            value={resolveParam($songStore, sectionIndex, instrumentIndex, 'velocity')?.[1] ?? 80} 
-            inherited={getParamLevel($songStore, sectionIndex, instrumentIndex, 'velocity') === 'instrument'}
+            value={resolveParam($songStore, sectionIndex, partIndex, 'velocity')?.[1] ?? 80} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'velocity') === 'part'}
             on:change={(e) => {
                 if (!performance.velocity) performance.velocity = [60, 80];
                 performance.velocity[1] = e.detail;
@@ -110,7 +110,7 @@
 </Card>
 
 <style>
-  .instrument-compact {
+  .part-compact {
     display: flex;
     flex-direction: column;
     gap: 8px;

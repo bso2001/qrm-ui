@@ -15,7 +15,7 @@
 <div class="section-editor">
   <div class="editor-header">
     <div class="title-group">
-        <h2 class="section-title">EDITING SECTION <span class="highlight">[{currentSection.name || 'Untitled'}]</span></h2>
+        <h2 class="section-title">SECTION <span class="highlight">[{currentSection.name || 'Untitled'}]</span></h2>
     </div>
     
     <div class="header-controls">

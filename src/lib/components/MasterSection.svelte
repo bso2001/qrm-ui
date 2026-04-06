@@ -7,6 +7,22 @@
   import { tonics, modes } from '../constants';
 
   export let loadedFilename = "";
+
+  function webkitDir(node: HTMLInputElement) {
+    node.setAttribute('webkitdirectory', '');
+    node.setAttribute('directory', '');
+    return {};
+  }
+
+  function handleDirSelect(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (file) {
+      // Get the relative path or absolute path if available in this environment
+      const path = (file as any).path || file.webkitRelativePath.split('/')[0] || file.name;
+      $songStore.outputDir = path.substring(0, path.lastIndexOf('/')) || path;
+    }
+  }
 </script>
 
 <Card title="SONG">
@@ -57,6 +73,15 @@
       </div>
     </div>
   </div>
+
+  <!-- Body of the Card for Output Dir -->
+  <div class="output-dir-row">
+    <label class="dir-btn">
+      OUTPUT DIR
+      <input type="file" use:webkitDir hidden on:change={handleDirSelect} />
+    </label>
+    <Display bind:value={$songStore.outputDir} label="" width="100%" color="#ffaa00" fontSize="11px" />
+  </div>
 </Card>
 
 <style>
@@ -99,6 +124,37 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .output-dir-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-sub);
+  }
+
+  .dir-btn {
+    background: var(--bg-sub);
+    border: 1px solid var(--border-input);
+    color: var(--text-main);
+    cursor: pointer;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .dir-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   :global(.header-controls .slider-container) {
