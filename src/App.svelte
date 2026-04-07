@@ -258,7 +258,7 @@
     if (!$songStore) return;
     generating = true;
     try {
-      const res = await fetch('/api/generate', {
+      const res = await fetch('http://localhost:3000/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(exportSong($songStore))
