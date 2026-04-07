@@ -658,21 +658,3 @@
     }
   }
 </style>
-
-      width: 100% !important;
-    }
-
-    .history-controls {
-      margin-left: 0;
-    }
-    
-    .logo {
-      border-right: none;
-      width: 100%;
-      text-align: center;
-      margin-right: 0;
-      padding-right: 0;
-      margin-bottom: 8px;
-    }
-  }
-</style>
