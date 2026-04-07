@@ -14,28 +14,13 @@
     return {};
   }
 
-  async function handleDirPick() {
-    if ('showDirectoryPicker' in window) {
-      try {
-        const handle = await (window as any).showDirectoryPicker();
-        $songStore.outputDir = handle.name;
-      } catch (err) {
-        // User cancelled
-      }
-    } else {
-      // Fallback to hidden input click
-      const input = document.getElementById('dir-input');
-      if (input) input.click();
-    }
-  }
-
   function handleDirSelect(event: Event) {
     const target = event.target as HTMLInputElement;
-    const files = target.files;
-    if (files && files.length > 0) {
-      const firstFile = files[0];
-      const path = (firstFile as any).path || firstFile.webkitRelativePath.split('/')[0] || firstFile.name;
-      $songStore.outputDir = path;
+    const file = target.files?.[0];
+    if (file) {
+      // Get the relative path or absolute path if available in this environment
+      const path = (file as any).path || file.webkitRelativePath.split('/')[0] || file.name;
+      $songStore.outputDir = path.substring(0, path.lastIndexOf('/')) || path;
     }
   }
 </script>
@@ -114,16 +99,10 @@
 
   <!-- Body of the Card for Output Dir -->
   <div class="output-dir-row">
-    <button class="dir-btn" on:click={handleDirPick}>
+    <label class="dir-btn">
       OUTPUT DIR
-    </button>
-    <input 
-      id="dir-input"
-      type="file" 
-      use:webkitDir 
-      hidden 
-      on:change={handleDirSelect} 
-    />
+      <input type="file" use:webkitDir hidden on:change={handleDirSelect} />
+    </label>
     <Display 
       value={$songStore.outputDir} 
       label="" 
