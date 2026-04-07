@@ -116,7 +116,6 @@
 </Card>
 
 <style>
-...
 .dir-btn-placeholder {
   background: var(--bg-sub);
   border: 1px solid var(--border-input);
