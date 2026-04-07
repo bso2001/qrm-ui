@@ -20,9 +20,24 @@ export default defineConfig({
                 if (!fs.existsSync(spoolDir)) {
                   fs.mkdirSync(spoolDir, { recursive: true });
                 }
+
+                // Parse the request to intercept and fix outputDir
+                const json = JSON.parse(body);
+                if (json.outputDir) {
+                  // Resolve relative paths against the UI project directory
+                  const absoluteOutDir = path.resolve(process.cwd(), json.outputDir);
+                  json.outputDir = absoluteOutDir;
+                  
+                  // Ensure the output directory exists so the generator doesn't crash
+                  if (!fs.existsSync(absoluteOutDir)) {
+                    fs.mkdirSync(absoluteOutDir, { recursive: true });
+                    console.log(`[QRM] Created output directory: ${absoluteOutDir}`);
+                  }
+                }
+
                 const filename = `request_${Date.now()}.json`;
                 const filePath = path.join(spoolDir, filename);
-                fs.writeFileSync(filePath, body);
+                fs.writeFileSync(filePath, JSON.stringify(json, null, 2));
                 console.log(`[QRM] Spooled request to ${filePath}`);
                 res.statusCode = 200;
                 res.end('OK');
