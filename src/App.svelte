@@ -117,9 +117,9 @@
 
   $: if (typeof document !== 'undefined') {
     // Remove all known theme classes first
-    themes.forEach(t => document.body.classList.remove(t));
-    if (currentTheme !== 'light') {
-      document.body.classList.add(currentTheme);
+    themes.forEach(t => document.body.classList.remove(t.toLowerCase()));
+    if (currentTheme !== 'Light') {
+      document.body.classList.add(currentTheme.toLowerCase());
     }
   }
 
@@ -355,6 +355,12 @@
             disabled={historyIndex <= 0}
             title="REVERT TO ORIGINAL"
           >REVERT</button>
+
+          <button 
+            class="btn sidebar-btn clear-btn" 
+            on:click={handleClear} 
+            title="CLEAR ENTIRE SONG"
+          >CLEAR</button>
         </div>
       {/if}
       
@@ -362,9 +368,8 @@
         <Choice 
           bind:value={currentTheme} 
           options={themes} 
-          width="80px"
+          width="65px"
         />
-        <span class="theme-label">THEME</span>
       </div>
     </div>
 
@@ -540,7 +545,7 @@
     margin-left: auto;
   }
 
-  .undo-btn, .revert-btn {
+  .undo-btn, .revert-btn, .clear-btn {
     font-size: 10px;
     padding: 0 10px;
     height: 32px;
@@ -554,6 +559,12 @@
   .revert-btn:hover:not(:disabled) {
     border-color: #ff6b6b;
     color: #ff6b6b;
+  }
+
+  .clear-btn:hover {
+    border-color: #fa5252;
+    background: #fa5252;
+    color: white;
   }
 
   .theme-picker {
@@ -630,6 +641,24 @@
     }
 
     :global(.section-sidebar) {
+      width: 100% !important;
+    }
+
+    .history-controls {
+      margin-left: 0;
+    }
+    
+    .logo {
+      border-right: none;
+      width: 100%;
+      text-align: center;
+      margin-right: 0;
+      padding-right: 0;
+      margin-bottom: 8px;
+    }
+  }
+</style>
+
       width: 100% !important;
     }
 

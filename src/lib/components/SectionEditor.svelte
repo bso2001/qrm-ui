@@ -29,7 +29,16 @@
     </div>
     
     <div class="header-controls">
-        <Display bind:value={currentSection.nMeasures} label="BARS" width="100px" layout="row" />
+        <Display 
+            value={currentSection.nMeasures} 
+            label="BARS" 
+            width="100px" 
+            layout="row" 
+            on:change={(e) => {
+                currentSection.nMeasures = parseInt(e.detail) || 4;
+                $songStore = $songStore;
+            }}
+        />
     </div>
   </div>
 

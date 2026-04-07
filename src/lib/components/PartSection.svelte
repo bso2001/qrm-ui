@@ -58,7 +58,17 @@
                 $songStore = $songStore;
             }}
         />
-        <Display bind:value={performance.file} label="MIDI FILE" width="180px" color="#aaa" fontSize="11px" />
+        <Display 
+            value={performance.file} 
+            label="MIDI FILE" 
+            width="180px" 
+            color="#aaa" 
+            fontSize="11px" 
+            on:change={(e) => {
+                performance.file = e.detail;
+                $songStore = $songStore;
+            }}
+        />
         
         <Display 
             value={(resolveParam($songStore, sectionIndex, partIndex, 'chords') || []).join(' ')} 
@@ -76,7 +86,16 @@
             width="120px" 
         />
         
-        <Display bind:value={part.duration} label="DURATION" width="70px" color="#00ffff" />
+        <Display 
+            value={part.duration} 
+            label="DURATION" 
+            width="70px" 
+            color="#00ffff" 
+            on:change={(e) => {
+                part.duration = e.detail;
+                $songStore = $songStore;
+            }}
+        />
     </div>
 
     <!-- Bottom Row: ALL Performance Sliders on one line -->

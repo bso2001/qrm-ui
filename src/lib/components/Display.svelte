@@ -13,6 +13,7 @@
 
   function handleChange(event: Event) {
     const newVal = (event.target as HTMLInputElement).value;
+    value = newVal;
     dispatch('change', newVal);
   }
 </script>

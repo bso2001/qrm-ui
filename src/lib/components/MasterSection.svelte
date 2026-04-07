@@ -124,7 +124,17 @@
       hidden 
       on:change={handleDirSelect} 
     />
-    <Display bind:value={$songStore.outputDir} label="" width="100%" color="#ffaa00" fontSize="11px" />
+    <Display 
+      value={$songStore.outputDir} 
+      label="" 
+      width="100%" 
+      color="#ffaa00" 
+      fontSize="11px" 
+      on:change={(e) => {
+        $songStore.outputDir = e.detail;
+        $songStore = $songStore;
+      }}
+    />
   </div>
 </Card>
 
