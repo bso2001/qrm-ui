@@ -270,8 +270,7 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        // Filename based on outputDir/name
-        a.download = ($songStore.outputDir || $songStore.name || "song") + ".zip";
+        a.download = ($songStore.name || "song") + ".zip";
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
