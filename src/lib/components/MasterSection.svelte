@@ -96,28 +96,41 @@
       </div>
     </div>
   </div>
-
-  <!-- Body of the Card for Output Dir -->
-  <div class="output-dir-row">
-    <label class="dir-btn">
-      OUTPUT DIR
-      <input type="file" use:webkitDir hidden on:change={handleDirSelect} />
-    </label>
-    <Display 
-      value={$songStore.outputDir} 
-      label="" 
-      width="100%" 
-      color="#ffaa00" 
-      fontSize="11px" 
-      on:change={(e) => {
-        $songStore.outputDir = e.detail;
-        $songStore = $songStore;
-      }}
-    />
+<!-- Body of the Card for Project Name -->
+<div class="output-dir-row">
+  <div class="dir-btn-placeholder">
+    PROJECT NAME
   </div>
+  <Display 
+    value={$songStore.outputDir || 'MySong'} 
+    label="" 
+    width="100%" 
+    color="#ffaa00" 
+    fontSize="11px" 
+    on:change={(e) => {
+      $songStore.outputDir = e.detail;
+      $songStore = $songStore;
+    }}
+  />
+</div>
 </Card>
 
 <style>
+...
+.dir-btn-placeholder {
+  background: var(--bg-sub);
+  border: 1px solid var(--border-input);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  cursor: default;
+}
+
   .header-controls {
     display: flex;
     align-items: center;
