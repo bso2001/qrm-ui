@@ -91,6 +91,18 @@
     }
   }
 
+  function handleClear() {
+    if (confirm('Are you sure you want to completely clear this song?')) {
+      loadSong(initialSong);
+      currentCatalogId = null;
+      selectedSectionIndex = 0;
+      selectedPartIndex = 0;
+      history = [];
+      historyIndex = -1;
+      saveState();
+    }
+  }
+
   function validateIndices() {
     if (!$songStore) return;
     if ($songStore.sections && selectedSectionIndex >= $songStore.sections.length) {
@@ -327,7 +339,7 @@
         </button>
       {/if}
 
-      <button class="btn sidebar-btn" on:click={() => showLibrary = true}>LIBRARY</button>
+      <button class="btn sidebar-btn" on:click={() => { console.log('Library clicked', showLibrary); showLibrary = true; console.log('showLibrary now', showLibrary); }}>LIBRARY</button>
 
       {#if ENABLE_ADMIN_FILE_IO}
         <label class="btn sidebar-btn">
