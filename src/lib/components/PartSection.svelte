@@ -65,7 +65,8 @@
             color="#aaa" 
             fontSize="11px" 
             on:change={(e) => {
-                performance.file = e.detail;
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
+                part.performances[sectionIndex].file = e.detail;
                 $songStore = $songStore;
             }}
         />
@@ -75,8 +76,11 @@
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
             options={['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
             on:change={(e) => {
-                if (!performance.key) performance.key = { ...resolveParam($songStore, sectionIndex, partIndex, 'key') };
-                performance.key.tonic = e.detail;
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
+                if (!part.performances[sectionIndex].key) {
+                    part.performances[sectionIndex].key = { ...(resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'}) };
+                }
+                part.performances[sectionIndex].key.tonic = e.detail;
                 $songStore = $songStore;
             }}
             width="45px" 
@@ -87,8 +91,11 @@
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
             options={['major', 'minor']}
             on:change={(e) => {
-                if (!performance.key) performance.key = { ...resolveParam($songStore, sectionIndex, partIndex, 'key') };
-                performance.key.mode = e.detail;
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
+                if (!part.performances[sectionIndex].key) {
+                    part.performances[sectionIndex].key = { ...(resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'}) };
+                }
+                part.performances[sectionIndex].key.mode = e.detail;
                 $songStore = $songStore;
             }}
             width="80px" 
@@ -100,13 +107,10 @@
             label="METER"
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'meter') !== 'performance'}
             on:change={(e) => {
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
                 const val = e.detail;
-                if (!val) {
-                    delete performance.meter;
-                } else {
-                    const [n, d] = val.split('/');
-                    performance.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
-                }
+                const [n, d] = val.split('/');
+                part.performances[sectionIndex].meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
                 $songStore = $songStore;
             }}
             width="60px" 
@@ -117,11 +121,12 @@
             label="CHORDS"
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'chords') !== 'performance'}
             on:change={(e) => {
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
                 const val = e.detail.trim();
                 if (val) {
-                    performance.chords = val.split(/[,\s]+/).filter(c => c);
+                    part.performances[sectionIndex].chords = val.split(/[,\s]+/).filter(c => c);
                 } else {
-                    delete performance.chords;
+                    delete part.performances[sectionIndex].chords;
                 }
                 $songStore = $songStore;
             }}
