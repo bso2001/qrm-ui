@@ -137,7 +137,6 @@
 
   const initialSong = {
     "name": "Untitled",
-    "outputDir": "",
     "tempo": 120,
     "velocity": [ 60, 80 ],
     "key": { "tonic": "C", "mode": "major" },
@@ -152,7 +151,6 @@
             "type": "chordal",
             "duration": "1/4",
             "range": [ "C3", "C5" ],
-            "file": "part1.mid",
             "restPct": 0,
             "tonicPct": 0,
             "inversionPct": 0,
