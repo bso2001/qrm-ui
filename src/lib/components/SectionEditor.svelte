@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { songStore } from '../songStore';
+  import { songStore, updateSection } from '../songStore';
   import Display from './Display.svelte';
   import Choice from './Choice.svelte';
   import { tonics, modes } from '../constants';
@@ -19,9 +19,9 @@
           <div class="input-sizer" data-value={currentSection.name || 'Untitled'}>
             <input 
                 class="name-input highlight" 
-                bind:value={currentSection.name} 
+                value={currentSection.name} 
+                on:input={(e) => updateSection(sectionIndex, 'name', e.currentTarget.value)}
                 placeholder="Untitled"
-                on:input={() => $songStore = $songStore}
                 size="1"
             />
           </div>
@@ -35,8 +35,7 @@
             width="100px" 
             layout="row" 
             on:change={(e) => {
-                currentSection.nMeasures = parseInt(e.detail) || 4;
-                $songStore = $songStore;
+                updateSection(sectionIndex, 'nMeasures', parseInt(e.detail) || 4);
             }}
         />
     </div>
@@ -52,9 +51,7 @@
           inherited={!currentSection.key}
           options={tonics}
           on:change={(e) => {
-            if (!currentSection.key) currentSection.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
-            currentSection.key.tonic = e.detail;
-            $songStore = $songStore;
+            updateSection(sectionIndex, 'key', { ...(currentSection.key || $songStore.key || {tonic: 'C', mode: 'major'}), tonic: e.detail });
           }}
           width="50px" 
         />
@@ -63,9 +60,7 @@
           inherited={!currentSection.key}
           options={modes}
           on:change={(e) => {
-            if (!currentSection.key) currentSection.key = { ...($songStore.key || {tonic: 'C', mode: 'major'}) };
-            currentSection.key.mode = e.detail;
-            $songStore = $songStore;
+            updateSection(sectionIndex, 'key', { ...(currentSection.key || $songStore.key || {tonic: 'C', mode: 'major'}), mode: e.detail });
           }}
           width="100px" 
         />
@@ -77,8 +72,7 @@
                 inherited={!currentSection.meter}
                 on:change={(e) => {
                     const [n, d] = e.detail.split('/');
-                    currentSection.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
-                    $songStore = $songStore;
+                    updateSection(sectionIndex, 'meter', { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 });
                 }}
                 width="75px" 
             />
@@ -92,11 +86,10 @@
                 on:change={(e) => {
                     const val = e.detail.trim();
                     if (val) {
-                        currentSection.chords = val.split(/[,\s]+/).filter(c => c);
+                        updateSection(sectionIndex, 'chords', val.split(/[,\s]+/).filter(c => c));
                     } else {
-                        delete currentSection.chords;
+                        updateSection(sectionIndex, 'chords', undefined);
                     }
-                    $songStore = $songStore;
                 }}
                 width="100%" 
                 layout="row"

@@ -1,11 +1,15 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 
 export const songStore = writable<any>(null);
 
-const partBaseKeys = ['name', 'type', 'duration', 'range', 'velocity', 'key', 'meter', 'chords', 'nMeasures', 'file'];
-const resolveKeys = ['duration', 'range', 'velocity', 'restPct', 'tonicPct', 'inversionPct', 'file', 'type', 'key', 'meter', 'chords', 'nMeasures'];
+// Keys that define the core identity of a part (not performance-specific)
+const partBaseKeys = ['name', 'type', 'duration', 'range'];
+
+// Keys that are resolved per-performance for export
+const resolveKeys = ['duration', 'range', 'velocity', 'restPct', 'tonicPct', 'inversionPct', 'file', 'type', 'key', 'meter', 'chords'];
 
 export function exportSong(state: any) {
+  if (!state) return state;
   const out = { ...state };
   delete out.parts;
 
@@ -18,8 +22,7 @@ export function exportSong(state: any) {
     sectionOut.chords = section.chords || state.chords;
 
     sectionOut.parts = (state.parts || []).map((p: any, pIdx: number) => {
-      const combined = { ...p };
-      delete combined.performances;
+      const combined: any = { name: p.name };
       
       // Resolve every part parameter so the backend gets a complete object
       resolveKeys.forEach(key => {
@@ -27,15 +30,9 @@ export function exportSong(state: any) {
         if (key === 'file' && typeof val === 'string' && val && !val.toLowerCase().endsWith('.mid')) {
           val += '.mid';
         }
-        
-        function isValid(v: any) {
-          if (v === undefined || v === null) return false;
-          if (typeof v === 'string' && v.trim() === '') return false;
-          if (Array.isArray(v) && v.length === 0) return false;
-          return true;
+        if (val !== undefined && val !== null) {
+          combined[key] = val;
         }
-
-        if (isValid(val)) combined[key] = val;
       });
       
       return combined;
@@ -49,24 +46,16 @@ export function exportSong(state: any) {
 export function importSong(json: any) {
   if (!json) return json;
   
-  // Normalize legacy section keys
-  const sections = json.sections || json.timeline || json.parts || [];
-  
   const state = { ...json };
+  const sections = json.sections || json.timeline || json.parts || [];
   state.sections = sections;
   delete state.timeline;
   delete state.parts_legacy;
   delete state.instruments;
   delete state.performers;
 
-  // Detect if it's already in the relational format (has root parts array with performances)
+  // Detect if it's already in the relational format
   if (json.parts && Array.isArray(json.parts) && json.parts[0] && Array.isArray(json.parts[0].performances)) {
-    state.parts = json.parts.map((p: any) => {
-        const cleanedPart = { ...p };
-        // Delete properties that should strictly be performance-level but got stuck globally
-        delete cleanedPart.file;
-        return cleanedPart;
-    });
     return state;
   }
   
@@ -78,7 +67,7 @@ export function importSong(json: any) {
     state.parts = templateParts.map((tp: any, pIdx: number) => {
       const p: any = {};
       
-      // Extract base properties from the first section's instance
+      // Extract base properties
       partBaseKeys.forEach(key => {
         if (tp[key] !== undefined) p[key] = tp[key];
       });
@@ -89,9 +78,9 @@ export function importSong(json: any) {
         const secPart = (sec.parts || sec.instruments || sec.performers || sec.voices)?.[pIdx] || {};
         const perf: any = {};
         
-        // Everything that isn't a base property goes into the performance specific object
+        // Everything else goes into the performance specific object
         Object.keys(secPart).forEach(key => {
-          if (!partBaseKeys.includes(key)) {
+          if (key !== 'name' && !partBaseKeys.includes(key)) {
             perf[key] = secPart[key];
           }
         });
@@ -120,6 +109,75 @@ export function importSong(json: any) {
 
 export function loadSong(json: any) {
   songStore.set(importSong(json));
+}
+
+// --- Explicit Update Functions ---
+
+export function updateSong(key: string, value: any) {
+  songStore.update(state => {
+    if (!state) return state;
+    const newState = { ...state };
+    if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+        delete newState[key];
+    } else {
+        newState[key] = value;
+    }
+    return newState;
+  });
+}
+
+export function updateSection(sectionIndex: number, key: string, value: any) {
+  songStore.update(state => {
+    if (!state?.sections?.[sectionIndex]) return state;
+    const newState = { ...state, sections: [...state.sections] };
+    const section = { ...newState.sections[sectionIndex] };
+    
+    if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+        delete section[key];
+    } else {
+        section[key] = value;
+    }
+    newState.sections[sectionIndex] = section;
+    return newState;
+  });
+}
+
+export function updatePart(partIndex: number, key: string, value: any) {
+  songStore.update(state => {
+    if (!state?.parts?.[partIndex]) return state;
+    const newState = { ...state, parts: [...state.parts] };
+    const part = { ...newState.parts[partIndex] };
+    
+    if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+        delete part[key];
+    } else {
+        part[key] = value;
+    }
+    newState.parts[partIndex] = part;
+    return newState;
+  });
+}
+
+export function updatePerformance(sectionIndex: number, partIndex: number, key: string, value: any) {
+  songStore.update(state => {
+    if (!state?.parts?.[partIndex]) return state;
+    const newState = { ...state, parts: [...state.parts] };
+    const part = { ...newState.parts[partIndex], performances: [...(newState.parts[partIndex].performances || [])] };
+    
+    if (!part.performances[sectionIndex]) {
+        part.performances[sectionIndex] = {};
+    }
+    const performance = { ...part.performances[sectionIndex] };
+    
+    if (value === undefined || value === null || (typeof value === 'string' && value.trim() === '')) {
+        delete performance[key];
+    } else {
+        performance[key] = value;
+    }
+    part.performances[sectionIndex] = performance;
+    newState.parts[partIndex] = part;
+    return newState;
+  });
 }
 
 /**

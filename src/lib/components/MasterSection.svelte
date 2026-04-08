@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { songStore } from '../songStore';
+  import { songStore, updateSong } from '../songStore';
   import Card from './Card.svelte';
   import Slider from './Slider.svelte';
   import Display from './Display.svelte';
@@ -20,7 +20,7 @@
     if (file) {
       // Get the relative path or absolute path if available in this environment
       const path = (file as any).path || file.webkitRelativePath.split('/')[0] || file.name;
-      $songStore.outputDir = path.substring(0, path.lastIndexOf('/')) || path;
+      updateSong('outputDir', path.substring(0, path.lastIndexOf('/')) || path);
     }
   }
 </script>
@@ -32,7 +32,8 @@
         <span class="name-wrapper">
             <span class="bracket">[</span><div class="input-sizer" data-value={$songStore.name || 'Untitled'}><input 
                     class="name-input highlight" 
-                    bind:value={$songStore.name} 
+                    value={$songStore.name} 
+                    on:input={(e) => updateSong('name', e.currentTarget.value)}
                     placeholder="Untitled"
                     size="1"
                 /></div><span class="bracket">]</span>
@@ -45,7 +46,7 @@
       {loadedFilename || ''}
     </div>
 
-    <Slider bind:value={$songStore.tempo} min={40} max={240} label="Tempo" compact={true} />
+    <Slider value={$songStore.tempo} on:change={(e) => updateSong('tempo', e.detail)} min={40} max={240} label="Tempo" compact={true} />
     
     <div class="header-group">
       <span class="group-label">DEFAULTS</span>
@@ -54,9 +55,7 @@
           value={$songStore.key?.tonic || 'C'} 
           options={tonics} 
           on:change={(e) => {
-            if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
-            $songStore.key.tonic = e.detail;
-            $songStore = $songStore;
+            updateSong('key', { ...($songStore.key || { tonic: 'C', mode: 'major' }), tonic: e.detail });
           }}
           width="45px" 
         />
@@ -64,9 +63,7 @@
           value={$songStore.key?.mode || 'major'} 
           options={modes} 
           on:change={(e) => {
-            if (!$songStore.key) $songStore.key = { tonic: 'C', mode: 'major' };
-            $songStore.key.mode = e.detail;
-            $songStore = $songStore;
+            updateSong('key', { ...($songStore.key || { tonic: 'C', mode: 'major' }), mode: e.detail });
           }}
           width="80px" 
         />
@@ -75,8 +72,7 @@
           label=""
           on:change={(e) => {
             const [n, d] = e.detail.split('/');
-            $songStore.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
-            $songStore = $songStore;
+            updateSong('meter', { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 });
           }}
           width="60px" 
         />
@@ -86,11 +82,10 @@
           on:change={(e) => {
             const val = e.detail.trim();
             if (val) {
-              $songStore.chords = val.split(/[,\s]+/).filter(c => c);
+              updateSong('chords', val.split(/[,\s]+/).filter(c => c));
             } else {
-              delete $songStore.chords;
+              updateSong('chords', undefined);
             }
-            $songStore = $songStore;
           }}
           width="120px" 
         />

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { songStore, resolveParam, getParamLevel } from '../songStore';
+  import { songStore, resolveParam, getParamLevel, updatePart, updatePerformance } from '../songStore';
   import Card from './Card.svelte';
   import Slider from './Slider.svelte';
   import Display from './Display.svelte';
@@ -27,9 +27,9 @@
       <div class="input-sizer" data-value={part.name || 'Untitled'}>
         <input 
             class="name-input highlight" 
-            bind:value={part.name} 
+            value={part.name} 
+            on:input={(e) => updatePart(partIndex, 'name', e.currentTarget.value)}
             placeholder="Untitled"
-            on:input={() => $songStore = $songStore}
             size="1"
         />
       </div>
@@ -44,8 +44,7 @@
             label="MODE"
             options={voiceTypes}
             on:change={(e) => {
-                part.type = e.detail;
-                $songStore = $songStore;
+                updatePart(partIndex, 'type', e.detail);
             }}
             width="90px" 
         />
@@ -54,8 +53,7 @@
             label="RANGE" 
             width="100px" 
             on:change={(e) => {
-                part.range = e.detail.split('-').map(s => s.trim());
-                $songStore = $songStore;
+                updatePart(partIndex, 'range', e.detail.split('-').map(s => s.trim()));
             }}
         />
         <Display 
@@ -65,9 +63,7 @@
             color="#aaa" 
             fontSize="11px" 
             on:change={(e) => {
-                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
-                part.performances[sectionIndex].file = e.detail;
-                $songStore = $songStore;
+                updatePerformance(sectionIndex, partIndex, 'file', e.detail);
             }}
         />
         
@@ -76,12 +72,8 @@
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
             options={['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
             on:change={(e) => {
-                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
-                if (!part.performances[sectionIndex].key) {
-                    part.performances[sectionIndex].key = { ...(resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'}) };
-                }
-                part.performances[sectionIndex].key.tonic = e.detail;
-                $songStore = $songStore;
+                const currentKey = resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'};
+                updatePerformance(sectionIndex, partIndex, 'key', { ...currentKey, tonic: e.detail });
             }}
             width="45px" 
             label="KEY"
@@ -91,12 +83,8 @@
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
             options={['major', 'minor']}
             on:change={(e) => {
-                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
-                if (!part.performances[sectionIndex].key) {
-                    part.performances[sectionIndex].key = { ...(resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'}) };
-                }
-                part.performances[sectionIndex].key.mode = e.detail;
-                $songStore = $songStore;
+                const currentKey = resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'};
+                updatePerformance(sectionIndex, partIndex, 'key', { ...currentKey, mode: e.detail });
             }}
             width="80px" 
             label="MODE"
@@ -107,11 +95,9 @@
             label="METER"
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'meter') !== 'performance'}
             on:change={(e) => {
-                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
                 const val = e.detail;
                 const [n, d] = val.split('/');
-                part.performances[sectionIndex].meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
-                $songStore = $songStore;
+                updatePerformance(sectionIndex, partIndex, 'meter', { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 });
             }}
             width="60px" 
         />
@@ -121,14 +107,12 @@
             label="CHORDS"
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'chords') !== 'performance'}
             on:change={(e) => {
-                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
                 const val = e.detail.trim();
                 if (val) {
-                    part.performances[sectionIndex].chords = val.split(/[,\s]+/).filter(c => c);
+                    updatePerformance(sectionIndex, partIndex, 'chords', val.split(/[,\s]+/).filter(c => c));
                 } else {
-                    delete part.performances[sectionIndex].chords;
+                    updatePerformance(sectionIndex, partIndex, 'chords', undefined);
                 }
-                $songStore = $songStore;
             }}
             width="120px" 
         />
@@ -139,8 +123,7 @@
             width="70px" 
             color="#00ffff" 
             on:change={(e) => {
-                part.duration = e.detail;
-                $songStore = $songStore;
+                updatePart(partIndex, 'duration', e.detail);
             }}
         />
     </div>
@@ -150,10 +133,9 @@
         <Slider 
             compact={true}
             value={resolveParam($songStore, sectionIndex, partIndex, 'restPct') ?? 0.5} 
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'restPct') === 'part'}
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'restPct') !== 'performance'}
             on:change={(e) => {
-                performance.restPct = e.detail;
-                $songStore = $songStore;
+                updatePerformance(sectionIndex, partIndex, 'restPct', e.detail);
             }}
             min={0} max={1} step={0.01} label="REST %" 
         />
@@ -161,10 +143,9 @@
         <Slider 
             compact={true}
             value={resolveParam($songStore, sectionIndex, partIndex, 'tonicPct') ?? 0} 
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'tonicPct') === 'part'}
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'tonicPct') !== 'performance'}
             on:change={(e) => {
-                performance.tonicPct = e.detail;
-                $songStore = $songStore;
+                updatePerformance(sectionIndex, partIndex, 'tonicPct', e.detail);
             }}
             min={0} max={1} step={0.01} label="TONIC %" 
         />
@@ -172,10 +153,9 @@
         <Slider 
             compact={true}
             value={resolveParam($songStore, sectionIndex, partIndex, 'inversionPct') ?? 0} 
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'inversionPct') === 'part'}
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'inversionPct') !== 'performance'}
             on:change={(e) => {
-                performance.inversionPct = e.detail;
-                $songStore = $songStore;
+                updatePerformance(sectionIndex, partIndex, 'inversionPct', e.detail);
             }}
             min={0} max={1} step={0.01} label="INV %" 
         />
@@ -183,22 +163,20 @@
         <Slider 
             compact={true}
             value={resolveParam($songStore, sectionIndex, partIndex, 'velocity')?.[0] ?? 60} 
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'velocity') === 'part'}
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'velocity') !== 'performance'}
             on:change={(e) => {
-                if (!performance.velocity) performance.velocity = [60, 80];
-                performance.velocity[0] = e.detail;
-                $songStore = $songStore;
+                const currentVel = resolveParam($songStore, sectionIndex, partIndex, 'velocity') || [60, 80];
+                updatePerformance(sectionIndex, partIndex, 'velocity', [e.detail, currentVel[1]]);
             }}
             min={0} max={127} label="MIN VEL"
         />
         <Slider 
             compact={true}
             value={resolveParam($songStore, sectionIndex, partIndex, 'velocity')?.[1] ?? 80} 
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'velocity') === 'part'}
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'velocity') !== 'performance'}
             on:change={(e) => {
-                if (!performance.velocity) performance.velocity = [60, 80];
-                performance.velocity[1] = e.detail;
-                $songStore = $songStore;
+                const currentVel = resolveParam($songStore, sectionIndex, partIndex, 'velocity') || [60, 80];
+                updatePerformance(sectionIndex, partIndex, 'velocity', [currentVel[0], e.detail]);
             }}
             min={0} max={127} label="MAX VEL"
         />
