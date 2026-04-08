@@ -171,13 +171,13 @@
     if (pos === 'start') idx = 0;
     else if (pos === 'current') idx = selectedSectionIndex;
     
-    $songStore = addSection($songStore, idx);
+    songStore.update(s => addSection(s, idx));
     selectedSectionIndex = idx;
   }
 
   function handleRemoveSection(index: number) {
     if ($songStore.sections.length <= 1) return;
-    $songStore = removeSection($songStore, index);
+    songStore.update(s => removeSection(s, index));
     validateIndices();
   }
 
@@ -187,13 +187,13 @@
     if (pos === 'start') idx = 0;
     else if (pos === 'current') idx = selectedPartIndex;
     
-    $songStore = addPart($songStore, idx);
+    songStore.update(s => addPart(s, idx));
     selectedPartIndex = idx;
   }
 
   function handleRemovePart(index: number) {
     if ($songStore.parts.length <= 1) return;
-    $songStore = removePart($songStore, index);
+    songStore.update(s => removePart(s, index));
     validateIndices();
   }
 
