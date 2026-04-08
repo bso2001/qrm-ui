@@ -70,6 +70,48 @@
             }}
         />
         
+        <Choice 
+            value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.tonic || 'C'} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
+            options={['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+            on:change={(e) => {
+                if (!performance.key) performance.key = { ...resolveParam($songStore, sectionIndex, partIndex, 'key') };
+                performance.key.tonic = e.detail;
+                $songStore = $songStore;
+            }}
+            width="45px" 
+            label="KEY"
+        />
+        <Choice 
+            value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.mode || 'major'} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
+            options={['major', 'minor']}
+            on:change={(e) => {
+                if (!performance.key) performance.key = { ...resolveParam($songStore, sectionIndex, partIndex, 'key') };
+                performance.key.mode = e.detail;
+                $songStore = $songStore;
+            }}
+            width="80px" 
+            label="MODE"
+        />
+        
+        <Display 
+            value="{resolveParam($songStore, sectionIndex, partIndex, 'meter')?.numerator || 4}/{resolveParam($songStore, sectionIndex, partIndex, 'meter')?.denominator || 4}" 
+            label="METER"
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'meter') !== 'performance'}
+            on:change={(e) => {
+                const val = e.detail;
+                if (!val) {
+                    delete performance.meter;
+                } else {
+                    const [n, d] = val.split('/');
+                    performance.meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
+                }
+                $songStore = $songStore;
+            }}
+            width="60px" 
+        />
+        
         <Display 
             value={(resolveParam($songStore, sectionIndex, partIndex, 'chords') || []).join(' ')} 
             label="CHORDS"
@@ -172,6 +214,7 @@
     gap: 12px;
     align-items: flex-end;
     margin-bottom: 4px;
+    flex-wrap: wrap;
   }
 
   .performance-row {
