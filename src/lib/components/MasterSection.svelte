@@ -27,16 +27,12 @@
 
 <Card title="">
   <div slot="header-left-extra" class="title-group">
-    <h2 class="song-title">SONG <span class="bracket">[</span>
-      <div class="input-sizer" data-value={$songStore.name || 'Untitled'}>
-        <input 
+    <h2 class="song-title">SONG <span class="bracket">[</span><div class="input-sizer" data-value={$songStore.name || 'Untitled'}><input 
             class="name-input highlight" 
             bind:value={$songStore.name} 
             placeholder="Untitled"
             size="1"
-        />
-      </div>
-    <span class="bracket">]</span></h2>
+        /></div><span class="bracket">]</span></h2>
   </div>
 
   <div slot="header-right-extra" class="header-controls">
