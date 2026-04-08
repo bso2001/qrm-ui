@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { 
     songStore, loadSong, exportSong, resolveParam, getParamLevel,
     addSection, removeSection, addPart, removePart 
@@ -165,13 +165,14 @@
   let selectedPartIndex = 0;
   let loadedFilename = "";
 
-  function handleInsertSection(event: CustomEvent<string>) {
+  async function handleInsertSection(event: CustomEvent<string>) {
     const pos = event.detail;
     let idx = $songStore.sections.length;
     if (pos === 'start') idx = 0;
     else if (pos === 'current') idx = selectedSectionIndex;
     
     songStore.update(s => addSection(s, idx));
+    await tick();
     selectedSectionIndex = idx;
   }
 
@@ -181,13 +182,14 @@
     validateIndices();
   }
 
-  function handleInsertPart(event: CustomEvent<string>) {
+  async function handleInsertPart(event: CustomEvent<string>) {
     const pos = event.detail;
     let idx = $songStore.parts.length;
     if (pos === 'start') idx = 0;
     else if (pos === 'current') idx = selectedPartIndex;
     
     songStore.update(s => addPart(s, idx));
+    await tick();
     selectedPartIndex = idx;
   }
 
