@@ -27,12 +27,17 @@
 
 <Card title="">
   <div slot="header-left-extra" class="title-group">
-    <h2 class="song-title"><span style="margin-right: 4px;">SONG</span><span class="bracket">[</span><div class="input-sizer" data-value={$songStore.name || 'Untitled'}><input 
-            class="name-input highlight" 
-            bind:value={$songStore.name} 
-            placeholder="Untitled"
-            size="1"
-        /></div><span class="bracket">]</span></h2>
+    <h2 class="song-title">
+        <span style="margin-right: 4px;">SONG</span>
+        <span class="name-wrapper">
+            <span class="bracket">[</span><div class="input-sizer" data-value={$songStore.name || 'Untitled'}><input 
+                    class="name-input highlight" 
+                    bind:value={$songStore.name} 
+                    placeholder="Untitled"
+                    size="1"
+                /></div><span class="bracket">]</span>
+        </span>
+    </h2>
   </div>
 
   <div slot="header-right-extra" class="header-controls">
@@ -183,6 +188,12 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  .name-wrapper {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
   }
 
   .input-sizer {
