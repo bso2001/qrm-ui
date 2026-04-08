@@ -59,7 +59,7 @@
             }}
         />
         <Display 
-            value={performance.file} 
+            value={resolveParam($songStore, sectionIndex, partIndex, 'file') || ''} 
             label="MIDI FILE" 
             width="180px" 
             color="#aaa" 
