@@ -44,24 +44,20 @@ export function importSong(json: any) {
   // Normalize legacy section keys
   const sections = json.sections || json.timeline || json.parts || [];
   
-  // Detect if it's already in the relational format (has root parts array)
-  if ((json.parts || json.instruments || json.performers) && !sections[0]?.parts && !sections[0]?.instruments && !sections[0]?.performers && !sections[0]?.voices) {
-    // Already relational, just ensure keys are modern
-    const state = { ...json };
-    state.sections = sections;
-    state.parts = json.parts || json.instruments || json.performers;
-    delete state.timeline;
-    delete state.parts_legacy; // just in case
-    delete state.instruments;
-    delete state.performers;
-    return state;
-  }
-
   const state = { ...json };
   state.sections = sections;
   delete state.timeline;
+  delete state.parts_legacy;
+  delete state.instruments;
+  delete state.performers;
+
+  // Detect if it's already in the relational format (has root parts array with performances)
+  if (json.parts && Array.isArray(json.parts) && json.parts[0] && Array.isArray(json.parts[0].performances)) {
+    state.parts = json.parts;
+    return state;
+  }
   
-  // Reconstruct parts array from the first section
+  // Reconstruct parts array from the first section (Flat format translation)
   const firstSection = state.sections[0];
   if (firstSection && (firstSection.parts || firstSection.instruments || firstSection.performers || firstSection.voices)) {
     const templateParts = firstSection.parts || firstSection.instruments || firstSection.performers || firstSection.voices;
@@ -102,6 +98,8 @@ export function importSong(json: any) {
       delete s.voices;
       return s;
     });
+  } else if (!state.parts) {
+      state.parts = [];
   }
 
   return state;
