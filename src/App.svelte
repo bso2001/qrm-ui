@@ -387,7 +387,7 @@
           >CLEAR</button>
         </div>
       {/if}
-      
+
       <div class="theme-picker">
         <Choice 
           bind:value={currentTheme} 
@@ -490,7 +490,7 @@
   .app-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     width: 100%;
     max-width: 1200px;
   }
@@ -507,9 +507,9 @@
     border: 1px solid var(--border-main);
     width: 100%;
     box-sizing: border-box;
-    position: sticky;
-    top: 10px;
     z-index: 100;
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
 
   .logo {
@@ -521,6 +521,7 @@
     margin-right: 12px;
     padding-right: 20px;
     border-right: 2px solid var(--border-sub);
+    flex-shrink: 0;
   }
 
   .btn {
@@ -543,6 +544,7 @@
     justify-content: center;
     font-size: 11px;
     white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .generate-btn {
@@ -567,6 +569,7 @@
     display: flex;
     gap: 4px;
     margin-left: auto;
+    flex-shrink: 0;
   }
 
   .undo-btn, .revert-btn, .clear-btn {
@@ -593,17 +596,11 @@
 
   .theme-picker {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
+    margin-left: 12px;
+    flex-shrink: 0;
   }
 
-  .theme-label {
-    font-size: 9px;
-    color: var(--text-muted);
-    font-weight: bold;
-    text-transform: uppercase;
-  }
 
   .btn:hover {
     background: var(--bg-hover);
@@ -624,7 +621,7 @@
 
   .workspace {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     align-items: flex-start;
   }
 
@@ -633,6 +630,7 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
+    gap: 12px;
   }
 
   .parts-container {
@@ -654,12 +652,6 @@
   }
 
   @media (max-width: 800px) {
-    .header-sidebar {
-      flex-wrap: wrap;
-      justify-content: center;
-      position: static;
-    }
-
     .workspace {
       flex-direction: column;
     }
@@ -668,17 +660,14 @@
       width: 100% !important;
     }
 
-    .history-controls {
-      margin-left: 0;
+    :global(.sections-list) {
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
     }
-    
-    .logo {
-      border-right: none;
-      width: 100%;
-      text-align: center;
-      margin-right: 0;
-      padding-right: 0;
-      margin-bottom: 8px;
+
+    :global(.section-item) {
+      flex: 1 1 150px !important;
+      max-width: 200px !important;
     }
   }
 </style>
