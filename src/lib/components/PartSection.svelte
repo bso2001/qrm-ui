@@ -59,14 +59,13 @@
             }}
         />
         <Display 
-            value={resolveParam($songStore, sectionIndex, partIndex, 'file') || ''} 
+            value={part.file || resolveParam($songStore, sectionIndex, partIndex, 'file') || ''} 
             label="MIDI FILE" 
             width="180px" 
             color="#aaa" 
             fontSize="11px" 
             on:change={(e) => {
-                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
-                part.performances[sectionIndex].file = e.detail;
+                part.file = e.detail;
                 $songStore = $songStore;
             }}
         />
