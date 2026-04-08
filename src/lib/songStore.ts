@@ -27,7 +27,15 @@ export function exportSong(state: any) {
         if (key === 'file' && typeof val === 'string' && val && !val.toLowerCase().endsWith('.mid')) {
           val += '.mid';
         }
-        if (val !== undefined) combined[key] = val;
+        
+        function isValid(v: any) {
+          if (v === undefined || v === null) return false;
+          if (typeof v === 'string' && v.trim() === '') return false;
+          if (Array.isArray(v) && v.length === 0) return false;
+          return true;
+        }
+
+        if (isValid(val)) combined[key] = val;
       });
       
       return combined;
@@ -116,30 +124,41 @@ export function loadSong(json: any) {
 export function resolveParam(song: any, sectionIndex: number, partIndex: number, key: string) {
   const section = song?.sections?.[sectionIndex];
   const part = song?.parts?.[partIndex];
-  const performance = part?.performances?.[sectionIndex]; // performances map 1:1 with sections
+  const performance = part?.performances?.[sectionIndex];
+
+  function isValid(val: any) {
+    if (val === undefined || val === null) return false;
+    if (typeof val === 'string' && val.trim() === '') return false;
+    if (Array.isArray(val) && val.length === 0) return false;
+    return true;
+  }
 
   // All params should resolve from Performance -> Part -> Section -> Song
-  if (performance && performance[key] !== undefined) return performance[key];
-  if (part && part[key] !== undefined) return part[key];
-  if (section && section[key] !== undefined) return section[key];
-  if (song && song[key] !== undefined) return song[key];
+  if (performance && isValid(performance[key])) return performance[key];
+  if (part && isValid(part[key])) return part[key];
+  if (section && isValid(section[key])) return section[key];
+  if (song && isValid(song[key])) return song[key];
 
   return undefined;
 }
 
-/**
- * Returns 'performance', 'part', 'section', or 'song' depending on where the param is actually defined.
- */
 export function getParamLevel(song: any, sectionIndex: number, partIndex: number, key: string) {
   const section = song?.sections?.[sectionIndex];
   const part = song?.parts?.[partIndex];
   const performance = part?.performances?.[sectionIndex];
 
+  function isValid(val: any) {
+    if (val === undefined || val === null) return false;
+    if (typeof val === 'string' && val.trim() === '') return false;
+    if (Array.isArray(val) && val.length === 0) return false;
+    return true;
+  }
+
   // All params should resolve from Performance -> Part -> Section -> Song
-  if (performance && performance[key] !== undefined) return 'performance';
-  if (part && part[key] !== undefined) return 'part';
-  if (section && section[key] !== undefined) return 'section';
-  if (song && song[key] !== undefined) return 'song';
+  if (performance && isValid(performance[key])) return 'performance';
+  if (part && isValid(part[key])) return 'part';
+  if (section && isValid(section[key])) return 'section';
+  if (song && isValid(song[key])) return 'song';
   return 'none';
 }
 
