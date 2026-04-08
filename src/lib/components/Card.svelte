@@ -58,7 +58,6 @@
     background: var(--bg-card);
     border: 1px solid var(--border-main);
     border-radius: 8px;
-    margin-bottom: 16px;
     padding: 16px 20px;
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -69,7 +68,6 @@
 
   .sub-module {
     background: var(--bg-sub);
-    margin: 12px 0 0 0;
     padding: 16px;
     border-color: var(--border-sub);
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);

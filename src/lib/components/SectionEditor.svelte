@@ -113,7 +113,6 @@
     border: 1px solid var(--border-main);
     border-radius: 8px;
     padding: 12px 20px;
-    margin-bottom: 16px;
     box-shadow: var(--shadow-sm);
   }
 
