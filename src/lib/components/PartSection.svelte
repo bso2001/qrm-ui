@@ -59,6 +59,80 @@
             }}
         />
         <Display 
+            value={part.file || resolveParam($songStore, sectionIndex, partIndex, 'file') || ''} 
+            label="MIDI FILE" 
+            width="180px" 
+            color="#aaa" 
+            fontSize="11px" 
+            on:change={(e) => {
+                part.file = e.detail;
+                $songStore = $songStore;
+            }}
+        />
+        
+        <Choice 
+            value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.tonic || 'C'} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
+            options={['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+            on:change={(e) => {
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
+                if (!part.performances[sectionIndex].key) {
+                    part.performances[sectionIndex].key = { ...(resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'}) };
+                }
+                part.performances[sectionIndex].key.tonic = e.detail;
+                $songStore = $songStore;
+            }}
+            width="45px" 
+            label="KEY"
+        />
+        <Choice 
+            value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.mode || 'major'} 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
+            options={['major', 'minor']}
+            on:change={(e) => {
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
+                if (!part.performances[sectionIndex].key) {
+                    part.performances[sectionIndex].key = { ...(resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'}) };
+                }
+                part.performances[sectionIndex].key.mode = e.detail;
+                $songStore = $songStore;
+            }}
+            width="80px" 
+            label="MODE"
+        />
+        
+        <Display 
+            value="{resolveParam($songStore, sectionIndex, partIndex, 'meter')?.numerator || 4}/{resolveParam($songStore, sectionIndex, partIndex, 'meter')?.denominator || 4}" 
+            label="METER"
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'meter') !== 'performance'}
+            on:change={(e) => {
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
+                const val = e.detail;
+                const [n, d] = val.split('/');
+                part.performances[sectionIndex].meter = { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 };
+                $songStore = $songStore;
+            }}
+            width="60px" 
+        />
+        
+        <Display 
+            value={(resolveParam($songStore, sectionIndex, partIndex, 'chords') || []).join(' ')} 
+            label="CHORDS"
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'chords') !== 'performance'}
+            on:change={(e) => {
+                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
+                const val = e.detail.trim();
+                if (val) {
+                    part.performances[sectionIndex].chords = val.split(/[,\s]+/).filter(c => c);
+                } else {
+                    delete part.performances[sectionIndex].chords;
+                }
+                $songStore = $songStore;
+            }}
+            width="120px" 
+        />
+        
+        <Display 
             value={part.duration} 
             label="DURATION" 
             width="70px" 
@@ -72,19 +146,6 @@
 
     <!-- Bottom Row: ALL Performance Sliders on one line -->
     <div class="performance-row">
-        <Display 
-            value={resolveParam($songStore, sectionIndex, partIndex, 'file') || ''} 
-            label="MIDI FILE" 
-            width="180px" 
-            color="#aaa" 
-            fontSize="11px" 
-            on:change={(e) => {
-                if (!part.performances[sectionIndex]) part.performances[sectionIndex] = {};
-                part.performances[sectionIndex].file = e.detail;
-                $songStore = $songStore;
-            }}
-        />
-        
         <Slider 
             compact={true}
             value={resolveParam($songStore, sectionIndex, partIndex, 'restPct') ?? 0.5} 
