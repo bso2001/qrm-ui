@@ -92,7 +92,7 @@
   }
 
   function handleClear() {
-    if (confirm('Are you sure you want to completely clear this song?')) {
+    if (confirm('Are you sure you want to completely clear this song?\n\nAny unsaved changes will be permanently lost! Remember to use the LIBRARY to save your work.')) {
       loadSong(initialSong);
       currentCatalogId = null;
       selectedSectionIndex = 0;
