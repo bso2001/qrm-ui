@@ -23,8 +23,8 @@
 <div class="slider-container" class:inherited class:compact>
   {#if label}
     <div class="header">
-      <span class="value">{value % 1 === 0 ? value : value.toFixed(2)}</span>
       <span class="label">{label}</span>
+      <span class="value">{value % 1 === 0 ? value : value.toFixed(2)}</span>
     </div>
   {/if}
   
@@ -65,7 +65,7 @@
 
   .header {
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-end;
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
