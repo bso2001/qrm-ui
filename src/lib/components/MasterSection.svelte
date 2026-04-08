@@ -134,7 +134,7 @@
   .group-content {
     display: flex;
     gap: 4px;
-    align-items: center;
+    align-items: flex-end;
   }
 
   .filename-display {
@@ -187,6 +187,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    flex-wrap: wrap;
   }
 
   .input-sizer {
@@ -200,7 +201,7 @@
     grid-area: 1 / 1;
     font-family: monospace;
     font-weight: 800;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     padding: 0;
     margin: 0;
     resize: none;
@@ -208,6 +209,12 @@
     appearance: none;
     border: none;
     text-align: center;
+  }
+
+  @media (max-width: 800px) {
+    .name-input, .input-sizer::after {
+      font-size: 0.9rem;
+    }
   }
 
   .name-input {
