@@ -61,7 +61,12 @@ export function importSong(json: any) {
 
   // Detect if it's already in the relational format (has root parts array with performances)
   if (json.parts && Array.isArray(json.parts) && json.parts[0] && Array.isArray(json.parts[0].performances)) {
-    state.parts = json.parts;
+    state.parts = json.parts.map((p: any) => {
+        const cleanedPart = { ...p };
+        // Delete properties that should strictly be performance-level but got stuck globally
+        delete cleanedPart.file;
+        return cleanedPart;
+    });
     return state;
   }
   
