@@ -2,7 +2,7 @@ import { writable } from 'svelte/store';
 
 export const songStore = writable<any>(null);
 
-const partBaseKeys = ['name', 'type', 'duration', 'range', 'velocity', 'key', 'meter', 'chords', 'nMeasures'];
+const partBaseKeys = ['name', 'type', 'duration', 'range', 'velocity', 'key', 'meter', 'chords', 'nMeasures', 'file'];
 const resolveKeys = ['duration', 'range', 'velocity', 'restPct', 'tonicPct', 'inversionPct', 'file', 'type', 'key', 'meter', 'chords', 'nMeasures'];
 
 export function exportSong(state: any) {
@@ -23,7 +23,10 @@ export function exportSong(state: any) {
       
       // Resolve every part parameter so the backend gets a complete object
       resolveKeys.forEach(key => {
-        const val = resolveParam(state, idx, pIdx, key);
+        let val = resolveParam(state, idx, pIdx, key);
+        if (key === 'file' && typeof val === 'string' && val && !val.toLowerCase().endsWith('.mid')) {
+          val += '.mid';
+        }
         if (val !== undefined) combined[key] = val;
       });
       
