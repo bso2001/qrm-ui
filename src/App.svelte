@@ -293,6 +293,13 @@
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
     if (file) {
+      if (historyIndex > 0) {
+        if (!confirm('You have unsaved changes. Loading a new file will overwrite your current workspace. Are you sure you want to proceed?')) {
+          target.value = "";
+          return;
+        }
+      }
+      
       loadedFilename = file.name;
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -302,6 +309,8 @@
           currentCatalogId = null; // Loading a file disconnects from library
           selectedSectionIndex = 0;
           selectedPartIndex = 0;
+          history = [];
+          historyIndex = -1;
         } catch (err) {
           alert("Error parsing JSON file");
         } finally {
