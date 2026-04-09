@@ -258,9 +258,6 @@
     }
   }
 
-  function handleLibraryClearedCurrent() {
-    currentCatalogId = null;
-  }
   // ----------------------
 
   let generating = false;
