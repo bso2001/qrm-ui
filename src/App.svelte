@@ -91,6 +91,17 @@
     }
   }
 
+  function handleLibraryClearedCurrent() {
+    localStorage.removeItem('qrm_autosave');
+    currentCatalogId = null;
+    selectedSectionIndex = 0;
+    selectedPartIndex = 0;
+    history = [];
+    historyIndex = -1;
+    loadSong(initialSong);
+    saveState();
+  }
+
   function handleClear() {
     if (confirm('Are you sure you want to completely clear this song?\n\nAny unsaved changes will be permanently lost! Remember to use the LIBRARY to save your work.')) {
       loadSong(initialSong);
@@ -333,7 +344,6 @@
 </script>
 
 <svelte:window on:keydown={handleGlobalKeydown} />
-
 <LibraryModal 
   show={showLibrary} 
   currentSongId={currentCatalogId}

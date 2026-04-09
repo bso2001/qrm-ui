@@ -48,8 +48,12 @@
                   saveToCatalog(song); // This generates a new ID and updates the store/index
                 }
               });
-
-              window.location.reload();
+              
+              // 3. Clear current song in UI and reload
+              dispatch('clearedCurrent');
+              setTimeout(() => {
+                window.location.reload();
+              }, 100);
             } else {
               alert("Invalid library format. Expected a JSON array of songs.");
             }
