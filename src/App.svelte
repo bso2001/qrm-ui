@@ -584,12 +584,14 @@
     transition: all 0.2s ease;
   }
 .sidebar-btn {
-  width: 100%;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
+  padding: 0 16px;
+  white-space: nowrap;
+  max-width: 120px;
 }
 
 .mini-btn {
