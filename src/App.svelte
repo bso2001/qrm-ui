@@ -392,8 +392,8 @@
         </button>
       {/if}
 
-      <div style="display: flex; gap: 4px; width: 100%; align-items: stretch; justify-content: space-between;">
-        <button class="btn sidebar-btn" style="flex: 1;" on:click={() => { console.log('Library clicked', showLibrary); showLibrary = true; console.log('showLibrary now', showLibrary); }}>LIBRARY</button>
+      <div style="display: flex; gap: 4px; align-items: stretch; justify-content: flex-start;">
+        <button class="btn sidebar-btn" on:click={() => { console.log('Library clicked', showLibrary); showLibrary = true; console.log('showLibrary now', showLibrary); }}>LIBRARY</button>
         <button class="btn mini-btn" on:click={handleExportLibrary} title="Export Library">▲</button>
         <label class="btn mini-btn" title="Import Library">
           ▼
