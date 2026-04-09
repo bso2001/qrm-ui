@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { catalogStore, deleteFromCatalog } from '../catalogStore';
+  import { catalogStore, deleteFromCatalog, loadFromCatalog, saveToCatalog } from '../catalogStore';
   import type { CatalogEntry } from '../catalogStore';
 
   export let show = false;
@@ -9,8 +9,13 @@
   const dispatch = createEventDispatcher();
 
   function handleExportLibrary() {
-    const catalogData = localStorage.getItem('qrm_catalog');
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(catalogData ? JSON.stringify(JSON.parse(catalogData), null, 2) : "{}");
+    const catalog = $catalogStore;
+    const fullLibrary = catalog.map(entry => {
+      const songData = loadFromCatalog(entry.id);
+      return songData;
+    }).filter(song => song !== null); // Filter out any broken entries
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullLibrary, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", `qrm_library_${new Date().toISOString().slice(0, 10)}.json`);
@@ -29,10 +34,24 @@
           try {
             const json = JSON.parse(e.target?.result as string);
             if (Array.isArray(json)) {
-              localStorage.setItem('qrm_catalog', JSON.stringify(json));
+              // 1. Clear existing catalog and all its songs
+              const oldCatalog = $catalogStore;
+              oldCatalog.forEach(entry => {
+                localStorage.removeItem(`qrm_song_${entry.id}`);
+              });
+              localStorage.removeItem('qrm_catalog');
+              catalogStore.set([]);
+
+              // 2. Import each song into the new catalog
+              json.forEach(song => {
+                if (song && typeof song === 'object') {
+                  saveToCatalog(song); // This generates a new ID and updates the store/index
+                }
+              });
+
               window.location.reload();
             } else {
-              alert("Invalid library format. Expected a JSON array.");
+              alert("Invalid library format. Expected a JSON array of songs.");
             }
           } catch (err) {
             alert("Error parsing JSON library file");
