@@ -6,6 +6,7 @@ export default defineConfig({
     svelte()
   ],
   server: {
+    allowedHosts: ['qrm.noztrey.com', 'bertolsson.com', 'localhost'],
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
