@@ -8,6 +8,45 @@
 
   const dispatch = createEventDispatcher();
 
+  function handleExportLibrary() {
+    const catalogData = localStorage.getItem('qrm_catalog');
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(catalogData ? JSON.stringify(JSON.parse(catalogData), null, 2) : "{}");
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `qrm_library_${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  }
+
+  function handleImportLibrary(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (file) {
+      if (confirm('Importing a library will OVERWRITE your current local library completely. Are you sure you want to proceed?')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const json = JSON.parse(e.target?.result as string);
+            if (Array.isArray(json)) {
+              localStorage.setItem('qrm_catalog', JSON.stringify(json));
+              window.location.reload();
+            } else {
+              alert("Invalid library format. Expected a JSON array.");
+            }
+          } catch (err) {
+            alert("Error parsing JSON library file");
+          } finally {
+            target.value = "";
+          }
+        };
+        reader.readAsText(file);
+      } else {
+        target.value = "";
+      }
+    }
+  }
+
   function handleClose() {
     dispatch('close');
   }
@@ -39,7 +78,14 @@
   <div class="modal-backdrop" on:click={handleClose}>
     <div class="modal-content" on:click|stopPropagation>
       <div class="modal-header">
-        <h2>SONG LIBRARY</h2>
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <h2>SONG LIBRARY</h2>
+          <button class="action-btn" on:click={handleExportLibrary} title="Export Library">EXPORT</button>
+          <label class="action-btn" title="Import Library">
+            IMPORT
+            <input type="file" accept=".json" on:change={handleImportLibrary} hidden />
+          </label>
+        </div>
         <button class="close-btn" on:click={handleClose}>×</button>
       </div>
 
@@ -126,6 +172,24 @@
     font-weight: 800;
     color: var(--text-heading);
     letter-spacing: 1px;
+  }
+
+  .action-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-input);
+    color: var(--text-main);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .action-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--text-muted);
   }
 
   .close-btn {

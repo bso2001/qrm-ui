@@ -91,47 +91,6 @@
     }
   }
 
-  function handleExportLibrary() {
-    const catalogData = localStorage.getItem('qrm_catalog');
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(catalogData ? JSON.stringify(JSON.parse(catalogData), null, 2) : "{}");
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `qrm_library_${new Date().toISOString().slice(0, 10)}.json`);
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-  }
-
-  function handleImportLibrary(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file) {
-      if (confirm('Importing a library will OVERWRITE your current local library completely. Are you sure you want to proceed?')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const json = JSON.parse(e.target?.result as string);
-            if (typeof json === 'object') {
-              localStorage.setItem('qrm_catalog', JSON.stringify(json));
-              // Dispatch an event or reload the page to refresh the catalog store
-              // A simple reload is safest to reset all state cleanly
-              window.location.reload();
-            } else {
-              alert("Invalid library format.");
-            }
-          } catch (err) {
-            alert("Error parsing JSON library file");
-          } finally {
-            target.value = "";
-          }
-        };
-        reader.readAsText(file);
-      } else {
-        target.value = "";
-      }
-    }
-  }
-
   function handleClear() {
     if (confirm('Are you sure you want to completely clear this song?\n\nAny unsaved changes will be permanently lost! Remember to use the LIBRARY to save your work.')) {
       loadSong(initialSong);
@@ -392,14 +351,7 @@
         </button>
       {/if}
 
-      <div style="display: flex; gap: 4px; align-items: stretch; justify-content: flex-start;">
-        <button class="btn sidebar-btn" on:click={() => { console.log('Library clicked', showLibrary); showLibrary = true; console.log('showLibrary now', showLibrary); }}>LIBRARY</button>
-        <button class="btn mini-btn" on:click={handleExportLibrary} title="Export Library">▲</button>
-        <label class="btn mini-btn" title="Import Library">
-          ▼
-          <input type="file" accept=".json" on:change={handleImportLibrary} hidden />
-        </label>
-      </div>
+      <button class="btn sidebar-btn" on:click={() => { console.log('Library clicked', showLibrary); showLibrary = true; console.log('showLibrary now', showLibrary); }}>LIBRARY</button>
 
       {#if ENABLE_ADMIN_FILE_IO}
         <label class="btn sidebar-btn">
