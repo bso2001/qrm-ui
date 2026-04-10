@@ -23,7 +23,15 @@
   }
 
   function selectChord(index: number) {
-    activeIndex = index;
+    if (activeIndex === index) {
+      activeIndex = null;
+    } else {
+      activeIndex = index;
+    }
+  }
+
+  function closeEditor() {
+    activeIndex = null;
   }
 
   function updateActiveChord(root: string, quality: string) {
@@ -64,8 +72,10 @@
   }
 </script>
 
-<div class="chord-builder">
-  <div class="chord-list">
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="chord-builder" on:click|self={closeEditor}>
+  <div class="chord-list" on:click|self={closeEditor}>
     {#each chords as chord, i}
       <div 
         class="chord-pill" 
@@ -87,6 +97,11 @@
 
   {#if activeIndex !== null && chords[activeIndex] !== undefined}
     <div class="editor-panel">
+      <div class="panel-header">
+        <span class="edit-title">EDIT CHORD: <span class="highlight">{chords[activeIndex]}</span></span>
+        <button class="close-panel-btn" on:click={closeEditor}>DONE</button>
+      </div>
+
       <div class="selector-group">
         <span class="label">ROOT</span>
         <div class="grid roots">
@@ -220,6 +235,47 @@
     gap: 16px;
     padding-top: 12px;
     border-top: 1px solid var(--border-sub);
+    animation: slideDown 0.2s ease-out;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .edit-title {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .highlight {
+    color: var(--accent);
+  }
+
+  .close-panel-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-input);
+    color: var(--text-main);
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .close-panel-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--text-muted);
   }
 
   .selector-group {
