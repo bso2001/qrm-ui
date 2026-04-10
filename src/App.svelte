@@ -18,7 +18,7 @@
   const ENABLE_ADMIN_FILE_IO = false;
 
   let currentTheme = 'light';
-  const themes = ['light', 'dark'];
+  const themes = ['light', 'medium', 'dark'];
   
   let history: string[] = [];
   let historyIndex = -1;
@@ -140,9 +140,9 @@
 
   $: if (typeof document !== 'undefined') {
     // Remove all known theme classes first
-    themes.forEach(t => document.body.classList.remove(t.toLowerCase()));
-    if (currentTheme !== 'Light') {
-      document.body.classList.add(currentTheme.toLowerCase());
+    themes.forEach(t => document.body.classList.remove(t));
+    if (currentTheme !== 'light') {
+      document.body.classList.add(currentTheme);
     }
   }
 
@@ -492,6 +492,23 @@
     --accent: #3b82f6;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  }
+
+  :global(body.medium) {
+    --bg-main: #5c5c5c;
+    --bg-card: #6b6b6b;
+    --bg-sub: #636363;
+    --bg-hover: #7a7a7a;
+    --bg-input: #4a4a4a;
+    --text-main: #eeeeee;
+    --text-muted: #cccccc;
+    --text-heading: #ffffff;
+    --border-main: #777777;
+    --border-sub: #666666;
+    --border-input: #555555;
+    --accent: #4dabf7;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   }
 
   main {
