@@ -14,6 +14,8 @@
   $: performance = part?.performances?.[sectionIndex] || {};
 
   const dispatch = createEventDispatcher();
+
+  let showKMC = false;
 </script>
 
 <Card 
@@ -22,6 +24,10 @@
   showDelete={$songStore?.parts?.length > 1}
   on:delete={() => dispatch('delete')}
 >
+  <div slot="header-right-extra">
+    <button class="icon-btn" style="font-size: 1.1rem; margin-right: 4px;" title="Override Key/Meter/Chords" on:click={() => showKMC = !showKMC}>⚙</button>
+  </div>
+  
   <div slot="header-left-extra" class="title-group">
     <h3 class="part-title">PART <span class="bracket">[</span>
       <div class="input-sizer" data-value={part.name || 'Untitled'}>
@@ -66,67 +72,74 @@
                 updatePerformance(sectionIndex, partIndex, 'file', e.detail);
             }}
         />
-        
-        <Choice 
-            value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.tonic || 'C'} 
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
-            options={['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
-            on:change={(e) => {
-                const currentKey = resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'};
-                updatePerformance(sectionIndex, partIndex, 'key', { ...currentKey, tonic: e.detail });
-            }}
-            width="45px" 
-            label="KEY"
-        />
-        <Choice 
-            value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.mode || 'major'} 
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
-            options={['major', 'minor']}
-            on:change={(e) => {
-                const currentKey = resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'};
-                updatePerformance(sectionIndex, partIndex, 'key', { ...currentKey, mode: e.detail });
-            }}
-            width="80px" 
-            label="MODE"
-        />
-        
-        <Display 
-            value="{resolveParam($songStore, sectionIndex, partIndex, 'meter')?.numerator || 4}/{resolveParam($songStore, sectionIndex, partIndex, 'meter')?.denominator || 4}" 
-            label="METER"
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'meter') !== 'performance'}
-            on:change={(e) => {
-                const val = e.detail;
-                const [n, d] = val.split('/');
-                updatePerformance(sectionIndex, partIndex, 'meter', { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 });
-            }}
-            width="60px" 
-        />
-        
-        <Display 
-            value={(resolveParam($songStore, sectionIndex, partIndex, 'chords') || []).join(' ')} 
-            label="CHORDS"
-            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'chords') !== 'performance'}
-            on:change={(e) => {
-                const val = e.detail.trim();
-                if (val) {
-                    updatePerformance(sectionIndex, partIndex, 'chords', val.split(/[,\s]+/).filter(c => c));
-                } else {
-                    updatePerformance(sectionIndex, partIndex, 'chords', undefined);
-                }
-            }}
-            width="120px" 
-        />
+
+        {#if showKMC}
+            <Choice 
+                value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.tonic || 'C'} 
+                inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
+                options={['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                on:change={(e) => {
+                    const currentKey = resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'};
+                    updatePerformance(sectionIndex, partIndex, 'key', { ...currentKey, tonic: e.detail });
+                }}
+                width="45px" 
+                label="KEY"
+            />
+            <Choice 
+                value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.mode || 'major'} 
+                inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
+                options={['major', 'minor']}
+                on:change={(e) => {
+                    const currentKey = resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'};
+                    updatePerformance(sectionIndex, partIndex, 'key', { ...currentKey, mode: e.detail });
+                }}
+                width="80px" 
+                label="MODE"
+            />
+            
+            <Display 
+                value="{resolveParam($songStore, sectionIndex, partIndex, 'meter')?.numerator || 4}/{resolveParam($songStore, sectionIndex, partIndex, 'meter')?.denominator || 4}" 
+                label="METER"
+                inherited={getParamLevel($songStore, sectionIndex, partIndex, 'meter') !== 'performance'}
+                on:change={(e) => {
+                    const val = e.detail;
+                    const [n, d] = val.split('/');
+                    updatePerformance(sectionIndex, partIndex, 'meter', { numerator: parseInt(n) || 4, denominator: parseInt(d) || 4 });
+                }}
+                width="60px" 
+            />
+        {/if}
         
         <Display 
-            value={part.duration} 
+            value={resolveParam($songStore, sectionIndex, partIndex, 'duration') || '1/4'} 
             label="DURATION" 
             width="70px" 
             color="#00ffff" 
+            inherited={getParamLevel($songStore, sectionIndex, partIndex, 'duration') !== 'performance'}
             on:change={(e) => {
-                updatePart(partIndex, 'duration', e.detail);
+                updatePerformance(sectionIndex, partIndex, 'duration', e.detail);
             }}
         />
     </div>
+
+    {#if showKMC}
+        <div class="chords-row">
+            <Display 
+                value={(resolveParam($songStore, sectionIndex, partIndex, 'chords') || []).join(' ')} 
+                label="CHORDS"
+                inherited={getParamLevel($songStore, sectionIndex, partIndex, 'chords') !== 'performance'}
+                on:change={(e) => {
+                    const val = e.detail.trim();
+                    if (val) {
+                        updatePerformance(sectionIndex, partIndex, 'chords', val.split(/[,\s]+/).filter(c => c));
+                    } else {
+                        updatePerformance(sectionIndex, partIndex, 'chords', undefined);
+                    }
+                }}
+                width="100%" 
+            />
+        </div>
+    {/if}
 
     <!-- Bottom Row: ALL Performance Sliders on one line -->
     <div class="performance-row">
@@ -165,8 +178,8 @@
             value={resolveParam($songStore, sectionIndex, partIndex, 'velocity')?.[0] ?? 60} 
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'velocity') !== 'performance'}
             on:change={(e) => {
-                const currentVel = resolveParam($songStore, sectionIndex, partIndex, 'velocity') || [60, 80];
-                updatePerformance(sectionIndex, partIndex, 'velocity', [e.detail, currentVel[1]]);
+                const currentVelocity = resolveParam($songStore, sectionIndex, partIndex, 'velocity') || [60, 80];
+                updatePerformance(sectionIndex, partIndex, 'velocity', [e.detail, currentVelocity[1]]);
             }}
             min={0} max={127} label="MIN VEL"
         />
@@ -175,8 +188,8 @@
             value={resolveParam($songStore, sectionIndex, partIndex, 'velocity')?.[1] ?? 80} 
             inherited={getParamLevel($songStore, sectionIndex, partIndex, 'velocity') !== 'performance'}
             on:change={(e) => {
-                const currentVel = resolveParam($songStore, sectionIndex, partIndex, 'velocity') || [60, 80];
-                updatePerformance(sectionIndex, partIndex, 'velocity', [currentVel[0], e.detail]);
+                const currentVelocity = resolveParam($songStore, sectionIndex, partIndex, 'velocity') || [60, 80];
+                updatePerformance(sectionIndex, partIndex, 'velocity', [currentVelocity[0], e.detail]);
             }}
             min={0} max={127} label="MAX VEL"
         />
@@ -200,6 +213,11 @@
     flex-wrap: wrap;
   }
 
+  .chords-row {
+      width: 100%;
+      margin-bottom: 4px;
+  }
+
   .performance-row {
     display: flex;
     gap: 5px;
@@ -208,29 +226,35 @@
     overflow-x: auto;
   }
 
-  .part-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--text-heading);
+  .title-group {
     display: flex;
     align-items: center;
     gap: 4px;
   }
 
-  .input-sizer {
-    display: inline-grid;
+  .part-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-heading);
+    display: flex;
     align-items: center;
   }
 
-  .input-sizer::after,
-  .name-input {
-    min-width: 0;
-    grid-area: 1 / 1;
-    font-family: monospace;
-    font-weight: 800;
-    font-size: 1.1rem;
-    padding: 0;
+  .input-sizer {
+    display: inline-grid;
+    vertical-align: top;
+    align-items: center;
+    position: relative;
+    padding: 0 4px;
+  }
+
+  .input-sizer::after, .name-input {
+    width: auto;
+    min-width: 50px;
+    grid-area: 1/2;
+    font: inherit;
+    padding: 2px 6px;
     margin: 0;
     resize: none;
     background: none;
@@ -246,7 +270,6 @@
   }
 
   .input-sizer::after {
-    width: auto;
     content: attr(data-value);
     visibility: hidden;
     white-space: pre;
@@ -255,7 +278,7 @@
   .name-input:focus {
     background: var(--bg-sub);
     border-radius: 4px;
-    box-shadow: 0 0 0 2px var(--bg-sub); /* Faux padding for focus */
+    box-shadow: 0 0 0 2px var(--bg-sub);
   }
 
   .bracket {
@@ -268,5 +291,23 @@
     color: var(--accent);
     font-family: monospace;
     font-weight: 800;
+  }
+
+  .icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    padding: 4px;
+    transition: all 0.2s ease;
+  }
+
+  .icon-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-heading);
   }
 </style>
