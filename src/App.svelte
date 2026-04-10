@@ -408,7 +408,7 @@
         <Choice 
           bind:value={currentTheme} 
           options={themes} 
-          width="65px"
+          width="80px"
         />
       </div>
     </div>
