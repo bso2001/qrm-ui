@@ -8,6 +8,7 @@
   export let inherited: boolean = false;
   export let label: string = '';
   export let layout: 'row' | 'column' = 'column';
+  export let fontSize: string = '0.95rem';
 
   const dispatch = createEventDispatcher();
 
@@ -27,7 +28,7 @@
   }
 </script>
 
-<div class="choice-container {layout}" style="--width: {width}; --accent: {color}" class:inherited>
+<div class="choice-container {layout}" style="--width: {width}; --accent: {color}; --font-size: {fontSize}" class:inherited>
   {#if label}
     <span class="choice-label">{label}</span>
   {/if}
@@ -101,7 +102,7 @@
   }
 
   .display {
-    font-size: 0.95rem;
+    font-size: var(--font-size, 0.95rem);
     font-weight: 600;
     text-align: center;
     line-height: 1;
