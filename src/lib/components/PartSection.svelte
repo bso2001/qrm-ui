@@ -5,7 +5,8 @@
   import Slider from './Slider.svelte';
   import Display from './Display.svelte';
   import Choice from './Choice.svelte';
-  import { voiceTypes } from '../constants';
+  import ChordBuilder from './ChordBuilder.svelte';
+  import { voiceTypes, tonics, modes } from '../constants';
 
   export let partIndex: number;
   export let sectionIndex: number;
@@ -77,7 +78,7 @@
             <Choice 
                 value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.tonic || 'C'} 
                 inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
-                options={['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                options={tonics}
                 on:change={(e) => {
                     const currentKey = resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'};
                     updatePerformance(sectionIndex, partIndex, 'key', { ...currentKey, tonic: e.detail });
@@ -88,7 +89,7 @@
             <Choice 
                 value={resolveParam($songStore, sectionIndex, partIndex, 'key')?.mode || 'major'} 
                 inherited={getParamLevel($songStore, sectionIndex, partIndex, 'key') !== 'performance'}
-                options={['major', 'minor']}
+                options={modes}
                 on:change={(e) => {
                     const currentKey = resolveParam($songStore, sectionIndex, partIndex, 'key') || {tonic: 'C', mode: 'major'};
                     updatePerformance(sectionIndex, partIndex, 'key', { ...currentKey, mode: e.detail });
@@ -124,19 +125,12 @@
 
     {#if showKMC}
         <div class="chords-row">
-            <Display 
-                value={(resolveParam($songStore, sectionIndex, partIndex, 'chords') || []).join(' ')} 
-                label="CHORDS"
-                inherited={getParamLevel($songStore, sectionIndex, partIndex, 'chords') !== 'performance'}
+            <span class="label">PART CHORDS OVERRIDE</span>
+            <ChordBuilder 
+                chords={resolveParam($songStore, sectionIndex, partIndex, 'chords') || []}
                 on:change={(e) => {
-                    const val = e.detail.trim();
-                    if (val) {
-                        updatePerformance(sectionIndex, partIndex, 'chords', val.split(/[,\s]+/).filter(c => c));
-                    } else {
-                        updatePerformance(sectionIndex, partIndex, 'chords', undefined);
-                    }
+                    updatePerformance(sectionIndex, partIndex, 'chords', e.detail);
                 }}
-                width="100%" 
             />
         </div>
     {/if}
@@ -215,7 +209,17 @@
 
   .chords-row {
       width: 100%;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+  }
+
+  .chords-row .label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
   }
 
   .performance-row {

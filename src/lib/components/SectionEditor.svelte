@@ -3,6 +3,7 @@
   import { songStore, updateSection } from '../songStore';
   import Display from './Display.svelte';
   import Choice from './Choice.svelte';
+  import ChordBuilder from './ChordBuilder.svelte';
   import { tonics, modes } from '../constants';
 
   export let sectionIndex: number;
@@ -46,15 +47,18 @@
       <span class="box-label">DEFAULTS</span>
       
       <div style="display: flex; gap: 8px; align-items: flex-end; padding-top: 5px; flex-wrap: wrap;">
-        <Choice 
-          value={currentSection.key?.tonic || $songStore.key?.tonic || 'C'} 
-          inherited={!currentSection.key}
-          options={tonics}
-          on:change={(e) => {
-            updateSection(sectionIndex, 'key', { ...(currentSection.key || $songStore.key || {tonic: 'C', mode: 'major'}), tonic: e.detail });
-          }}
-          width="50px" 
-        />
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <span class="inner-label">KEY</span>
+          <Choice 
+            value={currentSection.key?.tonic || $songStore.key?.tonic || 'C'} 
+            inherited={!currentSection.key}
+            options={tonics}
+            on:change={(e) => {
+              updateSection(sectionIndex, 'key', { ...(currentSection.key || $songStore.key || {tonic: 'C', mode: 'major'}), tonic: e.detail });
+            }}
+            width="50px" 
+          />
+        </div>
         <Choice 
           value={currentSection.key?.mode || $songStore.key?.mode || 'major'} 
           inherited={!currentSection.key}
@@ -68,7 +72,7 @@
         <div style="margin-left: 10px;">
             <Display 
                 value="{currentSection.meter?.numerator || $songStore.meter?.numerator || 4}/{currentSection.meter?.denominator || $songStore.meter?.denominator || 4}" 
-                label=""
+                label="METER"
                 inherited={!currentSection.meter}
                 on:change={(e) => {
                     const [n, d] = e.detail.split('/');
@@ -77,25 +81,17 @@
                 width="75px" 
             />
         </div>
-
-        <div style="margin-left: 10px; flex: 1; min-width: 200px;">
-            <Display 
-                value={(currentSection.chords || $songStore.chords || []).join(' ')} 
-                label="CHORDS"
-                inherited={!currentSection.chords}
-                on:change={(e) => {
-                    const val = e.detail.trim();
-                    if (val) {
-                        updateSection(sectionIndex, 'chords', val.split(/[,\s]+/).filter(c => c));
-                    } else {
-                        updateSection(sectionIndex, 'chords', undefined);
-                    }
-                }}
-                width="100%" 
-                layout="row"
-            />
-        </div>
       </div>
+    </div>
+
+    <div class="chord-area">
+        <span class="label">SECTION CHORDS</span>
+        <ChordBuilder 
+            chords={currentSection.chords || $songStore.chords || []}
+            on:change={(e) => {
+                updateSection(sectionIndex, 'chords', e.detail);
+            }}
+        />
     </div>
   </div>
 </div>
@@ -225,60 +221,16 @@
     text-align: center;
   }
 
-  .chords-area {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  .chord-area {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
   }
 
-  .chords-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 700;
-  }
-
-  .chord-sequence {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    background: var(--bg-sub);
-    padding: 12px;
-    border-radius: 6px;
-    border: 1px solid var(--border-main);
-    align-items: center;
-  }
-
-  .chord-tag {
-    background: var(--bg-input);
-    color: var(--accent);
-    border: 1px solid var(--border-input);
-    padding: 4px 12px;
-    font-size: 1rem;
-    border-radius: 4px;
-    font-weight: 600;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .add-chord-btn {
-    background: transparent;
-    border: 1px dashed var(--border-input);
-    color: var(--text-muted);
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-  }
-
-  .add-chord-btn:hover {
-    border-style: solid;
-    border-color: var(--accent);
-    color: var(--accent);
+  .chord-area .label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
   }
 </style>

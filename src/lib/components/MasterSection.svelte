@@ -4,6 +4,7 @@
   import Slider from './Slider.svelte';
   import Display from './Display.svelte';
   import Choice from './Choice.svelte';
+  import ChordBuilder from './ChordBuilder.svelte';
   import { tonics, modes } from '../constants';
 
   export let loadedFilename = "";
@@ -76,21 +77,16 @@
           }}
           width="60px" 
         />
-        <Display 
-          value={($songStore.chords || []).join(' ')} 
-          label="CHORDS"
-          on:change={(e) => {
-            const val = e.detail.trim();
-            if (val) {
-              updateSong('chords', val.split(/[,\s]+/).filter(c => c));
-            } else {
-              updateSong('chords', undefined);
-            }
-          }}
-          width="120px" 
-        />
       </div>
     </div>
+  </div>
+
+  <div class="chord-row">
+    <span class="label">SONG CHORDS</span>
+    <ChordBuilder 
+      chords={$songStore.chords || []} 
+      on:change={(e) => updateSong('chords', e.detail)}
+    />
   </div>
 </Card>
 
@@ -144,37 +140,6 @@
     white-space: nowrap;
   }
 
-  .output-dir-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    margin-top: 8px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-sub);
-  }
-
-  .dir-btn {
-    background: var(--bg-sub);
-    border: 1px solid var(--border-input);
-    color: var(--text-main);
-    cursor: pointer;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    padding: 6px 12px;
-    font-size: 0.75rem;
-    white-space: nowrap;
-  }
-
-  .dir-btn:hover {
-    background: var(--bg-hover);
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
   .song-title {
     font-size: 1.2rem;
     font-weight: 800;
@@ -225,7 +190,6 @@
   }
 
   .input-sizer::after {
-    width: auto;
     content: attr(data-value);
     visibility: hidden;
     white-space: pre;
@@ -247,6 +211,22 @@
     color: var(--accent);
     font-family: monospace;
     font-weight: 800;
+  }
+
+  .chord-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-sub);
+  }
+
+  .chord-row .label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 1px;
   }
 
   :global(.header-controls .slider-container) {
