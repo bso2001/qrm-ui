@@ -125,40 +125,35 @@
   }
 
   .icon-btn {
-    background: transparent;
-    border: 1px solid transparent;
+    background: var(--bg-card);
+    border: 1px solid var(--border-input);
     color: var(--text-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 6px;
     width: 32px;
     height: 32px;
     font-size: 18px;
+    font-weight: 800;
     transition: all 0.2s ease;
-  }
-
-  .icon-btn.text-btn {
-    width: auto;
-    padding: 0 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
+    box-shadow: var(--shadow-sm);
   }
 
   .icon-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-heading);
-  }
-
-  .delete-btn:hover {
-    background: var(--bg-hover);
-    color: var(--danger-hover);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .delete-btn {
     color: var(--danger);
+  }
+
+  .delete-btn:hover {
+    border-color: var(--danger);
+    background: var(--bg-hover);
+    color: var(--danger-hover);
   }
 
   .card-content {

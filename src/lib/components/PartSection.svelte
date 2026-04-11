@@ -26,7 +26,7 @@
   on:delete={() => dispatch('delete')}
 >
   <div slot="header-right-extra">
-    <button class="icon-btn" style="font-size: 1.4rem; margin-right: 4px;" title="Override Key/Meter/Chords" on:click={() => showKMC = !showKMC}>⚙</button>
+    <button class="icon-btn" title="Override Key/Meter/Chords" on:click={() => showKMC = !showKMC}>⚙</button>
   </div>
   
   <div slot="header-left-extra" class="title-group">
@@ -298,20 +298,25 @@
   }
 
   .icon-btn {
-    background: transparent;
-    border: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border-input);
     color: var(--text-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
-    padding: 4px;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    padding: 0;
     transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
   }
 
   .icon-btn:hover {
-    background: var(--bg-hover);
-    color: var(--text-heading);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 </style>

@@ -66,23 +66,25 @@
   }
 
   .add-btn {
-    background: transparent;
-    border: 1px solid var(--border-input);
-    color: var(--text-main);
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
+    background: var(--bg-card);
+    border: 1px dashed var(--border-input);
+    color: var(--text-muted);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
+    font-weight: 800;
     transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
   }
 
   .add-btn:hover {
-    background: var(--accent);
-    color: white;
+    background: var(--bg-hover);
+    color: var(--accent);
     border-color: var(--accent);
   }
 
@@ -90,7 +92,7 @@
     display: flex;
     flex-direction: column;
     padding: 8px;
-    gap: 4px;
+    gap: 6px;
   }
 
   .section-item {
@@ -98,20 +100,22 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
-    border: 1px solid transparent;
+    border: 1px solid var(--border-input);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-sm);
   }
 
   .section-item:hover {
-    background: var(--bg-hover);
+    border-color: var(--text-muted);
   }
 
   .section-item.active {
     background: var(--bg-sub);
     border-color: var(--accent);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(77, 171, 247, 0.2);
   }
 
   .section-info {
@@ -122,8 +126,8 @@
   }
 
   .section-name {
-    font-size: 0.9rem;
-    font-weight: 600;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: var(--text-main);
     white-space: nowrap;
     overflow: hidden;
@@ -132,21 +136,30 @@
 
   .section-measures {
     font-size: 0.7rem;
+    font-weight: 600;
     color: var(--text-muted);
   }
 
   .delete-btn {
-    background: transparent;
-    border: none;
+    background: var(--bg-card);
+    border: 1px solid var(--border-input);
     color: var(--danger);
-    font-size: 20px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    padding: 0 4px;
-    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
   }
 
   .delete-btn:hover {
+    background: var(--bg-hover);
     color: var(--danger-hover);
+    border-color: var(--danger);
   }
 </style>
