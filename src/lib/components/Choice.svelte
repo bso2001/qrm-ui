@@ -102,11 +102,12 @@
   }
 
   .display {
-    font-size: var(--font-size, 0.95rem);
-    font-weight: 600;
+    font-size: var(--font-size, 0.85rem);
+    font-weight: 800;
     text-align: center;
     line-height: 1;
     margin-top: -4px;
+    letter-spacing: 0.5px;
   }
 
   .indicators {

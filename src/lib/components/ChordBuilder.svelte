@@ -159,7 +159,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border-input);
     padding: 6px 12px;
-    border-radius: 20px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -189,8 +189,9 @@
   }
 
   .chord-name {
-    font-weight: 700;
-    font-size: 1rem;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
   }
 
   .remove-btn {
@@ -214,7 +215,7 @@
     color: var(--text-muted);
     width: 32px;
     height: 32px;
-    border-radius: 50%;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;

@@ -69,12 +69,12 @@
   box-sizing: border-box;
   outline: none;
   transition: all 0.2s;
-  font-weight: 500;
+  font-weight: 700;
   min-width: 0;
   height: 34px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
 }
-
 .display-input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);

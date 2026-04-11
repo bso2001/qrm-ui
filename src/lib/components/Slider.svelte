@@ -89,12 +89,13 @@
 
   .value {
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 800;
     color: var(--text-main);
     background: var(--bg-hover);
     padding: 2px 6px;
     border-radius: 4px;
     border: 1px solid var(--border-sub);
+    letter-spacing: 0.5px;
   }
 
   .compact .value {
