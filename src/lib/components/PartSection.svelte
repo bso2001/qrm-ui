@@ -26,7 +26,7 @@
   on:delete={() => dispatch('delete')}
 >
   <div slot="header-right-extra">
-    <button class="icon-btn" style="font-size: 1.1rem; margin-right: 4px;" title="Override Key/Meter/Chords" on:click={() => showKMC = !showKMC}>⚙</button>
+    <button class="icon-btn" style="font-size: 1.4rem; margin-right: 4px;" title="Override Key/Meter/Chords" on:click={() => showKMC = !showKMC}>⚙</button>
   </div>
   
   <div slot="header-left-extra" class="title-group">

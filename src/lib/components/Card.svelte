@@ -133,9 +133,9 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
     transition: all 0.2s ease;
   }
 
