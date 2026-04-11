@@ -503,7 +503,7 @@
     --bg-main: #5c5c5c;
     --bg-card: #6b6b6b;
     --bg-sub: #636363;
-    --bg-hover: #7a7a7a;
+    --bg-hover: #888888;
     --bg-input: #4a4a4a;
     --text-main: #eeeeee;
     --text-muted: #cccccc;

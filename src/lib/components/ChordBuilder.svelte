@@ -178,8 +178,10 @@
     transform: scale(0.95);
   }
 
-  .chord-pill:hover {
+  .chord-pill:hover:not(.active) {
     border-color: var(--accent);
+    background: var(--bg-hover);
+    color: var(--text-main);
   }
 
   .chord-pill.active {
