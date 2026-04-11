@@ -201,16 +201,16 @@
     background: none;
     border: none;
     color: var(--danger);
-    opacity: 0.6;
+    opacity: 1;
     cursor: pointer;
     font-size: 1.2rem;
     line-height: 1;
     padding: 0;
-    transition: opacity 0.2s, transform 0.2s;
+    transition: transform 0.2s, color 0.2s;
   }
 
   .remove-btn:hover {
-    opacity: 1;
+    color: var(--danger-hover);
     transform: scale(1.2);
   }
 

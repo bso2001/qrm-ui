@@ -138,19 +138,20 @@
   .delete-btn {
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: var(--danger);
     font-size: 16px;
     cursor: pointer;
     padding: 0 4px;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, color 0.2s;
   }
 
   .section-item:hover .delete-btn {
-    opacity: 1;
+    opacity: 0.8;
   }
 
   .delete-btn:hover {
-    color: var(--danger);
+    opacity: 1 !important;
+    color: var(--danger-hover);
   }
 </style>
