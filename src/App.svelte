@@ -512,8 +512,8 @@
     --border-sub: #666666;
     --border-input: #555555;
     --accent: #4dabf7;
-    --danger: #ff6b6b;
-    --danger-hover: #ff8787;
+    --danger: #ff4d4d;
+    --danger-hover: #ff7676;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   }
