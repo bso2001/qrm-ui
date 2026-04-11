@@ -92,7 +92,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    height: 28px;
+    height: 34px;
     position: relative;
   }
 
@@ -106,7 +106,7 @@
     font-weight: 600;
     text-align: center;
     line-height: 1;
-    margin-top: -6px;
+    margin-top: -4px;
     letter-spacing: 0.5px;
   }
 
@@ -115,7 +115,7 @@
     justify-content: center;
     gap: 3px;
     position: absolute;
-    bottom: 3px;
+    bottom: 5px;
     left: 0;
     right: 0;
   }

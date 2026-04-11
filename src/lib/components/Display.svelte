@@ -61,7 +61,7 @@
 .display-input {
   background-color: var(--bg-input);
   color: var(--text-main);
-  padding: 2px 8px;
+  padding: 0 10px;
   border-radius: 4px;
   border: 1px solid var(--border-input);
   font-family: inherit;
@@ -71,7 +71,7 @@
   transition: all 0.2s;
   font-weight: 600;
   min-width: 0;
-  height: 28px;
+  height: 34px;
   font-size: 0.85rem;
   letter-spacing: 0.5px;
 }.display-input:focus {
