@@ -4,10 +4,10 @@ After=network.target
 
 [Service]
 Type=simple
-User=bert.olsson
-Group=bert.olsson
-WorkingDirectory=/home/bert.olsson/src/qrm-ui
-ExecStart=/bin/bash /home/bert.olsson/src/qrm-ui/deploy/linux/start.sh
+User=bert
+Group=bert
+WorkingDirectory=/var/www/qrm-ui
+ExecStart=/bin/bash /var/www/qrm-ui/deploy/linux/start.sh
 Restart=on-failure
 RestartSec=5
 StandardOutput=syslog

@@ -1,27 +1,42 @@
 #!/bin/bash
 # QRM Startup Script (Linux / systemd)
 
-# Base directories
-UI_DIR="$HOME/src/qrm-ui"
-API_DIR="$HOME/src/qrm"
+# Detect script directory and project root
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+UI_DIR="$( cd "$SCRIPT_DIR/../.." && pwd )"
+# Assuming qrm (backend) is a sibling to qrm-ui in /var/www/
+API_DIR="$( cd "$UI_DIR/../qrm" && pwd )"
 
 # Ports
 UI_PORT=5173
 API_PORT=3000
 
-echo "Starting QRM Services..."
+echo "Starting QRM Services from $UI_DIR..."
 
 # 1. Start QRM Backend
-cd "$API_DIR"
-node server.js > "$API_DIR/server.log" 2>&1 &
-API_PID=$!
-echo "Backend running on port $API_PORT (PID: $API_PID)"
+if [ -d "$API_DIR" ]; then
+    echo "Starting Backend in $API_DIR..."
+    cd "$API_DIR"
+    node server.js > "$API_DIR/server.log" 2>&1 &
+    API_PID=$!
+    echo "Backend running (PID: $API_PID)"
+else
+    echo "Error: Backend directory $API_DIR not found."
+    exit 1
+fi
 
 # 2. Start QRM UI
-cd "$UI_DIR"
-npm run dev -- --host --port $UI_PORT > "$UI_DIR/ui.log" 2>&1 &
-UI_PID=$!
-echo "UI running on port $UI_PORT (PID: $UI_PID)"
+if [ -d "$UI_DIR" ]; then
+    echo "Starting UI in $UI_DIR..."
+    cd "$UI_DIR"
+    # Ensure node_modules are present
+    npm run dev -- --host --port $UI_PORT > "$UI_DIR/ui.log" 2>&1 &
+    UI_PID=$!
+    echo "UI running (PID: $UI_PID)"
+else
+    echo "Error: UI directory $UI_DIR not found."
+    exit 1
+fi
 
 # Trap SIGTERM (sent by systemctl stop) to gracefully kill child processes
 trap "echo 'Stopping QRM Services...'; kill -TERM $API_PID $UI_PID; exit 0" SIGTERM SIGINT
