@@ -185,6 +185,10 @@
     filter: brightness(1.2);
   }
 
+  .chord-pill:has(.remove-btn:hover) {
+    border-color: var(--danger);
+  }
+
   .chord-pill.active {
     background: var(--accent);
     color: white;
