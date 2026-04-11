@@ -3,16 +3,16 @@ Description=QRM Rack UI and Backend
 After=network.target
 
 [Service]
-Type=forking
+Type=simple
 User=bert.olsson
 Group=bert.olsson
 WorkingDirectory=/home/bert.olsson/src/qrm-ui
 ExecStart=/bin/bash /home/bert.olsson/src/qrm-ui/deploy/linux/start.sh
-ExecStop=/bin/bash /home/bert.olsson/src/qrm-ui/deploy/linux/stop.sh
-Restart=always
-# Ensure the logs directory exists
-StandardOutput=inherit
-StandardError=inherit
+Restart=on-failure
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=qrm-service
 
 [Install]
 WantedBy=multi-user.target

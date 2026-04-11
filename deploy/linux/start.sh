@@ -1,5 +1,5 @@
 #!/bin/bash
-# QRM Startup Script (Linux)
+# QRM Startup Script (Linux / systemd)
 
 # Base directories
 UI_DIR="$HOME/src/qrm-ui"
@@ -11,18 +11,20 @@ API_PORT=3000
 
 echo "Starting QRM Services..."
 
-# 1. Start QRM Backend (Port 3000)
-echo "Starting Backend on port $API_PORT..."
+# 1. Start QRM Backend
 cd "$API_DIR"
-nohup node server.js > "$API_DIR/server.log" 2>&1 &
-echo $! > "$API_DIR/server.pid"
+node server.js > "$API_DIR/server.log" 2>&1 &
+API_PID=$!
+echo "Backend running on port $API_PORT (PID: $API_PID)"
 
-# 2. Start QRM UI (Port 5173)
-echo "Starting UI on port $UI_PORT..."
+# 2. Start QRM UI
 cd "$UI_DIR"
-# Using --host to ensure it listens on all interfaces (for Nginx)
-# Using --port to explicitly set it (just in case)
-nohup npm run dev -- --host --port $UI_PORT > "$UI_DIR/ui.log" 2>&1 &
-echo $! > "$UI_DIR/ui.pid"
+npm run dev -- --host --port $UI_PORT > "$UI_DIR/ui.log" 2>&1 &
+UI_PID=$!
+echo "UI running on port $UI_PORT (PID: $UI_PID)"
 
-echo "QRM Services started."
+# Trap SIGTERM (sent by systemctl stop) to gracefully kill child processes
+trap "echo 'Stopping QRM Services...'; kill -TERM $API_PID $UI_PID; exit 0" SIGTERM SIGINT
+
+# Keep the script running to satisfy systemd
+wait $API_PID $UI_PID

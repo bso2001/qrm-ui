@@ -3,8 +3,7 @@
 This directory contains the files needed to manage QRM as a background service on a Linux system using `systemd`.
 
 ## Files
-- `start.sh`: Starts both the QRM Backend (port 3000) and the UI (port 5173).
-- `stop.sh`: Stops both services.
+- `start.sh`: Starts both the QRM Backend (port 3000) and the UI (port 5173). It is designed to run in the foreground to be managed by systemd.
 - `qrm.service`: Systemd service unit definition.
 
 ## Setup Instructions
@@ -13,7 +12,6 @@ This directory contains the files needed to manage QRM as a background service o
 2. **Make scripts executable**:
    ```bash
    chmod +x deploy/linux/start.sh
-   chmod +x deploy/linux/stop.sh
    ```
 3. **Install the service**:
    ```bash
@@ -31,3 +29,4 @@ Logs will be generated in:
 - Backend: `~/src/qrm/server.log`
 - UI: `~/src/qrm-ui/ui.log`
 - System logs: `journalctl -u qrm -f`
+
