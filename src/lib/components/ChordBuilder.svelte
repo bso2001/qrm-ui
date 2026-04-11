@@ -158,7 +158,7 @@
   .chord-pill {
     background: var(--bg-card);
     border: 1px solid var(--border-input);
-    padding: 6px 12px;
+    padding: 2px 8px;
     border-radius: 6px;
     display: flex;
     align-items: center;
