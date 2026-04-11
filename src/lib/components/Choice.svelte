@@ -103,7 +103,7 @@
 
   .display {
     font-size: var(--font-size, 0.85rem);
-    font-weight: 800;
+    font-weight: 600;
     text-align: center;
     line-height: 1;
     margin-top: -6px;

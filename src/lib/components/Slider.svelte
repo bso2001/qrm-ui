@@ -89,7 +89,7 @@
 
   .value {
     font-size: 0.85rem;
-    font-weight: 800;
+    font-weight: 600;
     color: var(--text-main);
     background: var(--bg-hover);
     padding: 2px 6px;

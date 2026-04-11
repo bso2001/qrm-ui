@@ -69,7 +69,7 @@
   box-sizing: border-box;
   outline: none;
   transition: all 0.2s;
-  font-weight: 700;
+  font-weight: 600;
   min-width: 0;
   height: 28px;
   font-size: 0.85rem;

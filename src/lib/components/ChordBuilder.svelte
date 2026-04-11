@@ -189,7 +189,7 @@
   }
 
   .chord-name {
-    font-weight: 800;
+    font-weight: 600;
     font-size: 0.9rem;
     letter-spacing: 0.5px;
   }
