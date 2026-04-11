@@ -153,13 +153,12 @@
   }
 
   .delete-btn:hover {
-    background: #ffe3e3;
-    color: #e03131;
+    background: var(--bg-hover);
+    color: var(--danger-hover);
   }
 
-  :global(body.dark) .delete-btn:hover {
-    background: #4d1515;
-    color: #ff6b6b;
+  .delete-btn {
+    color: var(--danger);
   }
 
   .card-content {

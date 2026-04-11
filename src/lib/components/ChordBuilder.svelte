@@ -197,16 +197,18 @@
   .remove-btn {
     background: none;
     border: none;
-    color: inherit;
+    color: var(--danger);
     opacity: 0.6;
     cursor: pointer;
     font-size: 1.2rem;
     line-height: 1;
     padding: 0;
+    transition: opacity 0.2s, transform 0.2s;
   }
 
   .remove-btn:hover {
     opacity: 1;
+    transform: scale(1.2);
   }
 
   .add-btn {

@@ -151,6 +151,6 @@
   }
 
   .delete-btn:hover {
-    color: #ff6b6b;
+    color: var(--danger);
   }
 </style>

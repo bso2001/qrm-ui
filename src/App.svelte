@@ -467,6 +467,8 @@
     --border-sub: #e9ecef;
     --border-input: #ced4da;
     --accent: #4dabf7;
+    --danger: #fa5252;
+    --danger-hover: #e03131;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
@@ -491,6 +493,8 @@
     --border-sub: #444444;
     --border-input: #555555;
     --accent: #3b82f6;
+    --danger: #ff6b6b;
+    --danger-hover: #ff8787;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
   }
@@ -508,6 +512,8 @@
     --border-sub: #666666;
     --border-input: #555555;
     --accent: #4dabf7;
+    --danger: #ff6b6b;
+    --danger-hover: #ff8787;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   }
@@ -628,13 +634,13 @@
   }
 
   .revert-btn:hover:not(:disabled) {
-    border-color: #ff6b6b;
-    color: #ff6b6b;
+    border-color: var(--danger);
+    color: var(--danger);
   }
 
   .clear-btn:hover {
-    border-color: #fa5252;
-    background: #fa5252;
+    border-color: var(--danger);
+    background: var(--danger);
     color: white;
   }
 
