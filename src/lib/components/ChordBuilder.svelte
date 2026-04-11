@@ -182,6 +182,7 @@
     border-color: var(--accent);
     background: var(--bg-hover);
     color: var(--text-main);
+    filter: brightness(1.2);
   }
 
   .chord-pill.active {
