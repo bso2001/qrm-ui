@@ -30,7 +30,7 @@
           <span class="section-name">{section.name || 'Untitled'}</span>
           <span class="section-measures">{section.nMeasures} {section.nMeasures === 1 ? 'bar' : 'bars'}</span>
         </div>
-        {#if $songStore.sections.length > 1}
+        {#if $songStore.sections.length > 1 && selectedSectionIndex === i}
             <button class="delete-btn" on:click|stopPropagation={() => dispatch('delete', i)}>×</button>
         {/if}
       </div>
