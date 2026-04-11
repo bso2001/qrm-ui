@@ -1,11 +1,9 @@
 #!/bin/bash
 # QRM Startup Script (Linux / systemd)
 
-# Detect script directory and project root
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-UI_DIR="$( cd "$SCRIPT_DIR/../.." && pwd )"
-# Assuming qrm (backend) is a sibling to qrm-ui in /var/www/
-API_DIR="$( cd "$UI_DIR/../qrm" && pwd )"
+# Hardcoded absolute paths for systemd reliability
+UI_DIR="/var/www/qrm-ui"
+API_DIR="/var/www/qrm"
 
 # Ports
 UI_PORT=5173
