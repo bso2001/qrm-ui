@@ -20,37 +20,54 @@ A skeuomorphic web interface for managing Quasi-Random Music (QRM) JSON specific
 ### Installation
 
 1. Navigate to the UI directory:
-   ```bash
-   cd src/qrm-ui
-   ```
+
+    ```bash
+    cd src/qrm-ui
+    ```
 
 2. Install dependencies:
-   ```bash
-   npm install
-   ```
+    ```bash
+    npm install
+    ```
 
 ### Development
 
 Run the development server:
+
 ```bash
 npm run dev
 ```
+
 Open the provided URL (usually `http://localhost:5173`) in your browser.
 
 ### Building for Production
 
 To create a production-ready build:
+
 ```bash
 npm run build
 ```
+
 The output will be in the `dist` folder.
+
+## 🎓 Learning & Configuration
+
+The project is configured with detailed documentation links in the source files to help you learn the stack:
+
+- **`eslint.config.js`**: Core linting and custom Allman-style formatting.
+- **`svelte.config.js`**: Svelte compiler settings and reactivity model.
+- **`vite.config.ts`**: Fast development server and build pipeline.
+
+Check these files for pointers to the official documentation.
 
 ## 📄 Specification
 
 This UI is designed to manage JSON files following the QRM specification, which defines:
+
 - Global song parameters (tempo, outputDir, etc.)
 - Sequential song parts (key, meter, chords, etc.)
 - Multiple voices per part (MIDI file, type, restPct, etc.)
 
 ---
+
 © 2026. Sven Bert Olsson.
