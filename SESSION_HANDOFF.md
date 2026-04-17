@@ -44,3 +44,8 @@
 
 - **Telemetry:** Enabled in `.gemini/settings.json` to log token usage to `.gemini/usage.log`.
 - **Session Duration:** Keep sessions short. Use this handoff file to bridge fresh sessions.
+
+## 8. Latest Updates (April 17, 2026)
+- **Cleanup:** Removed all root-level debug/test scripts and `ENABLE_ADMIN_FILE_IO` logic from `App.svelte`.
+- **Stylistic Overhaul:** Configured ESLint with `@stylistic/eslint-plugin` to enforce tabs, Allman brace style, single quotes, no semicolons, no trailing commas, array bracket spacing, and padded comments.
+- **Documentation:** Added configuration pointers to `eslint.config.js`, `svelte.config.js`, and `vite.config.ts`, and referenced them in the `README.md`.
