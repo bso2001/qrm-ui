@@ -7,11 +7,5 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 // Docs: https://svelte.dev/docs/svelte/svelte-config
 
 export default {
-	preprocess: vitePreprocess(),
-	compilerOptions: {
-		// 'runes: false' indicates Svelte 4 legacy mode for state management. 
-		// Read about Svelte 5 runes (the new reactivity model) here: https://svelte.dev/docs/svelte/runes
-
-		runes: false
-	}
+	preprocess: vitePreprocess()
 }
