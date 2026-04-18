@@ -14,7 +14,7 @@ echo "Starting QRM Services from $UI_DIR..."
 # 1. Start QRM Backend
 if [ -d "$API_DIR" ]; then
     echo "Starting Backend in $API_DIR..."
-    $API_DIR/node server.js > "$API_DIR/server.log" 2>&1 &
+    node $API_DIR/server.js > "$API_DIR/server.log" 2>&1 &
     API_PID=$!
     echo "Backend running (PID: $API_PID)"
 else
