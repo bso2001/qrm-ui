@@ -17,13 +17,12 @@
 	<div class="editor-header">
 		<div class="title-group">
 			<h2 class="section-title">
-				SECTION <span class="bracket">[</span>
 				<div
 					class="input-sizer"
 					data-value={currentSection.name || 'Untitled'}
 				>
 					<input
-						class="name-input highlight"
+						class="name-input"
 						value={currentSection.name}
 						on:input={e =>
 							updateSection(
@@ -32,10 +31,8 @@
 								e.currentTarget.value
 							)}
 						placeholder="Untitled"
-						size="1"
 					/>
 				</div>
-				<span class="bracket">]</span>
 			</h2>
 		</div>
 
@@ -167,7 +164,6 @@
 		color: var(--text-heading);
 		display: flex;
 		align-items: center;
-		gap: 4px;
 	}
 
 	.input-sizer {
@@ -177,18 +173,15 @@
 
 	.input-sizer::after,
 	.name-input {
-		min-width: 0;
 		grid-area: 1 / 1;
 		font-family: monospace;
 		font-weight: 800;
 		font-size: 1.1rem;
 		padding: 0;
-		margin: 0;
-		resize: none;
+		margin: 0 0 0 -4px;
 		background: none;
-		appearance: none;
 		border: none;
-		text-align: center;
+		text-align: left;
 	}
 
 	.name-input {
@@ -198,11 +191,11 @@
 	}
 
 	.input-sizer::after {
-		width: auto;
 		content: attr(data-value);
 		visibility: hidden;
 		white-space: pre;
 	}
+
 
 	.name-input:focus {
 		background: var(--bg-sub);

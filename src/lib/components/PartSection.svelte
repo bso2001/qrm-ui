@@ -41,19 +41,12 @@
 
 	<div slot="header-left-extra" class="title-group">
 		<h3 class="part-title">
-			PART <span class="bracket">[</span>
 			<div class="input-sizer" data-value={part.name || 'Untitled'}>
-				<input
-					class="name-input highlight"
-					value={part.name}
-					on:input={e =>
-						updatePart(partIndex, 'name', e.currentTarget.value)}
-					placeholder="Untitled"
-					size="1"
-				/>
+				<input class="name-input" value={part.name} placeholder="Untitled"
+					on:input={e => updatePart(partIndex, 'name', e.currentTarget.value)} />
 			</div>
-			<span class="bracket">]</span>
 		</h3>
+
 	</div>
 
 	<div class="part-compact">
@@ -450,7 +443,7 @@
 	}
 
 	.part-title {
-		font-size: 0.95rem;
+		font-size: 1rem;
 		font-weight: 700;
 		margin: 0;
 		color: var(--text-heading);
@@ -472,13 +465,12 @@
 		min-width: 50px;
 		grid-area: 1/2;
 		font: inherit;
-		padding: 2px 6px;
 		margin: 0;
 		resize: none;
 		background: none;
 		appearance: none;
 		border: none;
-		text-align: center;
+		text-align: left;
 	}
 
 	.name-input {

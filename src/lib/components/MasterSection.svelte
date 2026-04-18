@@ -39,9 +39,7 @@
 <Card title="">
 	<div slot="header-left-extra" class="title-group">
 		<h2 class="song-title">
-			<span style="margin-right: 4px;">SONG</span>
-			<span class="name-wrapper">
-				<span class="bracket">[</span>
+			<div>SONG NAME</div>
 				<div
 					class="input-sizer"
 					data-value={$songStore.name || 'Untitled'}
@@ -55,8 +53,6 @@
 						size="1"
 					/>
 				</div>
-				<span class="bracket">]</span>
-			</span>
 		</h2>
 	</div>
 
@@ -185,12 +181,13 @@
 	}
 
 	.song-title {
-		font-size: 1.2rem;
+		font-size: 1rem;
 		font-weight: 800;
 		margin: 0;
 		color: var(--text-heading);
 		display: flex;
-		align-items: center;
+		flex-flow: column;
+		align-items: left;
 		flex-wrap: wrap;
 	}
 
@@ -211,21 +208,12 @@
 		grid-area: 1 / 1;
 		font-family: monospace;
 		font-weight: 800;
-		font-size: 1.1rem;
-		padding: 0;
-		margin: 0;
+		font-size: 1.2rem;
+		margin: 0 4px 0 -2px;
 		resize: none;
 		background: none;
 		appearance: none;
 		border: none;
-		text-align: center;
-	}
-
-	@media (max-width: 800px) {
-		.name-input,
-		.input-sizer::after {
-			font-size: 0.9rem;
-		}
 	}
 
 	.name-input {
