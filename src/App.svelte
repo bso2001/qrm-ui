@@ -314,7 +314,7 @@
 		saveToCatalog(exportSong($songStore), currentCatalogId)
 	}
 
-	function loadFromLibrary(event: CustomEvent<string>) 
+	function loadFromLibrary(event) 
 	{
 		const id = event.detail
 		const songData = loadFromCatalog(id)
