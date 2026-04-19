@@ -10,6 +10,26 @@
 	{
 		dispatch('select', index)
 	}
+
+	let draggedIndex = null
+
+	function onDragStart(index) 
+	{
+		draggedIndex = index
+	}
+
+	function onDragOver(e, index) 
+	{
+		e.preventDefault()
+		if (draggedIndex === null || draggedIndex === index) return
+		dispatch('move', { from: draggedIndex, to: index })
+		draggedIndex = index
+	}
+
+	function onDragEnd() 
+	{
+		draggedIndex = null
+	}
 </script>
 
 <div class="section-sidebar">
@@ -29,15 +49,19 @@
 			<div
 				class="section-item"
 				class:active={selectedSectionIndex === i}
+				class:dragging={draggedIndex === i}
+				draggable="true"
 				on:click={() => select(i)}
+				on:dragstart={() => onDragStart(i)}
+				on:dragover={e => onDragOver(e, i)}
+				on:dragend={onDragEnd}
 			>
 				<div class="section-info">
 					<span class="section-name"
-						>{section.name || 'Untitled'}</span
+						>{section.name || 'New Section'}</span
 					>
 					<span class="section-measures"
-						>{section.nMeasures}
-						{section.nMeasures === 1 ? 'bar' : 'bars'}</span
+						>{section.nMeasures ? `${section.nMeasures} ${section.nMeasures === 1 ? 'bar' : 'bars'}` : ''}</span
 					>
 				</div>
 				{#if $songStore.sections.length > 1 && selectedSectionIndex === i}
@@ -130,6 +154,10 @@
 		background: var(--bg-sub);
 		border-color: var(--accent);
 		box-shadow: 0 2px 4px rgba(77, 171, 247, 0.2);
+	}
+
+	.section-item.dragging {
+		opacity: 0.5;
 	}
 
 	.section-info {

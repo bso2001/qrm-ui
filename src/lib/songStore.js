@@ -366,44 +366,69 @@ export function getParamLevel(
 	return null
 }
 
-export function addSection() 
+export function addSection(state, index) 
 {
-	songStore.update(state => 
-	{
-		if (!state) return state
-		const newState = { ...state, sections: [ ...state.sections ] }
-		newState.sections.push({})
-		return newState
-	})
+	if (!state) return state
+	const newSections = [ ...state.sections ]
+	newSections.splice(index, 0, { name: 'New Section', nMeasures: 0 })
+	
+	// Add default performance slot in each part
+	const newParts = state.parts.map(part => ({
+		...part,
+		performances: [
+			...part.performances.slice(0, index),
+			{},
+			...part.performances.slice(index)
+		]
+	}))
+	
+	return { ...state, sections: newSections, parts: newParts }
 }
 
-export function removeSection(index) 
+export function removeSection(state, index) 
 {
-	songStore.update(state => 
-	{
-		if (!state?.sections) return state
-		const newState = { ...state, sections: state.sections.filter((_, i) => i !== index) }
-		return newState
-	})
+	if (!state?.sections) return state
+	const newSections = state.sections.filter((_, i) => i !== index)
+	
+	// Remove performance slot from each part
+	const newParts = state.parts.map(part => ({
+		...part,
+		performances: part.performances.filter((_, i) => i !== index)
+	}))
+	
+	return { ...state, sections: newSections, parts: newParts }
 }
 
-export function addPart() 
+export function moveSection(state, fromIndex, toIndex) 
 {
-	songStore.update(state => 
-	{
-		if (!state) return state
-		const newState = { ...state, parts: [ ...state.parts ] }
-		newState.parts.push({ performances: [] })
-		return newState
+	if (!state?.sections) return state
+	const newSections = [ ...state.sections ]
+	const [moved] = newSections.splice(fromIndex, 1)
+	newSections.splice(toIndex, 0, moved)
+	
+	// Also reorder performances in each part to match new section order
+	const newParts = state.parts.map(part => {
+		if (!part.performances) return part
+		const newPerformances = [ ...part.performances ]
+		const [movedPerf] = newPerformances.splice(fromIndex, 1)
+		newPerformances.splice(toIndex, 0, movedPerf)
+		return { ...part, performances: newPerformances }
 	})
+	
+	return { ...state, sections: newSections, parts: newParts }
 }
 
-export function removePart(index) 
+export function addPart(state, index) 
 {
-	songStore.update(state => 
-	{
-		if (!state?.parts) return state
-		const newState = { ...state, parts: state.parts.filter((_, i) => i !== index) }
-		return newState
-	})
+	if (!state) return state
+	const newParts = [ ...state.parts ]
+	newParts.splice(index, 0, { performances: new Array(state.sections.length).fill({}) })
+	return { ...state, parts: newParts }
+}
+
+export function removePart(state, index) 
+{
+	if (!state?.parts) return state
+	const newParts = state.parts.filter((_, i) => i !== index)
+	return { ...state, parts: newParts }
 }

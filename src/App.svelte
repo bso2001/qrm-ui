@@ -8,6 +8,7 @@
 		getParamLevel,
 		addSection,
 		removeSection,
+		moveSection,
 		addPart,
 		removePart
 	} from './lib/songStore'
@@ -245,6 +246,25 @@
 		validateIndices()
 	}
 
+	function handleMoveSection(event) 
+	{
+		const { from, to } = event.detail
+		songStore.update(s => moveSection(s, from, to))
+		if (selectedSectionIndex === from) 
+		{
+			selectedSectionIndex = to
+		}
+		else if (selectedSectionIndex > from && selectedSectionIndex <= to) 
+		{
+			selectedSectionIndex--
+		}
+		else if (selectedSectionIndex < from && selectedSectionIndex >= to) 
+		{
+			selectedSectionIndex++
+		}
+		validateIndices()
+	}
+
 	async function handleInsertPart(event) 
 	{
 		const pos = event.detail
@@ -458,6 +478,7 @@
 						on:select={e => (selectedSectionIndex = e.detail)}
 						on:insert={handleInsertSection}
 						on:delete={e => handleRemoveSection(e.detail)}
+						on:move={handleMoveSection}
 					/>
 
 					<div class="stage">

@@ -19,7 +19,7 @@
 			<h2 class="section-title">
 				<div
 					class="input-sizer"
-					data-value={currentSection.name || 'Untitled'}
+					data-value={currentSection.name || 'New Section'}
 				>
 					<input
 						class="name-input"
@@ -30,7 +30,7 @@
 								'name',
 								e.currentTarget.value
 							)}
-						placeholder="Untitled"
+						placeholder="New Section"
 					/>
 				</div>
 			</h2>
