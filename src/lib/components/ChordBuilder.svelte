@@ -17,14 +17,14 @@
 		dispatch('change', newChords)
 	}
 
-	function removeChord(index: number) 
+	function removeChord(index) 
 	{
 		const newChords = chords.filter((_, i) => i !== index)
 		activeIndex = null
 		dispatch('change', newChords)
 	}
 
-	function selectChord(index: number) 
+	function selectChord(index) 
 	{
 		if (activeIndex === index) 
 		{
@@ -41,7 +41,7 @@
 		activeIndex = null
 	}
 
-	function updateActiveChord(root: string, quality: string) 
+	function updateActiveChord(root, quality) 
 	{
 		if (activeIndex === null) return
 		const newChords = [ ...chords ]
@@ -49,7 +49,7 @@
 		dispatch('change', newChords)
 	}
 
-	function getChordParts(chord: string) 
+	function getChordParts(chord) 
 	{
 		if (!chord) return { root: 'C', quality: '' }
 		const m = chord.match(/^([A-G][b#]?)(.*)$/)

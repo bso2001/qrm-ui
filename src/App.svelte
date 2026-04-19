@@ -34,7 +34,7 @@
 	let saveTimeout
 
 	let showLibrary = false
-	let currentCatalogId: string | null = null
+	let currentCatalogId = null
 
 	function saveState() 
 	{
@@ -266,7 +266,7 @@
 
 	function handleAddPartAtEnd() 
 	{
-		handleInsertPart({ detail: 'end' } as CustomEvent<string>)
+		handleInsertPart({ detail: 'end' })
 	}
 
 	onMount(() => 
