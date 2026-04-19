@@ -25,7 +25,7 @@
 			// Get the relative path or absolute path if available in this environment
 
 			const path =
-				(file as any).path ||
+			file.path ||
 				file.webkitRelativePath.split('/')[0] ||
 				file.name
 			updateSong(
