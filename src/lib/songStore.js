@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store'
 
-export const songStore = writable<any>(null)
+export const songStore = writable(null)
 
 // Keys that define the core identity of a part (not performance-specific)
 
@@ -22,13 +22,13 @@ const resolveKeys = [
 	'chords'
 ]
 
-export function exportSong(state: any) 
+export function exportSong(state) 
 {
 	if (!state) return state
 	const out = { ...state }
 	delete out.parts
 
-	out.sections = (state.sections || []).map((section: any, idx: number) => 
+	out.sections = (state.sections || []).map((section, idx) => 
 	{
 		const sectionOut = { ...section }
 
@@ -38,9 +38,9 @@ export function exportSong(state: any)
 		sectionOut.meter = section.meter || state.meter
 		sectionOut.chords = section.chords || state.chords
 
-		sectionOut.parts = (state.parts || []).map((p: any, pIdx: number) => 
+		sectionOut.parts = (state.parts || []).map((p, pIdx) => 
 		{
-			const combined: any = { name: p.name }
+			const combined = { name: p.name }
 
 			// Resolve every part parameter so the backend gets a complete object
 
@@ -70,7 +70,7 @@ export function exportSong(state: any)
 	return out
 }
 
-export function importSong(json: any) 
+export function importSong(json) 
 {
 	if (!json) return json
 
@@ -111,9 +111,9 @@ export function importSong(json: any)
 			firstSection.performers ||
 			firstSection.voices
 
-		state.parts = templateParts.map((tp: any, pIdx: number) => 
+		state.parts = templateParts.map((tp, pIdx) => 
 		{
-			const p: any = {}
+			const p = {}
 
 			// Extract base properties
 
@@ -124,14 +124,14 @@ export function importSong(json: any)
 
 			p.performances = []
 
-			state.sections.forEach((sec: any) => 
+			state.sections.forEach((sec) => 
 			{
 				const secPart =
 					(sec.parts ||
 						sec.instruments ||
 						sec.performers ||
 						sec.voices)?.[pIdx] || {}
-				const perf: any = {}
+				const perf = {}
 
 				// Everything else goes into the performance specific object
 
@@ -151,7 +151,7 @@ export function importSong(json: any)
 
 		// Clean up sections
 
-		state.sections = state.sections.map((sec: any) => 
+		state.sections = state.sections.map((sec) => 
 		{
 			const s = { ...sec }
 			delete s.parts
@@ -169,14 +169,14 @@ export function importSong(json: any)
 	return state
 }
 
-export function loadSong(json: any) 
+export function loadSong(json) 
 {
 	songStore.set(importSong(json))
 }
 
 // --- Explicit Update Functions ---
 
-export function updateSong(key: string, value: any) 
+export function updateSong(key, value) 
 {
 	songStore.update(state => 
 	{
@@ -198,7 +198,7 @@ export function updateSong(key: string, value: any)
 	})
 }
 
-export function updateSection(sectionIndex: number, key: string, value: any) 
+export function updateSection(sectionIndex, key, value) 
 {
 	songStore.update(state => 
 	{
@@ -223,7 +223,7 @@ export function updateSection(sectionIndex: number, key: string, value: any)
 	})
 }
 
-export function updatePart(partIndex: number, key: string, value: any) 
+export function updatePart(partIndex, key, value) 
 {
 	songStore.update(state => 
 	{
@@ -249,10 +249,10 @@ export function updatePart(partIndex: number, key: string, value: any)
 }
 
 export function updatePerformance(
-	sectionIndex: number,
-	partIndex: number,
-	key: string,
-	value: any
+	sectionIndex,
+	partIndex,
+	key,
+	value
 ) 
 {
 	songStore.update(state => 
@@ -294,142 +294,116 @@ export function updatePerformance(
  */
 
 export function resolveParam(
-	song: any,
-	sectionIndex: number,
-	partIndex: number,
-	key: string
+	song,
+	sectionIndex,
+	partIndex,
+	key
 ) 
 {
-	const section = song?.sections?.[sectionIndex]
-	const part = song?.parts?.[partIndex]
-	const performance = part?.performances?.[sectionIndex]
+	if (!song) return undefined
 
-	function isValid(val: any) 
+	const part = song.parts?.[partIndex]
+	const performance = part?.performances?.[sectionIndex]
+	const section = song.sections?.[sectionIndex]
+
+	// Check performance-level first
+	if (performance && key in performance) 
 	{
-		if (val === undefined || val === null) return false
-		if (typeof val === 'string' && val.trim() === '') return false
-		if (Array.isArray(val) && val.length === 0) return false
-		return true
+		return performance[key]
 	}
 
-	// All params should resolve from Performance -> Part -> Section -> Song
+	// Check part-level (all performances)
+	if (part && key in part) 
+	{
+		return part[key]
+	}
 
-	if (performance && isValid(performance[key])) return performance[key]
-	if (part && isValid(part[key])) return part[key]
-	if (section && isValid(section[key])) return section[key]
-	if (song && isValid(song[key])) return song[key]
+	// Check section-level
+	if (section && key in section) 
+	{
+		return section[key]
+	}
+
+	// Check song-level (root)
+	if (key in song) 
+	{
+		return song[key]
+	}
 
 	return undefined
 }
 
 export function getParamLevel(
-	song: any,
-	sectionIndex: number,
-	partIndex: number,
-	key: string
+	song,
+	sectionIndex,
+	partIndex,
+	key
 ) 
 {
-	const section = song?.sections?.[sectionIndex]
-	const part = song?.parts?.[partIndex]
+	if (!song) return null
+
+	const part = song.parts?.[partIndex]
 	const performance = part?.performances?.[sectionIndex]
+	const section = song.sections?.[sectionIndex]
 
-	function isValid(val: any) 
+	if (performance && key in performance) 
 	{
-		if (val === undefined || val === null) return false
-		if (typeof val === 'string' && val.trim() === '') return false
-		if (Array.isArray(val) && val.length === 0) return false
-		return true
+		return 'performance'
+	}
+	if (part && key in part) 
+	{
+		return 'part'
+	}
+	if (section && key in section) 
+	{
+		return 'section'
+	}
+	if (key in song) 
+	{
+		return 'song'
 	}
 
-	// All params should resolve from Performance -> Part -> Section -> Song
-
-	if (performance && isValid(performance[key])) return 'performance'
-	if (part && isValid(part[key])) return 'part'
-	if (section && isValid(section[key])) return 'section'
-	if (song && isValid(song[key])) return 'song'
-	return 'none'
+	return null
 }
 
-export function addSection(song: any, index?: number) 
+export function addSection() 
 {
-	const newSection = {
-		name: 'New Section',
-		nMeasures: 4
-	}
-
-	const sections = song.sections ? [ ...song.sections ] : []
-	const insertIdx = index !== undefined ? index : sections.length
-	sections.splice(insertIdx, 0, newSection)
-
-	// Keep all parts synced with the new section
-
-	const parts = song.parts
-		? song.parts.map((p: any) => 
-		{
-			const performances = p.performances ? [ ...p.performances ] : []
-			performances.splice(insertIdx, 0, {}) // Insert empty performance
-			return { ...p, performances }
-		})
-		: []
-
-	return { ...song, sections, parts }
+	songStore.update(state => 
+	{
+		if (!state) return state
+		const newState = { ...state, sections: [ ...state.sections ] }
+		newState.sections.push({})
+		return newState
+	})
 }
 
-export function removeSection(song: any, index: number) 
+export function removeSection(index) 
 {
-	if (song.sections && song.sections.length > 1) 
+	songStore.update(state => 
 	{
-		const sections = [ ...song.sections ]
-		sections.splice(index, 1)
-
-		// Remove corresponding performance from all parts
-
-		const parts = song.parts
-			? song.parts.map((p: any) => 
-			{
-				const performances = p.performances
-					? [ ...p.performances ]
-					: []
-				performances.splice(index, 1)
-				return { ...p, performances }
-			})
-			: []
-
-		return { ...song, sections, parts }
-	}
-	return song
+		if (!state?.sections) return state
+		const newState = { ...state, sections: state.sections.filter((_, i) => i !== index) }
+		return newState
+	})
 }
 
-export function addPart(song: any, index?: number) 
+export function addPart() 
 {
-	const sectionsLen = song.sections ? song.sections.length : 1
-	const newPart = {
-		name: 'New Part',
-		type: 'chordal',
-		performances: Array(sectionsLen)
-			.fill({})
-			.map(() => ({})) // Fill with unique empty performance objects
-	}
-
-	const parts = song.parts ? [ ...song.parts ] : []
-	if (index !== undefined) 
+	songStore.update(state => 
 	{
-		parts.splice(index, 0, newPart)
-	}
-	else 
-	{
-		parts.push(newPart)
-	}
-	return { ...song, parts }
+		if (!state) return state
+		const newState = { ...state, parts: [ ...state.parts ] }
+		newState.parts.push({ performances: [] })
+		return newState
+	})
 }
 
-export function removePart(song: any, index: number) 
+export function removePart(index) 
 {
-	if (song.parts && song.parts.length > 1) 
+	songStore.update(state => 
 	{
-		const parts = [ ...song.parts ]
-		parts.splice(index, 1)
-		return { ...song, parts }
-	}
-	return song
+		if (!state?.parts) return state
+		const newState = { ...state, parts: state.parts.filter((_, i) => i !== index) }
+		return newState
+	})
 }

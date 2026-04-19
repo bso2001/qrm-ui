@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 	import {
 		catalogStore,
@@ -6,10 +6,9 @@
 		loadFromCatalog,
 		saveToCatalog
 	} from '../catalogStore'
-	import type { CatalogEntry } from '../catalogStore'
 
 	export let show = false
-	export let currentSongId: string | null = null
+	export let currentSongId = null
 
 	const dispatch = createEventDispatcher()
 
@@ -38,9 +37,9 @@
 		downloadAnchorNode.remove()
 	}
 
-	function handleImportLibrary(event: Event) 
+	function handleImportLibrary(event) 
 	{
-		const target = event.target as HTMLInputElement
+		const target = event.target
 		const file = target.files?.[0]
 		if (file) 
 		{
@@ -55,7 +54,7 @@
 				{
 					try 
 					{
-						const json = JSON.parse(e.target?.result as string)
+						const json = JSON.parse(e.target?.result)
 						if (Array.isArray(json)) 
 						{
 							// 1. Clear existing catalog and all its songs
@@ -116,12 +115,12 @@
 		dispatch('close')
 	}
 
-	function handleLoad(id: string) 
+	function handleLoad(id) 
 	{
 		dispatch('load', id)
 	}
 
-	function handleDelete(id: string) 
+	function handleDelete(id) 
 	{
 		if (
 			confirm(
@@ -137,7 +136,7 @@
 		}
 	}
 
-	function formatDate(ts: number) 
+	function formatDate(ts) 
 	{
 		return new Date(ts).toLocaleString(undefined, {
 			year: 'numeric',

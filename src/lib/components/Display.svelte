@@ -1,19 +1,19 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 
-	export let value: any = ''
-	export let label: string = ''
-	export let width: string = 'auto'
-	export let color: string = '#00ff00'
-	export let fontSize: string = '16px'
-	export let inherited: boolean = false
-	export let layout: 'row' | 'column' = 'column'
+	export let value = ''
+	export let label = ''
+	export let width = 'auto'
+	export let color = '#00ff00'
+	export let fontSize = '16px'
+	export let inherited = false
+	export let layout = 'column'
 
 	const dispatch = createEventDispatcher()
 
-	function handleChange(event: Event) 
+	function handleChange(event) 
 	{
-		const newVal = (event.target as HTMLInputElement).value
+		const newVal = event.target.value
 		value = newVal
 		dispatch('change', newVal)
 	}

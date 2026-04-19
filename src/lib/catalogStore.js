@@ -1,17 +1,11 @@
 import { writable } from 'svelte/store'
 
-export interface CatalogEntry {
-	id: string;
-	name: string;
-	lastModified: number;
-}
-
 const CATALOG_KEY = 'qrm_catalog'
 const SONG_PREFIX = 'qrm_song_'
 
 // Reactive store for the catalog index
 
-export const catalogStore = writable<CatalogEntry[]>([])
+export const catalogStore = writable([])
 
 // Initialize catalog from localStorage
 
@@ -46,7 +40,7 @@ function generateId()
 
 // Save a song to the catalog
 
-export function saveToCatalog(songData: any, existingId?: string): string 
+export function saveToCatalog(songData, existingId) 
 {
 	const id = existingId || generateId()
 	const name = songData.name || 'Untitled Song'
@@ -89,7 +83,7 @@ export function saveToCatalog(songData: any, existingId?: string): string
 
 // Load a specific song from the catalog
 
-export function loadFromCatalog(id: string): any | null 
+export function loadFromCatalog(id) 
 {
 	const data = localStorage.getItem(`${SONG_PREFIX}${id}`)
 	if (data) 
@@ -109,7 +103,7 @@ export function loadFromCatalog(id: string): any | null
 
 // Delete a song from the catalog
 
-export function deleteFromCatalog(id: string) 
+export function deleteFromCatalog(id) 
 {
 	// Remove the song data
 

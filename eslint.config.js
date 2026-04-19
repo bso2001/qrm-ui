@@ -13,11 +13,6 @@ import eslintPluginSvelte from 'eslint-plugin-svelte'
 
 import svelteParser from 'svelte-eslint-parser'
 
-// TypeScript ESLint Parser: Allows ESLint to understand TypeScript syntax.
-// Docs: https://typescript-eslint.io/
-
-import tsParser from '@typescript-eslint/parser'
-
 // ESLint Stylistic: Formatting rules (indent, brace-style, etc.) since they were deprecated in ESLint core.
 // Docs: https://eslint.style/
 
@@ -79,23 +74,12 @@ export default [
 		}
 	},
 	{
-		// Apply the TypeScript parser to standard script files
-
-		files: [ '**/*.ts', '**/*.js' ],
-		languageOptions: {
-			parser: tsParser
-		}
-	},
-	{
 		// Apply the Svelte parser to Svelte components
 
 		files: [ '**/*.svelte' ],
 		languageOptions: {
 			parser: svelteParser,
 			parserOptions: {
-				// Use the TypeScript parser inside Svelte <script> tags
-
-				parser: tsParser,
 				extraFileExtensions: [ '.svelte' ]
 			}
 		}

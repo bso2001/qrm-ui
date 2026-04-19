@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="js">
 	import { songStore, updateSong } from '../songStore'
 	import Card from './Card.svelte'
 	import Slider from './Slider.svelte'
@@ -9,16 +9,16 @@
 
 	export let loadedFilename = ''
 
-	function webkitDir(node: HTMLInputElement) 
+	function webkitDir(node) 
 	{
 		node.setAttribute('webkitdirectory', '')
 		node.setAttribute('directory', '')
 		return {}
 	}
 
-	function handleDirSelect(event: Event) 
+	function handleDirSelect(event) 
 	{
-		const target = event.target as HTMLInputElement
+		const target = event.target
 		const file = target.files?.[0]
 		if (file) 
 		{

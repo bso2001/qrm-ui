@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 	import { songStore, updateSection } from '../songStore'
 	import Display from './Display.svelte'
@@ -6,7 +6,7 @@
 	import ChordBuilder from './ChordBuilder.svelte'
 	import { tonics, modes } from '../constants'
 
-	export let sectionIndex: number
+	export let sectionIndex
 
 	$: currentSection = $songStore?.sections?.[sectionIndex] || {}
 

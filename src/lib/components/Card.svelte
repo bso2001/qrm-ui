@@ -1,12 +1,12 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 
-	export let title: string = ''
-	export let subModule: boolean = false
-	export let showNav: boolean = false
-	export let navLabel: string = ''
-	export let showInsert: boolean = false
-	export let showDelete: boolean = false
+	export let title = ''
+	export let subModule = false
+	export let showNav = false
+	export let navLabel = ''
+	export let showInsert = false
+	export let showDelete = false
 
 	const dispatch = createEventDispatcher()
 </script>

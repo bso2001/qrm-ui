@@ -1,14 +1,14 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 
-	export let value: string = ''
-	export let options: string[] = []
-	export let width: string = 'auto'
-	export let color: string = '#00ff00'
-	export let inherited: boolean = false
-	export let label: string = ''
-	export let layout: 'row' | 'column' = 'column'
-	export let fontSize: string = '0.95rem'
+	export let value = ''
+	export let options = []
+	export let width = 'auto'
+	export let color = '#00ff00'
+	export let inherited = false
+	export let label = ''
+	export let layout = 'column'
+	export let fontSize = '0.95rem'
 
 	const dispatch = createEventDispatcher()
 
@@ -20,7 +20,7 @@
 		dispatch('change', value)
 	}
 
-	function prev(e: MouseEvent) 
+	function prev(e) 
 	{
 		e.preventDefault()
 		const currentIndex = options.indexOf(value)

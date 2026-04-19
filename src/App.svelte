@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="js">
 	import { onMount, tick } from 'svelte'
 	import {
 		songStore,
@@ -28,10 +28,10 @@
 	let currentTheme = 'light'
 	const themes = [ 'light', 'medium', 'dark' ]
 
-	let history: string[] = []
+	let history = []
 	let historyIndex = -1
 	let isUndoing = false
-	let saveTimeout: ReturnType<typeof setTimeout>
+	let saveTimeout
 
 	let showLibrary = false
 	let currentCatalogId: string | null = null
@@ -164,7 +164,7 @@
 		}
 	}
 
-	function handleGlobalKeydown(e: KeyboardEvent) 
+	function handleGlobalKeydown(e) 
 	{
 		if (e.key === 'z' && (e.ctrlKey || e.metaKey)) 
 		{
@@ -226,7 +226,7 @@
 	let selectedPartIndex = 0
 	let loadedFilename = ''
 
-	async function handleInsertSection(event: CustomEvent<string>) 
+	async function handleInsertSection(event) 
 	{
 		const pos = event.detail
 		let idx = $songStore.sections.length
@@ -238,14 +238,14 @@
 		selectedSectionIndex = idx
 	}
 
-	function handleRemoveSection(index: number) 
+	function handleRemoveSection(index) 
 	{
 		if ($songStore.sections.length <= 1) return
 		songStore.update(s => removeSection(s, index))
 		validateIndices()
 	}
 
-	async function handleInsertPart(event: CustomEvent<string>) 
+	async function handleInsertPart(event) 
 	{
 		const pos = event.detail
 		let idx = $songStore.parts.length
@@ -257,7 +257,7 @@
 		selectedPartIndex = idx
 	}
 
-	function handleRemovePart(index: number) 
+	function handleRemovePart(index) 
 	{
 		if ($songStore.parts.length <= 1) return
 		songStore.update(s => removePart(s, index))

@@ -1,12 +1,12 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 	import { songStore } from '../songStore'
 
-	export let selectedSectionIndex: number
+	export let selectedSectionIndex
 
 	const dispatch = createEventDispatcher()
 
-	function select(index: number) 
+	function select(index) 
 	{
 		dispatch('select', index)
 	}

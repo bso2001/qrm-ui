@@ -1,8 +1,8 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 
-	export let on: boolean = false
-	export let label: string = ''
+	export let on = false
+	export let label = ''
 
 	const dispatch = createEventDispatcher()
 

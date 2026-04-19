@@ -1,19 +1,19 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 
-	export let value: number = 0
-	export let min: number = 0
-	export let max: number = 100
-	export let step: number = 1
-	export let label: string = ''
-	export let inherited: boolean = false
-	export let compact: boolean = false
+	export let value = 0
+	export let min = 0
+	export let max = 100
+	export let step = 1
+	export let label = ''
+	export let inherited = false
+	export let compact = false
 
 	const dispatch = createEventDispatcher()
 
-	function handleInput(event: Event) 
+	function handleInput(event) 
 	{
-		const val = parseFloat((event.target as HTMLInputElement).value)
+		const val = parseFloat(event.target.value)
 		if (!isNaN(val)) 
 		{
 			value = val

@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 	import {
 		songStore,
@@ -14,8 +14,8 @@
 	import ChordBuilder from './ChordBuilder.svelte'
 	import { voiceTypes, tonics, modes } from '../constants'
 
-	export let partIndex: number
-	export let sectionIndex: number
+	export let partIndex
+	export let sectionIndex
 
 	$: part = $songStore?.parts?.[partIndex] || {}
 	$: performance = part?.performances?.[sectionIndex] || {}

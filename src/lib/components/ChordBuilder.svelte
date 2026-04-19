@@ -1,14 +1,14 @@
-<script lang="ts">
+<script lang="js">
 	import { createEventDispatcher } from 'svelte'
 	import { tonics, chordQualities } from '../constants'
 	import { flip } from 'svelte/animate'
 
-	export let chords: string[] = []
+	export let chords = []
 
 	const dispatch = createEventDispatcher()
 
-	let activeIndex: number | null = null
-	let draggedIndex: number | null = null
+	let activeIndex = null
+	let draggedIndex = null
 
 	function addChord() 
 	{
@@ -59,12 +59,12 @@
 
 	// Simple Drag and Drop
 
-	function onDragStart(index: number) 
+	function onDragStart(index) 
 	{
 		draggedIndex = index
 	}
 
-	function onDragOver(e: DragEvent, index: number) 
+	function onDragOver(e, index) 
 	{
 		e.preventDefault()
 		if (draggedIndex === null || draggedIndex === index) return
