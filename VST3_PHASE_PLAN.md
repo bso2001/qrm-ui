@@ -1,10 +1,10 @@
-# QRM VST3 Spike Plan
+# QRM VST3 Phase Plan
 
 ## Goal
 
-Determine whether QRM can become a useful macOS VST3 plugin without over-investing in UI or platform work too early.
+Determine whether QRM can become a useful macOS VST3 plugin without over-investing in production-level work too early.
 
-This is a spike, not a productization effort.
+This is a phase, not a productization effort.
 
 ## Scope
 
@@ -14,7 +14,8 @@ In scope:
 - VST3 only
 - Prototype quality
 - Local development only
-- One or two DAWs for testing
+- Studio One on macOS as primary test host
+- One optional second DAW only if needed
 
 Out of scope:
 
@@ -25,6 +26,7 @@ Out of scope:
 - Signing and notarization
 - Installer work
 - Broad host compatibility
+- Production hardening beyond what is needed for prototype use by a small internal group
 
 ## Primary Question
 
@@ -33,20 +35,39 @@ Can we build a macOS VST3 that:
 1. Loads reliably in a target DAW on the local machine
 2. Opens a usable editor window
 3. Saves and restores plugin state correctly
-4. Proves that a small slice of QRM generation is meaningful inside a DAW
+4. Proves that a small slice of QRM generation is meaningful inside a DAW record workflow
 5. Tells us whether further UI work should target a plugin-first architecture
 
 If the answer is no, the current web UI remains the main product path.
 
 ## Recommendation
 
-Use JUCE for the spike.
+Use JUCE for this phase.
 
 Reasoning:
 
 - Fastest path to a working macOS VST3
 - Mature plugin editor and host integration model
 - Good fit for a local prototype where commercial licensing is not the immediate constraint
+
+## Framework Decision Note: JUCE vs iPlug2
+
+Current decision for this phase:
+
+- Choose JUCE as the default framework
+- Defer iPlug2 exploration until after first working prototype milestones are met
+
+Why this is the current decision:
+
+- Higher confidence in fast time-to-first-plugin on macOS VST3
+- Larger ecosystem, documentation, and examples for host integration issues
+- Lower project risk for a prototype used by a small internal group
+
+What would trigger reconsidering iPlug2:
+
+- JUCE-specific constraints materially block QRM workflow goals
+- Build size, runtime overhead, or framework complexity becomes a concrete problem
+- A successful Phase 1 prototype exists and we decide to optimize architecture before broader investment
 
 ## What Carries Over From The Current Repos
 
@@ -77,9 +98,27 @@ A plugin is different:
 - It must avoid browser and server assumptions
 - It may need to emit MIDI in real time instead of writing files
 
-Because of that, this spike should be treated as a native plugin implementation that reuses QRM concepts, not as a direct port of the existing app.
+Because of that, this phase should be treated as a native plugin implementation that reuses QRM concepts, not as a direct port of the existing app.
 
-## Architecture For The Spike
+## DAW Workflow Assumptions
+
+The target workflow for this phase is:
+
+1. User programs QRM settings in the plugin UI
+2. User hits record in the DAW
+3. QRM emits MIDI events in real time while transport runs
+4. Another instrument/plugin receives that MIDI and produces audio that gets recorded
+5. Generation stops when the user stops transport
+
+Implications:
+
+- Tempo comes from the DAW transport and is not editable in QRM
+- Section length may also be host-driven in practice; treat it as constrained unless proven otherwise
+- Plugin behavior should be transport-aware first, timeline-authoring second
+- Song Mode is out of scope for plugin operation in this phase
+- Multiple QRM instances across tracks is the expected usage model
+
+## Architecture For The Phase
 
 ### 1. Native Plugin Shell
 
@@ -106,7 +145,7 @@ This core should be isolated from JUCE-specific UI code where practical.
 
 ### 3. UI Strategy
 
-Do not try to embed the existing Svelte app for the spike.
+Do not try to embed the existing Svelte app for this phase.
 
 Instead:
 
@@ -117,7 +156,7 @@ Instead:
 
 ## Product Model Question To Resolve Early
 
-The spike needs to answer what kind of plugin QRM actually wants to be.
+The phase needs to answer what kind of plugin QRM actually wants to be.
 
 The main options are:
 
@@ -152,7 +191,9 @@ Risks:
 - Weaker plugin value proposition
 - May end up being the wrong form factor
 
-The spike should compare these two models quickly, not assume the answer up front.
+Given the target workflow, Option A is the default direction for this phase.
+
+Option B can still be treated as a fallback if transport-driven MIDI output proves unworkable.
 
 ## Recommended DAW Test Matrix
 
@@ -160,11 +201,11 @@ Keep this intentionally small.
 
 Primary host:
 
-- REAPER on macOS
+- Studio One on macOS
 
 Optional second host:
 
-- Bitwig Studio or Ableton Live, whichever is already available locally
+- REAPER, Bitwig Studio, or Ableton Live, whichever is already available locally
 
 Selection criteria:
 
@@ -172,26 +213,56 @@ Selection criteria:
 - Easy plugin diagnostics
 - Reliable MIDI plugin testing
 
-## Definition Of Done For The Spike
+## Definition Of Done For The Phase
 
-The spike is successful if all of the following are true:
+The phase is successful if all of the following are true:
 
 1. The VST3 builds locally on macOS
 2. The plugin loads in the target DAW
 3. The editor opens and remains stable
 4. At least a minimal QRM-shaped state object can be edited
 5. State restore works across DAW reloads
-6. One minimal generation behavior works well enough to evaluate the product direction
+6. One minimal real-time generation behavior works well enough to evaluate the product direction
 7. We can clearly say whether plugin-first development is justified
 
-The spike is unsuccessful if any of the following happens:
+The phase is unsuccessful if any of the following happens:
 
 - Host integration is too unstable
 - Timing model is a poor fit for QRM
 - The plugin form factor adds friction without enough benefit
 - UI constraints make the authoring experience materially worse than the current web app
 
+## Time Estimate Assumptions
+
+The two-week plan is an effort estimate, not a calendar promise.
+
+For this document, one week means:
+
+- 20 to 30 focused engineering hours
+- One primary developer
+- Prototype quality expectations
+- One primary DAW host (Studio One on macOS)
+
+Estimate basis:
+
+- Typical first-plugin setup and host-integration effort in JUCE
+- Known complexity around state restore and transport timing
+- A small vertical slice of generation logic, not a full port of qrm
+- Limited host matrix and no production packaging work
+
+Not included in the estimate:
+
+- Production hardening, edge-case handling, or broad host support
+- Installer, signing, notarization, and release workflow work
+- Major UX redesign beyond a minimal native editor
+
+Expected uncertainty:
+
+- Around plus or minus 40 percent at this stage, mostly due to DAW/transport behavior and real-time MIDI edge cases
+
 ## Two-Week Execution Plan
+
+Read this as approximately 40 to 60 focused hours total.
 
 ### Week 1
 
@@ -199,14 +270,14 @@ Objectives:
 
 - Create the JUCE project
 - Build a minimal macOS VST3
-- Verify plugin discovery and editor launch in the target DAW
+- Verify plugin discovery and editor launch in Studio One on macOS
 - Implement basic state serialization
 
 Tasks:
 
 1. Create a minimal JUCE VST3 project
 2. Build and install the plugin into the user VST3 path on macOS
-3. Confirm the DAW scans and opens it
+3. Confirm Studio One scans and opens it
 4. Add a small editor with a handful of QRM-shaped controls
 5. Implement plugin state save and restore
 
@@ -219,16 +290,16 @@ Deliverable:
 Objectives:
 
 - Port a very small slice of QRM logic
-- Decide whether real-time MIDI behavior is viable
+- Validate real-time MIDI behavior in the record workflow
 - Evaluate whether the plugin UI model feels right
 
 Tasks:
 
 1. Port a minimal subset of generation concepts
 2. Implement one thin vertical slice of behavior
-3. Test transport interaction and reload behavior
+3. Test transport interaction, record behavior, and reload behavior
 4. Compare plugin experience against the current web prototype
-5. Write a short spike conclusion with go / no-go recommendation
+5. Write a short phase conclusion with go / no-go recommendation
 
 Deliverable:
 
@@ -240,16 +311,20 @@ Keep the first plugin parameter surface deliberately small.
 
 Suggested initial parameters:
 
-- Tempo source mode if needed
 - Key tonic
 - Key mode
-- Section length in measures
+- Section length in measures only if it does not conflict with host/transport constraints
 - Part type
 - Duration selection
 - Note range low
 - Note range high
 - Rest probability
 - Tonic probability
+
+Host-owned controls for v0.1:
+
+- Tempo is DAW-owned and read-only in QRM
+- Transport state (play/record/stop) is DAW-owned
 
 Do not attempt the full song editor in version 0.1.
 
@@ -282,20 +357,22 @@ Work that is likely throwaway for the plugin path:
 
 - QRM may be better as an offline composition tool than as a live plugin
 - A plugin UI may be less effective for authoring complex arrangements than the current web editor
+- Removing Song Mode in plugin context may limit some existing QRM mental models
 
 ### Process Risks
 
-- Trying to preserve too much of the current UI too early will slow the spike
+- Trying to preserve too much of the current UI too early will slow the phase
 - Expanding scope beyond macOS VST3 will bury the core question
+- Pulling in production polish before workflow validation will delay learning
 
-## Recommendation After The Spike
+## Recommendation After The Phase
 
-If the spike succeeds:
+If the phase succeeds:
 
 - Move toward a plugin-first architecture
 - Keep qrm-ui as a schema workbench and transition aid during migration
 
-If the spike fails:
+If the phase fails:
 
 - Keep qrm-ui as the primary product
 - Consider a standalone native wrapper only if it solves a specific user problem
@@ -307,5 +384,7 @@ Start with the smallest possible plugin that proves three things:
 1. It loads in a DAW
 2. It restores state correctly
 3. It can express one minimal QRM behavior meaningfully
+
+For this phase, that behavior should be transport-driven real-time MIDI output that can be recorded via downstream instrument audio.
 
 That is the decision gate. Everything else is secondary.
