@@ -123,7 +123,7 @@
 			<button class="reset-btn" on:click={resetModel}>RESET</button>
 		</header>
 
-		<Card title="Single-Part Control Panel">
+		<Card>
 			<div class="panel-grid">
 				<div class="control choice-control">
 					<Choice
