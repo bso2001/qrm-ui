@@ -85,10 +85,7 @@
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
 		font-weight: 600;
-	}
-
-	.compact .label {
-		font-size: 0.65rem;
+		white-space: nowrap;
 	}
 
 	.value {
