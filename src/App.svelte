@@ -116,7 +116,10 @@
 <main>
 	<div class="app-shell">
 		<header class="topbar">
-			<div class="brand">QRM UI - VST Scope</div>
+			<div class="brand-wrap">
+				<div class="brand">qrm.vst</div>
+				<div class="subtitle">Quasi-intelligent accompanist</div>
+			</div>
 			<button class="reset-btn" on:click={resetModel}>RESET</button>
 		</header>
 
@@ -347,23 +350,23 @@
 
 <style>
 	:global(body) {
-		--bg-main: #f4f6f8;
-		--bg-card: #ffffff;
-		--bg-sub: #f8f9fa;
-		--bg-hover: #e9ecef;
-		--bg-input: #ffffff;
-		--text-main: #333333;
-		--text-muted: #6c757d;
-		--text-heading: #2c3e50;
-		--border-main: #e0e0e0;
-		--border-sub: #e9ecef;
-		--border-input: #ced4da;
-		--accent: #4dabf7;
-		--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+		--bg-main: #16181d;
+		--bg-card: #1d2027;
+		--bg-sub: #242933;
+		--bg-hover: #2d3340;
+		--bg-input: #232832;
+		--text-main: #d7d9dd;
+		--text-muted: #b3b8c0;
+		--text-heading: #edf0f5;
+		--border-main: #353a45;
+		--border-sub: #323743;
+		--border-input: #464d5d;
+		--accent: #8fb3ff;
+		--shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.28);
 
 		margin: 0;
 		padding: 0;
-		background: var(--bg-main);
+		background: radial-gradient(circle at top, #1f232d 0%, var(--bg-main) 55%);
 		font-family:
 			-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
 			Arial, sans-serif;
@@ -389,29 +392,50 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 10px 14px;
-		border: 1px solid var(--border-main);
-		border-radius: 8px;
+		padding: 12px 16px;
+		border: 1.5px solid var(--border-main);
+		border-radius: 12px;
 		background: var(--bg-card);
 		box-shadow: var(--shadow-sm);
 	}
 
+	.brand-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
 	.brand {
 		font-weight: 800;
-		letter-spacing: 0.04em;
-		font-size: 0.95rem;
-		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		font-size: 1.3rem;
+		line-height: 1.1;
+		color: var(--text-heading);
+	}
+
+	.subtitle {
+		font-size: 0.78rem;
+		line-height: 1;
+		color: var(--text-muted);
 	}
 
 	.reset-btn {
 		height: 34px;
 		padding: 0 12px;
-		border-radius: 6px;
+		border-radius: 7px;
 		border: 1px solid var(--border-input);
 		background: var(--bg-sub);
-		font-size: 0.75rem;
+		font-size: 0.7rem;
 		font-weight: 700;
 		cursor: pointer;
+		color: var(--text-main);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.reset-btn:hover {
+		background: var(--bg-hover);
+		border-color: var(--accent);
 	}
 
 	.panel-grid {
@@ -444,7 +468,7 @@
 		justify-content: center;
 		gap: 8px;
 		padding: 8px 6px 6px;
-		border: 1px solid var(--border-main);
+		border: 1.5px solid var(--border-main);
 		border-radius: 8px;
 		background: var(--bg-sub);
 		position: relative;
@@ -492,7 +516,7 @@
 	.gate-card {
 		margin-top: 8px;
 		padding: 10px;
-		border: 1px solid var(--border-main);
+		border: 1.5px solid var(--border-main);
 		border-radius: 8px;
 		background: var(--bg-sub);
 	}
@@ -526,7 +550,7 @@
 		margin-top: 8px;
 		padding: 10px;
 		border-radius: 8px;
-		border: 1px dashed var(--border-input);
+		border: 1px dashed #5a6276;
 		background: var(--bg-sub);
 	}
 
