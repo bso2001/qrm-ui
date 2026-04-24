@@ -15,9 +15,11 @@
 		restLikelihood: 0.15,
 		noteLength: 0.5,
 		phraseLength: 4,
-		gateEnabled: false,
-		gateStart: 0,
-		gateEnd: 16
+		activationRangeEnabled: true,
+		startRange: 'song-start',
+		startBar: 1,
+		endRange: 'song-end',
+		endBar: 64
 	}
 
 	let model = { ...defaultState }
@@ -30,11 +32,31 @@
 
 	function clampModel()
 	{
-		if (model.gateStart > model.gateEnd)
+		if (model.startBar < 1)
 		{
 			model = {
 				...model,
-				gateEnd: model.gateStart
+				startBar: 1
+			}
+		}
+
+		if (model.endBar < 1)
+		{
+			model = {
+				...model,
+				endBar: 1
+			}
+		}
+
+		if (
+			model.startRange === 'bar'
+			&& model.endRange === 'bar'
+			&& model.startBar > model.endBar
+		)
+		{
+			model = {
+				...model,
+				endBar: model.startBar
 			}
 		}
 	}
@@ -178,54 +200,95 @@
 				</div>
 			</div>
 
-			<div class="gate-card" class:disabled={!model.gateEnabled}>
+			<div class="gate-card" class:disabled={!model.activationRangeEnabled}>
 				<div class="gate-header">
 					<Switch
-						on={model.gateEnabled}
-						label="GATE ENABLE"
+						on={model.activationRangeEnabled}
+						label="ACTIVATION RANGE"
 						on:change={e =>
 						{
 							model = {
 								...model,
-								gateEnabled: e.detail
+								activationRangeEnabled: e.detail
 							}
 						}}
 					/>
 				</div>
 
 				<div class="gate-grid">
-					<Slider
-						value={model.gateStart}
-						label="GATE START (PPQ)"
-						min={0}
-						max={64}
-						step={0.25}
-						on:change={e =>
-						{
-							const gateStart = e.detail
-							model = {
-								...model,
-								gateStart,
-								gateEnd: Math.max(model.gateEnd, gateStart)
-							}
-						}}
-					/>
-					<Slider
-						value={model.gateEnd}
-						label="GATE END (PPQ)"
-						min={0}
-						max={64}
-						step={0.25}
-						on:change={e =>
-						{
-							const gateEnd = e.detail
-							model = {
-								...model,
-								gateStart: Math.min(model.gateStart, gateEnd),
-								gateEnd
-							}
-						}}
-					/>
+					<div class="range-block">
+						<Choice
+							value={model.startRange}
+							label="START"
+							options={[ 'song-start', 'bar' ]}
+							on:change={e =>
+							{
+								model = {
+									...model,
+									startRange: e.detail
+								}
+							}}
+							width="120px"
+						/>
+
+						{#if model.startRange === 'bar'}
+							<Slider
+								value={model.startBar}
+								label="START BAR"
+								min={1}
+								max={512}
+								step={1}
+								on:change={e =>
+								{
+									const startBar = e.detail
+									model = {
+										...model,
+										startBar,
+										endBar: model.endRange === 'bar'
+											? Math.max(model.endBar, startBar)
+											: model.endBar
+									}
+								}}
+							/>
+						{/if}
+					</div>
+
+					<div class="range-block">
+						<Choice
+							value={model.endRange}
+							label="STOP"
+							options={[ 'song-end', 'bar' ]}
+							on:change={e =>
+							{
+								model = {
+									...model,
+									endRange: e.detail
+								}
+							}}
+							width="120px"
+						/>
+
+						{#if model.endRange === 'bar'}
+							<Slider
+								value={model.endBar}
+								label="STOP BAR"
+								min={1}
+								max={512}
+								step={1}
+								on:change={e =>
+								{
+									const endBar = e.detail
+									model = {
+										...model,
+										startBar: model.startRange === 'bar'
+											? Math.min(model.startBar, endBar)
+											: model.startBar,
+										endBar
+									}
+								}}
+							/>
+						{/if}
+					</div>
 				</div>
 			</div>
 
@@ -346,6 +409,14 @@
 		display: grid;
 		grid-template-columns: repeat(2, minmax(200px, 1fr));
 		gap: 8px;
+	}
+
+	.range-block {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
+		padding-top: 4px;
 	}
 
 	.json-preview {
