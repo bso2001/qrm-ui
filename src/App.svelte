@@ -183,37 +183,37 @@
 					/>
 				</div>
 
-				<div class="control">
-					<Slider
-						value={model.phraseLength}
-						label="PHRASE LENGTH"
-						min={1}
-						max={16}
-						step={1}
-						on:change={e =>
-						{
-							model = {
-								...model,
-								phraseLength: e.detail
-							}
-						}}
-					/>
-				</div>
-
-				<div class="control phrase-playback-control">
-					<Choice
-						value={model.phrasePlayback}
-						label="PHRASE PLAYBACK"
-						options={[ 'no-repeat', 'repeat-as-needed', 'regenerate-per-cycle' ]}
-						on:change={e =>
-						{
-							model = {
-								...model,
-								phrasePlayback: e.detail
-							}
-						}}
-						width="220px"
-					/>
+				<div class="control phrase-group-control">
+					<div class="phrase-group">
+						<div class="phrase-group-label">PHRASE</div>
+						<Slider
+							value={model.phraseLength}
+							label="LENGTH (BARS)"
+							min={1}
+							max={16}
+							step={1}
+							on:change={e =>
+							{
+								model = {
+									...model,
+									phraseLength: e.detail
+								}
+							}}
+						/>
+						<Choice
+							value={model.phrasePlayback}
+							label="PLAYBACK"
+							options={[ 'no-repeat', 'repeat-as-needed', 'regenerate-per-cycle' ]}
+							on:change={e =>
+							{
+								model = {
+									...model,
+									phrasePlayback: e.detail
+								}
+							}}
+							width="220px"
+						/>
+					</div>
 				</div>
 			</div>
 
@@ -403,10 +403,37 @@
 		justify-content: center;
 	}
 
-	.phrase-playback-control {
+	.phrase-group-control {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+	}
+
+	.phrase-group {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 8px 6px 6px;
+		border: 1px solid var(--border-main);
+		border-radius: 8px;
+		background: var(--bg-sub);
+		position: relative;
+	}
+
+	.phrase-group-label {
+		position: absolute;
+		top: -8px;
+		left: 12px;
+		padding: 0 6px;
+		background: var(--bg-card);
+		border: 1px solid var(--border-main);
+		border-radius: 6px;
+		font-size: 0.62rem;
+		font-weight: 700;
+		letter-spacing: 0.09em;
+		color: var(--text-muted);
 	}
 
 	.gate-card {
