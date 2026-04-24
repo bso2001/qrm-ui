@@ -3,7 +3,6 @@
 	import Card from './lib/components/Card.svelte'
 	import Choice from './lib/components/Choice.svelte'
 	import Slider from './lib/components/Slider.svelte'
-	import Switch from './lib/components/Switch.svelte'
 	import { tonics } from './lib/constants'
 
 	const STORAGE_KEY = 'qrm_vst_scope_autosave'
@@ -16,7 +15,6 @@
 		noteLength: 0.5,
 		phraseLength: 4,
 		phrasePlayback: 'loop',
-		activationRangeEnabled: true,
 		startRange: 'song-start',
 		startBar: 1,
 		endRange: 'song-end',
@@ -88,6 +86,7 @@
 			try
 			{
 				const parsed = JSON.parse(saved)
+				const { activationRangeEnabled, ...savedState } = parsed
 				const legacyPhrasePlaybackMap = {
 					'no-repeat': 'one-shot',
 					'repeat-as-needed': 'loop',
@@ -96,10 +95,10 @@
 
 				model = {
 					...defaultState,
-					...parsed,
+					...savedState,
 					phrasePlayback:
-						legacyPhrasePlaybackMap[parsed.phrasePlayback]
-						|| parsed.phrasePlayback
+						legacyPhrasePlaybackMap[savedState.phrasePlayback]
+						|| savedState.phrasePlayback
 						|| defaultState.phrasePlayback
 				}
 			}
@@ -248,21 +247,7 @@
 				</div>
 			</div>
 
-			<div class="gate-card" class:disabled={!model.activationRangeEnabled}>
-				<div class="gate-header">
-					<Switch
-						on={model.activationRangeEnabled}
-						label="ACTIVATION RANGE"
-						on:change={e =>
-						{
-							model = {
-								...model,
-								activationRangeEnabled: e.detail
-							}
-						}}
-					/>
-				</div>
-
+			<div class="gate-card">
 				<div class="gate-grid">
 					<div class="range-block">
 						<Choice
@@ -519,17 +504,6 @@
 		border: 1.5px solid var(--border-main);
 		border-radius: 8px;
 		background: var(--bg-sub);
-	}
-
-	.gate-card.disabled {
-		opacity: 0.75;
-	}
-
-	.gate-header {
-		display: flex;
-		align-items: center;
-		justify-content: flex-start;
-		padding-left: 6px;
 	}
 
 	.gate-grid {
