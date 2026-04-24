@@ -214,7 +214,7 @@
 						<div class="phrase-group-label">PHRASE</div>
 						<Choice
 							value={model.phrasePlayback}
-							label="PLAYBACK"
+							label="REPEAT MODE"
 							options={[ 'one-shot', 'loop', 're-roll' ]}
 							on:change={e =>
 							{
