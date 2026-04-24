@@ -15,6 +15,7 @@
 		restLikelihood: 0.15,
 		noteLength: 0.5,
 		phraseLength: 4,
+		phrasePlayback: 'repeat-as-needed',
 		activationRangeEnabled: true,
 		startRange: 'song-start',
 		startBar: 1,
@@ -196,6 +197,22 @@
 								phraseLength: e.detail
 							}
 						}}
+					/>
+				</div>
+
+				<div class="control phrase-playback-control">
+					<Choice
+						value={model.phrasePlayback}
+						label="PHRASE PLAYBACK"
+						options={[ 'no-repeat', 'repeat-as-needed', 'regenerate-per-cycle' ]}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								phrasePlayback: e.detail
+							}
+						}}
+						width="220px"
 					/>
 				</div>
 			</div>
@@ -381,6 +398,12 @@
 	}
 
 	.choice-control {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.phrase-playback-control {
 		display: flex;
 		align-items: center;
 		justify-content: center;
