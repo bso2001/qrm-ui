@@ -465,12 +465,28 @@
 	}
 
 	.phrase-length-wrap {
-		display: contents;
+		display: block;
+		min-width: 0;
 	}
 
 	.phrase-length-wrap.dimmed {
-		opacity: 0.45;
+		opacity: 0.28;
+		filter: grayscale(1) saturate(0.15);
 		pointer-events: none;
+	}
+
+	:global(.phrase-length-wrap.dimmed .label) {
+		color: var(--text-muted) !important;
+	}
+
+	:global(.phrase-length-wrap.dimmed .value) {
+		color: var(--text-muted) !important;
+		background: var(--bg-main) !important;
+		border-color: var(--border-main) !important;
+	}
+
+	:global(.phrase-length-wrap.dimmed .slider) {
+		opacity: 0.45 !important;
 	}
 
 	.gate-card {
