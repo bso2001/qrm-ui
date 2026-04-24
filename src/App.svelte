@@ -1,515 +1,239 @@
 <script lang="js">
-	import { onMount, tick } from 'svelte'
-	import {
-		songStore,
-		loadSong,
-		exportSong,
-		resolveParam,
-		getParamLevel,
-		addSection,
-		removeSection,
-		moveSection,
-		addPart,
-		removePart
-	} from './lib/songStore'
-	import {
-		initCatalog,
-		saveToCatalog,
-		loadFromCatalog
-	} from './lib/catalogStore'
-	import MasterSection from './lib/components/MasterSection.svelte'
-	import SectionSidebar from './lib/components/SectionSidebar.svelte'
-	import SectionEditor from './lib/components/SectionEditor.svelte'
-	import PartSection from './lib/components/PartSection.svelte'
-	import Choice from './lib/components/Choice.svelte'
-	import Display from './lib/components/Display.svelte'
-	import LibraryModal from './lib/components/LibraryModal.svelte'
+	import { onMount } from 'svelte'
 	import Card from './lib/components/Card.svelte'
+	import Choice from './lib/components/Choice.svelte'
+	import Slider from './lib/components/Slider.svelte'
+	import Switch from './lib/components/Switch.svelte'
+	import { tonics } from './lib/constants'
 
-	let currentTheme = 'light'
-	const themes = [ 'light', 'medium', 'dark' ]
+	const STORAGE_KEY = 'qrm_vst_scope_autosave'
 
-	let history = []
-	let historyIndex = -1
-	let isUndoing = false
-	let saveTimeout
+	const defaultState = {
+		root: 'C',
+		octave: 3,
+		velocity: 90,
+		restLikelihood: 0.15,
+		noteLength: 0.5,
+		phraseLength: 4,
+		gateEnabled: false,
+		gateStart: 0,
+		gateEnd: 16
+	}
 
-	let showLibrary = false
-	let currentCatalogId = null
+	let model = { ...defaultState }
+	let mounted = false
 
-	function saveState() 
+	function resetModel()
 	{
-		if (!$songStore) return
-		const serialized = JSON.stringify($songStore)
+		model = { ...defaultState }
+	}
 
-		localStorage.setItem('qrm_autosave', serialized)
-		// Also remember the active library ID so a refresh doesn't disconnect it
-
-		if (currentCatalogId) 
+	function clampModel()
+	{
+		if (model.gateStart > model.gateEnd)
 		{
-			localStorage.setItem('qrm_active_catalog_id', currentCatalogId)
-		}
-		else 
-		{
-			localStorage.removeItem('qrm_active_catalog_id')
-		}
-
-		if (isUndoing) 
-		{
-			isUndoing = false
-			return
-		}
-
-		if (historyIndex < history.length - 1) 
-		{
-			history = history.slice(0, historyIndex + 1)
-		}
-
-		if (
-			history.length === 0 ||
-			history[history.length - 1] !== serialized
-		) 
-		{
-			history = [ ...history, serialized ]
-			historyIndex = history.length - 1
-			if (history.length > 50) 
-			{
-				history.shift()
-				historyIndex--
+			model = {
+				...model,
+				gateEnd: model.gateStart
 			}
 		}
 	}
 
-	$: if ($songStore && typeof localStorage !== 'undefined') 
+	$: if (mounted)
 	{
-		clearTimeout(saveTimeout)
-		saveTimeout = setTimeout(saveState, 200)
+		clampModel()
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(model))
 	}
 
-	function handleUndo() 
+	onMount(() =>
 	{
-		if (historyIndex > 0) 
+		const saved = localStorage.getItem(STORAGE_KEY)
+		if (saved)
 		{
-			isUndoing = true
-			historyIndex--
-			$songStore = JSON.parse(history[historyIndex])
-			validateIndices()
-		}
-	}
-
-	function handleRedo() 
-	{
-		if (historyIndex < history.length - 1) 
-		{
-			isUndoing = true
-			historyIndex++
-			$songStore = JSON.parse(history[historyIndex])
-			validateIndices()
-		}
-	}
-
-	function handleRevert() 
-	{
-		if (history.length > 0) 
-		{
-			isUndoing = true
-			historyIndex = 0
-			$songStore = JSON.parse(history[0])
-			validateIndices()
-		}
-	}
-
-	function handleLibraryClearedCurrent() 
-	{
-		localStorage.removeItem('qrm_autosave')
-		currentCatalogId = null
-		selectedSectionIndex = 0
-		selectedPartIndex = 0
-		history = []
-		historyIndex = -1
-		loadSong(initialSong)
-		saveState()
-	}
-
-	function handleClear() 
-	{
-		if (
-			confirm(
-				'Are you sure you want to completely clear this song?\n\nAny unsaved changes will be permanently lost! Remember to use the LIBRARY to save your work.'
-			)
-		) 
-		{
-			loadSong(initialSong)
-			currentCatalogId = null
-			selectedSectionIndex = 0
-			selectedPartIndex = 0
-			history = []
-			historyIndex = -1
-			saveState()
-		}
-	}
-
-	function validateIndices() 
-	{
-		if (!$songStore) return
-		if (
-			$songStore.sections &&
-			selectedSectionIndex >= $songStore.sections.length
-		) 
-		{
-			selectedSectionIndex = Math.max(0, $songStore.sections.length - 1)
-		}
-		if ($songStore.parts && selectedPartIndex >= $songStore.parts.length) 
-		{
-			selectedPartIndex = Math.max(0, $songStore.parts.length - 1)
-		}
-	}
-
-	function handleGlobalKeydown(e) 
-	{
-		if (e.key === 'z' && (e.ctrlKey || e.metaKey)) 
-		{
-			e.preventDefault()
-			if (e.shiftKey) 
+			try
 			{
-				handleRedo()
-			}
-			else 
-			{
-				handleUndo()
-			}
-		}
-		else if (e.key === 'y' && e.ctrlKey) 
-		{
-			e.preventDefault()
-			handleRedo()
-		}
-	}
-
-	$: if (typeof document !== 'undefined') 
-	{
-		// Remove all known theme classes first
-
-		themes.forEach(t => document.body.classList.remove(t))
-		if (currentTheme !== 'light') 
-		{
-			document.body.classList.add(currentTheme)
-		}
-	}
-
-	const initialSong = {
-		name: 'Untitled',
-		tempo: 120,
-		velocity: [ 60, 80 ],
-		key: { tonic: 'C', mode: 'major' },
-		meter: { numerator: 4, denominator: 4 },
-		sections: [
-			{
-				name: 'intro',
-				nMeasures: 4,
-				parts: [
-					{
-						name: 'part A',
-						type: 'chordal',
-						duration: '1/4',
-						range: [ 'C3', 'C5' ],
-						restPct: 0,
-						tonicPct: 0,
-						inversionPct: 0,
-						velocity: [ 70, 90 ]
-					}
-				]
-			}
-		]
-	}
-
-	let selectedSectionIndex = 0
-	let selectedPartIndex = 0
-	let loadedFilename = ''
-
-	async function handleInsertSection(event) 
-	{
-		const pos = event.detail
-		let idx = $songStore.sections.length
-		if (pos === 'start') idx = 0
-		else if (pos === 'current') idx = selectedSectionIndex
-
-		songStore.update(s => addSection(s, idx))
-		await tick()
-		selectedSectionIndex = idx
-	}
-
-	function handleRemoveSection(index) 
-	{
-		if ($songStore.sections.length <= 1) return
-		songStore.update(s => removeSection(s, index))
-		validateIndices()
-	}
-
-	function handleMoveSection(event) 
-	{
-		const { from, to } = event.detail
-		songStore.update(s => moveSection(s, from, to))
-		if (selectedSectionIndex === from) 
-		{
-			selectedSectionIndex = to
-		}
-		else if (selectedSectionIndex > from && selectedSectionIndex <= to) 
-		{
-			selectedSectionIndex--
-		}
-		else if (selectedSectionIndex < from && selectedSectionIndex >= to) 
-		{
-			selectedSectionIndex++
-		}
-		validateIndices()
-	}
-
-	async function handleInsertPart(event) 
-	{
-		const pos = event.detail
-		let idx = $songStore.parts.length
-		if (pos === 'start') idx = 0
-		else if (pos === 'current') idx = selectedPartIndex
-
-		songStore.update(s => addPart(s, idx))
-		await tick()
-		selectedPartIndex = idx
-	}
-
-	function handleRemovePart(index) 
-	{
-		if ($songStore.parts.length <= 1) return
-		songStore.update(s => removePart(s, index))
-		validateIndices()
-	}
-
-	function handleAddPartAtEnd() 
-	{
-		handleInsertPart({ detail: 'end' })
-	}
-
-	onMount(() => 
-	{
-		initCatalog()
-		const saved = localStorage.getItem('qrm_autosave')
-		currentCatalogId = localStorage.getItem('qrm_active_catalog_id')
-
-		if (saved) 
-		{
-			try 
-			{
-				const json = JSON.parse(saved)
-				if (json.sections || json.timeline) 
-				{
-					loadSong(json)
-				}
-				else 
-				{
-					loadSong(initialSong)
+				model = {
+					...defaultState,
+					...JSON.parse(saved)
 				}
 			}
-			catch (err) 
+			catch
 			{
-				loadSong(initialSong)
+				model = { ...defaultState }
 			}
 		}
-		else 
-		{
-			loadSong(initialSong)
-		}
+
+		mounted = true
 	})
-
-	// --- Library Methods ---
-
-	function saveCurrentToLibrary() 
-	{
-		if (!$songStore) return
-		currentCatalogId = saveToCatalog(exportSong($songStore))
-	}
-
-	function overwriteCurrentInLibrary() 
-	{
-		if (!$songStore || !currentCatalogId) return
-		saveToCatalog(exportSong($songStore), currentCatalogId)
-	}
-
-	function loadFromLibrary(event) 
-	{
-		const id = event.detail
-		const songData = loadFromCatalog(id)
-		if (songData) 
-		{
-			loadSong(songData)
-			currentCatalogId = id
-			selectedSectionIndex = 0
-			selectedPartIndex = 0
-			showLibrary = false
-		}
-	}
-
-	// ----------------------
-
-	let generating = false
-
-	async function handleGenerate() 
-	{
-		if (!$songStore) return
-		generating = true
-		try 
-		{
-			const res = await fetch('/api/generate', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(exportSong($songStore))
-			})
-
-			if (res.ok) 
-			{
-				// Assume the response is a ZIP file blob
-
-				const blob = await res.blob()
-				const url = window.URL.createObjectURL(blob)
-				const a = document.createElement('a')
-				a.href = url
-				a.download = ($songStore.name || 'song') + '.zip'
-				document.body.appendChild(a)
-				a.click()
-				window.URL.revokeObjectURL(url)
-				document.body.removeChild(a)
-
-				// Success indicator
-
-				setTimeout(() => (generating = false), 1500)
-			}
-			else 
-			{
-				alert('Generation failed')
-				generating = false
-			}
-		}
-		catch (err) 
-		{
-			console.error(err)
-			alert('Network error during generation')
-			generating = false
-		}
-	}
 </script>
 
-<svelte:window on:keydown={handleGlobalKeydown} />
-<LibraryModal
-	show={showLibrary}
-	currentSongId={currentCatalogId}
-	on:close={() => (showLibrary = false)}
-	on:load={loadFromLibrary}
-	on:saveNew={saveCurrentToLibrary}
-	on:saveOverwrite={overwriteCurrentInLibrary}
-	on:clearedCurrent={handleLibraryClearedCurrent}
-/>
-
 <main>
-	<div class="app-container">
-		<div class="header-sidebar">
-			<div class="logo">QRM</div>
+	<div class="app-shell">
+		<header class="topbar">
+			<div class="brand">QRM UI - VST Scope</div>
+			<button class="reset-btn" on:click={resetModel}>RESET</button>
+		</header>
 
-			{#if $songStore}
-				<button
-					class="btn sidebar-btn generate-btn"
-					class:generating
-					on:click={handleGenerate}
-					disabled={generating}
-				>
-					{generating ? 'DONE!' : 'GENERATE'}
-				</button>
-			{/if}
-
-			<button
-				class="btn sidebar-btn"
-				on:click={() => 
-				{
-					console.log('Library clicked', showLibrary)
-					showLibrary = true
-					console.log('showLibrary now', showLibrary)
-				}}>LIBRARY</button
-			>
-
-			{#if $songStore}
-				<div class="history-controls">
-					<button
-						class="btn sidebar-btn undo-btn"
-						on:click={handleUndo}
-						disabled={historyIndex <= 0}
-						title="UNDO (Ctrl+Z)">UNDO</button
-					>
-
-					<button
-						class="btn sidebar-btn revert-btn"
-						on:click={handleRevert}
-						disabled={historyIndex <= 0}
-						title="REVERT TO ORIGINAL">REVERT</button
-					>
-
-					<button
-						class="btn sidebar-btn clear-btn"
-						on:click={handleClear}
-						title="CLEAR ENTIRE SONG">CLEAR</button
-					>
-				</div>
-			{/if}
-
-			<div class="theme-picker">
-				<Choice
-					bind:value={currentTheme}
-					options={themes}
-					width="65px"
-					fontSize="0.75rem"
-				/>
-			</div>
-		</div>
-
-		{#if $songStore}
-			<div class="main-content">
-				<MasterSection {loadedFilename} />
-
-				<div class="workspace">
-					<SectionSidebar
-						{selectedSectionIndex}
-						on:select={e => (selectedSectionIndex = e.detail)}
-						on:insert={handleInsertSection}
-						on:delete={e => handleRemoveSection(e.detail)}
-						on:move={handleMoveSection}
+		<Card title="Single-Part Control Panel">
+			<div class="panel-grid">
+				<div class="control choice-control">
+					<Choice
+						value={model.root}
+						label="ROOT"
+						options={tonics}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								root: e.detail
+							}
+						}}
+						width="92px"
 					/>
+				</div>
 
-					<div class="stage">
-						<SectionEditor sectionIndex={selectedSectionIndex} />
+				<div class="control">
+					<Slider
+						value={model.octave}
+						label="OCTAVE"
+						min={0}
+						max={8}
+						step={1}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								octave: e.detail
+							}
+						}}
+					/>
+				</div>
 
-						<div class="parts-container">
-							<Card title="PARTS">
-								<div slot="header-right-extra">
-									<button
-										class="btn add-btn"
-										on:click={handleAddPartAtEnd}
-										>+ ADD PART</button
-									>
-								</div>
+				<div class="control">
+					<Slider
+						value={model.velocity}
+						label="VELOCITY"
+						min={1}
+						max={127}
+						step={1}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								velocity: e.detail
+							}
+						}}
+					/>
+				</div>
 
-								<div class="parts-list">
-									{#each $songStore.parts as part, i}
-										<PartSection
-											partIndex={i}
-											sectionIndex={selectedSectionIndex}
-											on:delete={() =>
-												handleRemovePart(i)}
-										/>
-									{/each}
-								</div>
-							</Card>
-						</div>
-					</div>
+				<div class="control">
+					<Slider
+						value={model.restLikelihood}
+						label="REST LIKELIHOOD"
+						min={0}
+						max={1}
+						step={0.01}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								restLikelihood: e.detail
+							}
+						}}
+					/>
+				</div>
+
+				<div class="control">
+					<Slider
+						value={model.noteLength}
+						label="NOTE LENGTH"
+						min={0.05}
+						max={1}
+						step={0.01}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								noteLength: e.detail
+							}
+						}}
+					/>
+				</div>
+
+				<div class="control">
+					<Slider
+						value={model.phraseLength}
+						label="PHRASE LENGTH"
+						min={1}
+						max={16}
+						step={1}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								phraseLength: e.detail
+							}
+						}}
+					/>
 				</div>
 			</div>
-		{/if}
+
+			<div class="gate-card" class:disabled={!model.gateEnabled}>
+				<div class="gate-header">
+					<Switch
+						on={model.gateEnabled}
+						label="GATE ENABLE"
+						on:change={e =>
+						{
+							model = {
+								...model,
+								gateEnabled: e.detail
+							}
+						}}
+					/>
+				</div>
+
+				<div class="gate-grid">
+					<Slider
+						value={model.gateStart}
+						label="GATE START (PPQ)"
+						min={0}
+						max={64}
+						step={0.25}
+						on:change={e =>
+						{
+							const gateStart = e.detail
+							model = {
+								...model,
+								gateStart,
+								gateEnd: Math.max(model.gateEnd, gateStart)
+							}
+						}}
+					/>
+					<Slider
+						value={model.gateEnd}
+						label="GATE END (PPQ)"
+						min={0}
+						max={64}
+						step={0.25}
+						on:change={e =>
+						{
+							const gateEnd = e.detail
+							model = {
+								...model,
+								gateStart: Math.min(model.gateStart, gateEnd),
+								gateEnd
+							}
+						}}
+					/>
+				</div>
+			</div>
+
+			<div class="json-preview">
+				<div class="json-title">VST PARAM SNAPSHOT</div>
+				<pre>{JSON.stringify(model, null, 2)}</pre>
+			</div>
+		</Card>
 	</div>
 </main>
 
@@ -527,267 +251,147 @@
 		--border-sub: #e9ecef;
 		--border-input: #ced4da;
 		--accent: #4dabf7;
-		--danger: #fa5252;
-		--danger-hover: #e03131;
 		--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-		--shadow-md:
-			0 4px 6px -1px rgba(0, 0, 0, 0.1),
-			0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
 		margin: 0;
 		padding: 0;
+		background: var(--bg-main);
 		font-family:
 			-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
 			Arial, sans-serif;
-		background-color: var(--bg-main);
 		color: var(--text-main);
-		transition:
-			background-color 0.3s ease,
-			color 0.3s ease;
-	}
-
-	:global(body.dark) {
-		--bg-main: #121212;
-		--bg-card: #1e1e1e;
-		--bg-sub: #252525;
-		--bg-hover: #333333;
-		--bg-input: #2a2a2a;
-		--text-main: #e0e0e0;
-		--text-muted: #a0a0a0;
-		--text-heading: #ffffff;
-		--border-main: #333333;
-		--border-sub: #444444;
-		--border-input: #555555;
-		--accent: #3b82f6;
-		--danger: #ff6b6b;
-		--danger-hover: #ff8787;
-		--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
-		--shadow-md:
-			0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-	}
-
-	:global(body.medium) {
-		--bg-main: #5c5c5c;
-		--bg-card: #6b6b6b;
-		--bg-sub: #636363;
-		--bg-hover: #888888;
-		--bg-input: #4a4a4a;
-		--text-main: #eeeeee;
-		--text-muted: #cccccc;
-		--text-heading: #ffffff;
-		--border-main: #777777;
-		--border-sub: #666666;
-		--border-input: #555555;
-		--accent: #4dabf7;
-		--danger: #ff3333;
-		--danger-hover: #ff5555;
-		--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-		--shadow-md:
-			0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
 	}
 
 	main {
 		width: 100%;
 		display: flex;
 		justify-content: center;
-		align-items: flex-start;
-		padding: 10px;
+		padding: 14px;
 		box-sizing: border-box;
 	}
 
-	.app-container {
+	.app-shell {
+		width: min(980px, 100%);
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
-		width: 100%;
-		max-width: 1200px;
 	}
 
-	.header-sidebar {
+	.topbar {
 		display: flex;
-		flex-direction: row;
 		align-items: center;
-		gap: 12px;
-		background: var(--bg-card);
-		padding: 8px 16px;
-		border-radius: 8px;
-		box-shadow: var(--shadow-sm);
+		justify-content: space-between;
+		padding: 10px 14px;
 		border: 1px solid var(--border-main);
-		width: 100%;
-		box-sizing: border-box;
-		z-index: 100;
-		flex-wrap: nowrap;
-		overflow-x: auto;
+		border-radius: 8px;
+		background: var(--bg-card);
+		box-shadow: var(--shadow-sm);
 	}
 
-	.logo {
-		font-size: 16px;
-		font-weight: 900;
-		color: var(--text-heading);
-		line-height: 1;
-		letter-spacing: 3px;
-		margin-right: 12px;
-		padding-right: 20px;
-		border-right: 2px solid var(--border-sub);
-		flex-shrink: 0;
-	}
-
-	.btn {
-		background: var(--bg-sub);
-		border: 1px solid var(--border-input);
-		color: var(--text-main);
-		cursor: pointer;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		border-radius: 6px;
-		transition: all 0.2s ease;
-	}
-	.sidebar-btn {
-		height: 36px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 11px;
-		padding: 0 16px;
-		white-space: nowrap;
-		max-width: 120px;
-	}
-
-	.mini-btn {
-		width: 24px;
-		min-width: 24px;
-		height: 36px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 10px;
-		padding: 0;
-	}
-
-	.generate-btn {
-		background: var(--accent);
-		color: white;
-		border-color: var(--accent);
+	.brand {
 		font-weight: 800;
-		box-shadow: 0 2px 4px rgba(77, 171, 247, 0.3);
+		letter-spacing: 0.04em;
+		font-size: 0.95rem;
+		text-transform: uppercase;
 	}
 
-	.generate-btn:hover {
-		filter: brightness(1.1);
+	.reset-btn {
+		height: 34px;
+		padding: 0 12px;
+		border-radius: 6px;
+		border: 1px solid var(--border-input);
+		background: var(--bg-sub);
+		font-size: 0.75rem;
+		font-weight: 700;
+		cursor: pointer;
 	}
 
-	.generate-btn.generating {
-		background: #40c057 !important;
-		border-color: #40c057 !important;
-		box-shadow: 0 2px 8px rgba(64, 192, 87, 0.4);
+	.panel-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(180px, 1fr));
+		gap: 6px;
+		width: 100%;
 	}
 
-	.history-controls {
-		display: flex;
-		gap: 4px;
-		margin-left: auto;
-		flex-shrink: 0;
+	.control {
+		min-width: 0;
 	}
 
-	.undo-btn,
-	.revert-btn,
-	.clear-btn {
-		font-size: 10px;
-		padding: 0 10px;
-		height: 32px;
-	}
-
-	.undo-btn:disabled,
-	.revert-btn:disabled {
-		opacity: 0.4;
-		cursor: not-allowed;
-	}
-
-	.revert-btn:hover:not(:disabled) {
-		border-color: var(--danger);
-		color: var(--danger);
-	}
-
-	.clear-btn:hover {
-		border-color: var(--danger);
-		background: var(--danger);
-		color: white;
-	}
-
-	.theme-picker {
+	.choice-control {
 		display: flex;
 		align-items: center;
-		margin-left: 12px;
-		flex-shrink: 0;
+		justify-content: center;
 	}
 
-	.btn:hover {
-		background: var(--bg-hover);
-		border-color: var(--text-muted);
+	.gate-card {
+		margin-top: 8px;
+		padding: 10px;
+		border: 1px solid var(--border-main);
+		border-radius: 8px;
+		background: var(--bg-sub);
 	}
 
-	.btn:active {
-		transform: translateY(1px);
+	.gate-card.disabled {
+		opacity: 0.75;
 	}
 
-	.main-content {
-		flex: 1;
+	.gate-header {
 		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		min-width: 0;
+		align-items: center;
+		justify-content: flex-start;
+		padding-left: 6px;
 	}
 
-	.workspace {
-		display: flex;
-		gap: 12px;
-		align-items: flex-start;
+	.gate-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(200px, 1fr));
+		gap: 8px;
 	}
 
-	.stage {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		min-width: 0;
-		gap: 12px;
+	.json-preview {
+		margin-top: 8px;
+		padding: 10px;
+		border-radius: 8px;
+		border: 1px dashed var(--border-input);
+		background: var(--bg-sub);
 	}
 
-	.parts-container {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
+	.json-title {
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		margin-bottom: 6px;
 	}
 
-	.parts-list {
-		display: flex;
-		flex-direction: column;
-		gap: 12px;
-		width: 100%;
+	pre {
+		margin: 0;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+		font-size: 0.76rem;
+		line-height: 1.35;
+		overflow: auto;
 	}
 
-	.add-btn {
-		padding: 6px 12px;
-		font-size: 0.75rem;
+	@media (max-width: 900px) {
+		.panel-grid {
+			grid-template-columns: repeat(2, minmax(170px, 1fr));
+		}
+
+		.gate-grid {
+			grid-template-columns: 1fr;
+		}
 	}
 
-	@media (max-width: 800px) {
-		.workspace {
+	@media (max-width: 600px) {
+		.panel-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.topbar {
+			gap: 10px;
+			align-items: flex-start;
 			flex-direction: column;
-		}
-
-		:global(.section-sidebar) {
-			width: 100% !important;
-		}
-
-		:global(.sections-list) {
-			flex-direction: row !important;
-			flex-wrap: wrap !important;
-		}
-
-		:global(.section-item) {
-			flex: 1 1 150px !important;
-			max-width: 200px !important;
 		}
 	}
 </style>
