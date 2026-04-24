@@ -15,7 +15,7 @@
 		restLikelihood: 0.15,
 		noteLength: 0.5,
 		phraseLength: 4,
-		phrasePlayback: 'repeat-as-needed',
+		phrasePlayback: 'loop',
 		activationRangeEnabled: true,
 		startRange: 'song-start',
 		startBar: 1,
@@ -33,6 +33,18 @@
 
 	function clampModel()
 	{
+		if (
+			model.phrasePlayback !== 'one-shot'
+			&& model.phrasePlayback !== 'loop'
+			&& model.phrasePlayback !== 're-roll'
+		)
+		{
+			model = {
+				...model,
+				phrasePlayback: defaultState.phrasePlayback
+			}
+		}
+
 		if (model.startBar < 1)
 		{
 			model = {
@@ -75,9 +87,20 @@
 		{
 			try
 			{
+				const parsed = JSON.parse(saved)
+				const legacyPhrasePlaybackMap = {
+					'no-repeat': 'one-shot',
+					'repeat-as-needed': 'loop',
+					'regenerate-per-cycle': 're-roll'
+				}
+
 				model = {
 					...defaultState,
-					...JSON.parse(saved)
+					...parsed,
+					phrasePlayback:
+						legacyPhrasePlaybackMap[parsed.phrasePlayback]
+						|| parsed.phrasePlayback
+						|| defaultState.phrasePlayback
 				}
 			}
 			catch
@@ -186,24 +209,10 @@
 				<div class="control phrase-group-control">
 					<div class="phrase-group">
 						<div class="phrase-group-label">PHRASE</div>
-						<Slider
-							value={model.phraseLength}
-							label="LENGTH (BARS)"
-							min={1}
-							max={16}
-							step={1}
-							on:change={e =>
-							{
-								model = {
-									...model,
-									phraseLength: e.detail
-								}
-							}}
-						/>
 						<Choice
 							value={model.phrasePlayback}
 							label="PLAYBACK"
-							options={[ 'no-repeat', 'repeat-as-needed', 'regenerate-per-cycle' ]}
+							options={[ 'one-shot', 'loop', 're-roll' ]}
 							on:change={e =>
 							{
 								model = {
@@ -211,8 +220,27 @@
 									phrasePlayback: e.detail
 								}
 							}}
-							width="220px"
+							width="140px"
 						/>
+						<div class="phrase-length-wrap" class:dimmed={model.phrasePlayback === 'one-shot'}>
+							<Slider
+								value={model.phraseLength}
+								label="LENGTH (BARS)"
+								min={1}
+								max={16}
+								step={1}
+								on:change={e =>
+								{
+									if (model.phrasePlayback === 'one-shot')
+										return
+
+									model = {
+										...model,
+										phraseLength: e.detail
+									}
+								}}
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -434,6 +462,15 @@
 		font-weight: 700;
 		letter-spacing: 0.09em;
 		color: var(--text-muted);
+	}
+
+	.phrase-length-wrap {
+		display: contents;
+	}
+
+	.phrase-length-wrap.dimmed {
+		opacity: 0.45;
+		pointer-events: none;
 	}
 
 	.gate-card {
