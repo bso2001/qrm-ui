@@ -372,6 +372,7 @@ Work that is likely throwaway for the plugin path:
 - Trying to preserve too much of the current UI too early will slow the phase
 - Expanding scope beyond macOS VST3 will bury the core question
 - Pulling in production polish before workflow validation will delay learning
+- A small transport trace harness can remain useful beyond this phase as a testing utility, but should stay secondary to plugin validation
 
 ## Recommendation After The Phase
 
