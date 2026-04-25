@@ -6,6 +6,14 @@ Determine whether QRM can become a useful macOS VST3 plugin without over-investi
 
 This is a phase, not a productization effort.
 
+## Step 1 Baseline
+
+Before deeper engine implementation, use the frozen contract in `STEP1_ENGINE_CONTRACT.md` as the source of truth for:
+
+- control semantics and interaction rules
+- transport discontinuity policy
+- shared tracing schema and invariants
+
 ## Scope
 
 In scope:
