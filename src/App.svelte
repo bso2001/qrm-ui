@@ -106,35 +106,9 @@
 		{
 			try
 			{
-				const parsed = JSON.parse(saved)
-				const { activationRangeEnabled, ...savedState } = parsed
-				const legacyPhrasePlaybackMap = {
-					'no-repeat': 'one-shot',
-					'repeat-as-needed': 'loop',
-					'regenerate-per-cycle': 're-roll'
-				}
-
-				const mappedPhrasePlayback =
-					legacyPhrasePlaybackMap[savedState.phrasePlayback]
-					|| savedState.phrasePlayback
-					|| defaultState.phrasePlayback
-
-				const derivedRepeatPhrases =
-					typeof savedState.repeatPhrases === 'boolean'
-						? savedState.repeatPhrases
-						: mappedPhrasePlayback === 'loop'
-
-				const derivedRepeatStyle =
-					savedState.repeatStyle === 'refresh' || savedState.repeatStyle === 'same'
-						? savedState.repeatStyle
-						: mappedPhrasePlayback === 'loop' ? 'same' : 'refresh'
-
 				model = {
 					...defaultState,
-					...savedState,
-					repeatPhrases: derivedRepeatPhrases,
-					repeatStyle: derivedRepeatStyle,
-					phrasePlayback: mappedPhrasePlayback
+					...JSON.parse(saved)
 				}
 			}
 			catch
