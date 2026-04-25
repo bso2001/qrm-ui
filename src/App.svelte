@@ -852,10 +852,12 @@
 				<pre>{JSON.stringify(model, null, 2)}</pre>
 			</div>
 
-			<div class="json-preview">
-				<div class="json-title">TRACE PREVIEW (LAST 30 JSONL EVENTS)</div>
-				<pre>{tracePreview || 'No trace events yet.'}</pre>
-			</div>
+			{#if traceWindowBlocked}
+				<div class="json-preview">
+					<div class="json-title">TRACE WINDOW</div>
+					<pre>Popup blocked. Enable popups for this app, then click OPEN TRACE WINDOW again.</pre>
+				</div>
+			{/if}
 		</Card>
 	</div>
 </main>
