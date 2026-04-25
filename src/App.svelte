@@ -210,7 +210,6 @@
 
 				<div class="control phrase-group-control">
 					<div class="phrase-group">
-						<div class="phrase-group-label">PHRASE</div>
 						<Choice
 							value={model.phrasePlayback}
 							label="PHRASE MODE"
@@ -461,20 +460,6 @@
 		border-radius: 8px;
 		background: var(--bg-sub);
 		position: relative;
-	}
-
-	.phrase-group-label {
-		position: absolute;
-		top: -8px;
-		left: 12px;
-		padding: 0 6px;
-		background: var(--bg-card);
-		border: 1px solid var(--border-main);
-		border-radius: 6px;
-		font-size: 0.62rem;
-		font-weight: 700;
-		letter-spacing: 0.09em;
-		color: var(--text-muted);
 	}
 
 	.phrase-length-wrap {
