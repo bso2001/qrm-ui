@@ -842,7 +842,7 @@
 					<button class="transport-btn" on:click={() => seekToBar(seekBarInput)}>SEEK</button>
 					<button class="transport-btn" on:click={clearTrace}>CLEAR TRACE</button>
 					<button class="transport-btn" on:click={downloadTrace} disabled={traceEvents.length === 0}>DOWNLOAD JSONL</button>
-					<button class="transport-btn" on:click={openTraceWindow}>OPEN TRACE WINDOW</button>
+					<button class="transport-btn debug-window-btn" on:click={openTraceWindow}>SHOW DEBUG WINDOW</button>
 				</div>
 
 				<div class="transport-controls transport-meta-row">
@@ -1141,6 +1141,18 @@
 	.transport-btn:hover {
 		border-color: var(--accent);
 		background: var(--bg-hover);
+	}
+
+	.debug-window-btn {
+		background: color-mix(in srgb, var(--accent) 18%, var(--bg-card));
+		border-color: color-mix(in srgb, var(--accent) 50%, var(--border-input));
+		color: var(--text-heading);
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+	}
+
+	.debug-window-btn:hover {
+		background: color-mix(in srgb, var(--accent) 28%, var(--bg-hover));
+		border-color: var(--accent);
 	}
 
 	.transport-btn:disabled {
