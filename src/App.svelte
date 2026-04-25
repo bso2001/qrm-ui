@@ -752,6 +752,7 @@
 							value={model.startRange}
 							label="START"
 							options={[ 'song-start', 'bar' ]}
+							fontSize="0.76rem"
 							on:change={e =>
 							{
 								model = {
@@ -759,7 +760,7 @@
 									startRange: e.detail
 								}
 							}}
-							width="120px"
+							width="142px"
 						/>
 
 						{#if model.startRange === 'bar'}
@@ -789,6 +790,7 @@
 							value={model.endRange}
 							label="STOP"
 							options={[ 'song-end', 'bar' ]}
+							fontSize="0.76rem"
 							on:change={e =>
 							{
 								model = {
@@ -796,7 +798,7 @@
 									endRange: e.detail
 								}
 							}}
-							width="120px"
+							width="142px"
 						/>
 
 						{#if model.endRange === 'bar'}
@@ -1205,7 +1207,7 @@
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		color: var(--text-muted);
-		padding-top: 2px;
+		padding-top: 12px;
 		border-top: 1px solid var(--border-main);
 	}
 
