@@ -13,6 +13,7 @@
 	const TICK_INTERVAL_MS = 140
 
 	const defaultState = {
+		partType: 'freeform',
 		root: 'C',
 		octave: 3,
 		velocity: 90,
@@ -132,6 +133,7 @@
 				note: null,
 				velocity: null,
 				phraseId: currentPhraseId,
+				partType: model.partType,
 				repeatPhrases: model.repeatPhrases,
 				repeatStyle: model.repeatStyle,
 				phraseLengthBars: model.phraseLength,
@@ -183,16 +185,21 @@
 
 		if (!model.repeatPhrases)
 		{
-			if (beat === 1 || currentPhraseId == null)
+			if (model.partType === 'chords')
 			{
-				currentPhraseId = `phrase-${phraseCounter++}`
-				logTrace('phrase.boundary', {
-					phraseId: currentPhraseId,
-					mode: 'invent'
-				})
+				if (beat === 1)
+				{
+					const chordIndex = (bar - 1) % 4
+					logTrace('phrase.boundary', {
+						phraseId: `chord-cycle-${chordIndex}`,
+						mode: 'chord-cycle'
+					})
+				}
+
+				return null
 			}
 
-			return currentPhraseId
+			return null
 		}
 
 		const phraseBars = Math.max(1, Math.round(model.phraseLength))
@@ -217,11 +224,32 @@
 
 	function chooseNote(bar, beat)
 	{
-		const scaleOffsets = [ 0, 2, 4, 5, 7, 9, 11 ]
 		const rootSemitone = Math.max(0, tonics.indexOf(model.root))
 		const baseNote = 24 + model.octave * 12 + rootSemitone
-		const degree = (bar + beat) % scaleOffsets.length
-		const note = baseNote + scaleOffsets[degree]
+		let note = baseNote
+
+		if (model.partType === 'chords')
+		{
+			const chordCycle = [
+				[ 0, 3, 7, 10 ],
+				[ 0, 4, 7, 11 ],
+				[ 0, 3, 7 ],
+				[ 0, 3, 7 ]
+			]
+			const chordIndex = (bar - 1) % chordCycle.length
+			const chord = chordCycle[chordIndex]
+			note += chord[(beat - 1) % chord.length]
+		}
+		else if (model.partType === 'chordal')
+		{
+			const chordalOffsets = [ 0, 3, 7, 10, 12, 10, 7, 3 ]
+			note += chordalOffsets[((bar - 1) * 2 + beat - 1) % chordalOffsets.length]
+		}
+		else
+		{
+			const scaleOffsets = [ 0, 2, 4, 5, 7, 9, 11 ]
+			note += scaleOffsets[(bar + beat) % scaleOffsets.length]
+		}
 
 		return Math.min(108, Math.max(24, note))
 	}
@@ -233,9 +261,10 @@
 
 		flushActiveNotes('beat-advance')
 
-		const phraseId = resolvePhraseIdForBeat(transportState.bar, transportState.beat)
-		if (phraseId == null)
+		if (!isInActiveRange(transportState.bar))
 			return
+
+		const phraseId = resolvePhraseIdForBeat(transportState.bar, transportState.beat)
 
 		const note = chooseNote(transportState.bar, transportState.beat)
 		activeNotes = [ note ]
@@ -459,6 +488,14 @@
 
 	function clampModel()
 	{
+		if (model.partType !== 'freeform' && model.partType !== 'chordal' && model.partType !== 'chords')
+		{
+			model = {
+				...model,
+				partType: defaultState.partType
+			}
+		}
+
 		if (
 			model.repeatStyle !== 'same'
 			&& model.repeatStyle !== 'refresh'
@@ -582,6 +619,23 @@
 
 		<Card>
 			<div class="panel-grid">
+				<div class="control choice-control">
+					<Choice
+						value={model.partType}
+						label="PART TYPE"
+						options={[ 'freeform', 'chordal', 'chords' ]}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								partType: e.detail
+							}
+						}}
+						width="120px"
+						fontSize="0.78rem"
+					/>
+				</div>
+
 				<div class="control choice-control">
 					<Choice
 						value={model.root}

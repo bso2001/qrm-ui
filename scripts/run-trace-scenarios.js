@@ -15,6 +15,7 @@ const scenarios = [
 		id: 'S1-start-8-bars-stop',
 		model: {
 			...defaultTraceModel,
+			partType: 'freeform',
 			repeatPhrases: false
 		},
 		steps: [
@@ -27,6 +28,7 @@ const scenarios = [
 		id: 'S2-seek-bar-9-run-4-stop',
 		model: {
 			...defaultTraceModel,
+			partType: 'freeform',
 			repeatPhrases: true,
 			repeatStyle: 'same',
 			phraseLength: 2
@@ -42,6 +44,7 @@ const scenarios = [
 		id: 'S3-repeat-off-vs-same',
 		model: {
 			...defaultTraceModel,
+			partType: 'freeform',
 			repeatPhrases: true,
 			repeatStyle: 'same',
 			phraseLength: 2
@@ -56,6 +59,7 @@ const scenarios = [
 		id: 'S4-refresh-with-length-change',
 		model: {
 			...defaultTraceModel,
+			partType: 'freeform',
 			repeatPhrases: true,
 			repeatStyle: 'refresh',
 			phraseLength: 2
@@ -72,6 +76,7 @@ const scenarios = [
 		id: 'S5-range-seeks',
 		model: {
 			...defaultTraceModel,
+			partType: 'freeform',
 			startRange: 'bar',
 			startBar: 3,
 			endRange: 'bar',
@@ -88,6 +93,21 @@ const scenarios = [
 			{ type: 'advance-bars', bars: 2 },
 			{ type: 'seek', bar: 7 },
 			{ type: 'advance-bars', bars: 1 },
+			{ type: 'stop' }
+		]
+	},
+	{
+		id: 'S6-part-type-natural-behavior',
+		model: {
+			...defaultTraceModel,
+			partType: 'freeform',
+			repeatPhrases: false
+		},
+		steps: [
+			{ type: 'start' },
+			{ type: 'advance-bars', bars: 2 },
+			{ type: 'set-model', patch: { partType: 'chords' } },
+			{ type: 'advance-bars', bars: 4 },
 			{ type: 'stop' }
 		]
 	}

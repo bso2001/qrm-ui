@@ -6,6 +6,7 @@ const TICKS_PER_BEAT = 4
 const tonics = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ]
 
 export const defaultTraceModel = {
+	partType: 'freeform',
 	root: 'C',
 	octave: 3,
 	velocity: 90,
@@ -30,6 +31,9 @@ function clampModel(input)
 
 	if (model.repeatStyle !== 'same' && model.repeatStyle !== 'refresh')
 		model.repeatStyle = defaultTraceModel.repeatStyle
+
+	if (model.partType !== 'freeform' && model.partType !== 'chordal' && model.partType !== 'chords')
+		model.partType = defaultTraceModel.partType
 
 	if (typeof model.repeatPhrases !== 'boolean')
 		model.repeatPhrases = defaultTraceModel.repeatPhrases
@@ -123,6 +127,7 @@ function logTrace(runtime, eventType, extra = {})
 		note: null,
 		velocity: null,
 		phraseId: runtime.currentPhraseId,
+		partType: runtime.model.partType,
 		repeatPhrases: runtime.model.repeatPhrases,
 		repeatStyle: runtime.model.repeatStyle,
 		phraseLengthBars: runtime.model.phraseLength,
@@ -166,9 +171,31 @@ function emitRangeTransitionIfNeeded(runtime)
 
 function chooseNote(model, bar, beat)
 {
-	const scaleOffsets = [ 0, 2, 4, 5, 7, 9, 11 ]
 	const rootSemitone = Math.max(0, tonics.indexOf(model.root))
 	const baseNote = 24 + model.octave * 12 + rootSemitone
+
+	if (model.partType === 'chords')
+	{
+		const chordCycle = [
+			[ 0, 3, 7, 10 ],
+			[ 0, 4, 7, 11 ],
+			[ 0, 3, 7 ],
+			[ 0, 3, 7 ]
+		]
+		const chordIndex = (bar - 1) % chordCycle.length
+		const chord = chordCycle[chordIndex]
+		const toneIndex = (beat - 1) % chord.length
+		return Math.min(108, Math.max(24, baseNote + chord[toneIndex]))
+	}
+
+	if (model.partType === 'chordal')
+	{
+		const chordalOffsets = [ 0, 3, 7, 10, 12, 10, 7, 3 ]
+		const degree = ((bar - 1) * 2 + beat - 1) % chordalOffsets.length
+		return Math.min(108, Math.max(24, baseNote + chordalOffsets[degree]))
+	}
+
+	const scaleOffsets = [ 0, 2, 4, 5, 7, 9, 11 ]
 	const degree = (bar + beat) % scaleOffsets.length
 	return Math.min(108, Math.max(24, baseNote + scaleOffsets[degree]))
 }
@@ -182,16 +209,21 @@ function resolvePhraseIdForBeat(runtime)
 
 	if (!runtime.model.repeatPhrases)
 	{
-		if (beat === 1 || runtime.currentPhraseId == null)
+		if (runtime.model.partType === 'chords')
 		{
-			runtime.currentPhraseId = `phrase-${runtime.phraseCounter++}`
-			logTrace(runtime, 'phrase.boundary', {
-				phraseId: runtime.currentPhraseId,
-				mode: 'invent'
-			})
+			if (beat === 1)
+			{
+				const chordIndex = (bar - 1) % 4
+				logTrace(runtime, 'phrase.boundary', {
+					phraseId: `chord-cycle-${chordIndex}`,
+					mode: 'chord-cycle'
+				})
+			}
+
+			return null
 		}
 
-		return runtime.currentPhraseId
+		return null
 	}
 
 	const phraseBars = Math.max(1, Math.round(runtime.model.phraseLength))
@@ -221,9 +253,10 @@ function runBeatIfNeeded(runtime)
 
 	flushActiveNotes(runtime, 'beat-advance')
 
-	const phraseId = resolvePhraseIdForBeat(runtime)
-	if (phraseId == null)
+	if (!isInActiveRange(runtime.model, runtime.transportState.bar))
 		return
+
+	const phraseId = resolvePhraseIdForBeat(runtime)
 
 	const note = chooseNote(runtime.model, runtime.transportState.bar, runtime.transportState.beat)
 	runtime.activeNotes = [ note ]

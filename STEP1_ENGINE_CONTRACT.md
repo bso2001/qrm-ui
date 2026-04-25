@@ -12,6 +12,7 @@ This contract is a decision freeze artifact, not a long implementation phase. Th
 
 | Control | Type | Default | Valid Values | Runtime Meaning | Interaction Rules |
 |---|---|---|---|---|---|
+| Part type | enum | freeform | freeform, chordal, chords | Selects the baseline generative behavior of the part. | Controls natural repeat behavior when Repeat phrases is false. |
 | Repeat phrases | bool | false | true/false | When false, player continually invents through active range. When true, phrase repetition behavior is enabled. | Enables Repeat style and Length when true. Disables them when false. |
 | Repeat style | enum | same | same, refresh | Controls how repeated phrases are sourced. same = keep one phrase and repeat it. refresh = generate a new phrase per repeat boundary. | Only effective when Repeat phrases is true. |
 | Length | int bars | 4 | 1..16 | Phrase length in bars used for repetition boundaries. | Only effective when Repeat phrases is true. |
@@ -22,11 +23,24 @@ This contract is a decision freeze artifact, not a long implementation phase. Th
 
 ## Internal Representation Contract
 
+- Canonical UI state includes `partType`, `repeatPhrases`, and `repeatStyle`.
 - Canonical UI state for repetition uses `repeatPhrases` and `repeatStyle`.
 - Derived compatibility field `phrasePlayback` is allowed for transitional engine integration:
 - `repeatPhrases=false` -> `phrasePlayback=re-roll`
 - `repeatPhrases=true` and `repeatStyle=same` -> `phrasePlayback=loop`
 - `repeatPhrases=true` and `repeatStyle=refresh` -> `phrasePlayback=re-roll`
+
+## Part-Type Baseline Contract
+
+- `freeform`: continuously invent quasi-random notes through the active range.
+- `chordal`: continuously invent notes constrained by harmonic context, but without intrinsic phrase repetition.
+- `chords`: consumes a finite chord list that wraps back to the start when exhausted. This chord-list wrap is intrinsic behavior, not the same thing as phrase repetition.
+
+Repeat overlay rules:
+
+- `Repeat phrases=false` means each part type follows its natural baseline behavior.
+- `Repeat phrases=true` adds reusable phrase chunks on top of the part type's natural behavior.
+- For `chords`, chord-list cycling may still occur even when phrase repetition is off.
 
 ## Transport Contract (Prototype Harness)
 
@@ -66,6 +80,7 @@ Required fields:
 - `note`: integer or null.
 - `velocity`: integer or null.
 - `phraseId`: string or null.
+- `partType`: string.
 - `repeatPhrases`: boolean.
 - `repeatStyle`: string or null.
 - `phraseLengthBars`: integer.
@@ -83,6 +98,8 @@ Optional fields:
 - No `note.off` appears before its corresponding `note.on`.
 - No note-on event is emitted outside active range.
 - `repeatPhrases=false` never pins phrase reuse by repeat boundaries.
+- `freeform` and `chordal` with `repeatPhrases=false` should not require musically obvious phrase-boundary reuse.
+- `chords` may still exhibit harmonic cycling when `repeatPhrases=false` because the chord list wraps naturally.
 - `repeatPhrases=true` + `repeatStyle=same` preserves phrase identity across boundaries.
 - `repeatPhrases=true` + `repeatStyle=refresh` changes phrase identity at each boundary.
 - Start/stop/seek discontinuities do not leave stuck active notes.
@@ -94,6 +111,7 @@ Optional fields:
 - S3: Repeat off vs Repeat on same (same seed, same transport script).
 - S4: Repeat on refresh with phrase length changes during playback.
 - S5: Activation range bar-to-bar with seeks inside and outside range.
+- S6: Compare `freeform` vs `chords` natural behavior with `Repeat phrases=false`.
 
 ## Step 1 Exit Criteria
 
