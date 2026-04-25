@@ -300,7 +300,8 @@
 						<div class="phrase-length-wrap" class:dimmed={!model.repeatPhrases}>
 							<Slider
 								value={model.phraseLength}
-								label="LENGTH (BARS)"
+								label="LENGTH"
+								compact={true}
 								min={1}
 								max={16}
 								step={1}
@@ -585,7 +586,9 @@
 
 	.phrase-length-wrap {
 		display: block;
+		width: min(320px, 100%);
 		min-width: 0;
+		align-self: center;
 	}
 
 	.phrase-length-wrap.dimmed {
