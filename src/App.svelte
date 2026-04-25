@@ -826,7 +826,7 @@
 			</div>
 
 			<div class="transport-card">
-				<div class="transport-title">TRANSPORT HARNESS</div>
+				<div class="transport-title">TRANSPORT SIMULATOR</div>
 				<div class="transport-controls">
 					<button class="transport-btn" on:click={startTransport} disabled={transportState.isPlaying}>START</button>
 					<button class="transport-btn" on:click={stopTransport} disabled={!transportState.isPlaying}>STOP</button>
