@@ -245,59 +245,57 @@
 
 				<div class="control phrase-group-control">
 					<div class="phrase-group">
-						<div class="repeat-controls">
-							<label class="repeat-toggle">
+						<label class="repeat-toggle">
+							<input
+								type="checkbox"
+								checked={model.repeatPhrases}
+								on:change={e =>
+								{
+									model = {
+										...model,
+										repeatPhrases: e.currentTarget.checked
+									}
+								}}
+							/>
+							<span>Repeat phrases</span>
+						</label>
+
+						<div class="repeat-style-group" class:dimmed={!model.repeatPhrases}>
+							<div class="repeat-style-label">Repeat style</div>
+							<label class="repeat-style-option">
 								<input
-									type="checkbox"
-									checked={model.repeatPhrases}
+									type="radio"
+									name="repeat-style"
+									value="same"
+									checked={model.repeatStyle === 'same'}
+									disabled={!model.repeatPhrases}
 									on:change={e =>
 									{
 										model = {
 											...model,
-											repeatPhrases: e.currentTarget.checked
+											repeatStyle: e.currentTarget.value
 										}
 									}}
 								/>
-								<span>Repeat phrases</span>
+								<span>Keep same phrase</span>
 							</label>
-
-							{#if model.repeatPhrases}
-								<div class="repeat-style-group">
-									<div class="repeat-style-label">Repeat style</div>
-									<label class="repeat-style-option">
-										<input
-											type="radio"
-											name="repeat-style"
-											value="same"
-											checked={model.repeatStyle === 'same'}
-											on:change={e =>
-											{
-												model = {
-													...model,
-													repeatStyle: e.currentTarget.value
-												}
-											}}
-										/>
-										<span>Keep same phrase</span>
-									</label>
-									<label class="repeat-style-option">
-										<input
-											type="radio"
-											name="repeat-style"
-											value="refresh"
-											checked={model.repeatStyle === 'refresh'}
-											on:change={e =>
-											{
-												model = {
-													...model,
-													repeatStyle: e.currentTarget.value
-												}
-											}}
-										/>
-										<span>Refresh each repeat</span>
-									</label>
-								</div>
-							{/if}
+							<label class="repeat-style-option">
+								<input
+									type="radio"
+									name="repeat-style"
+									value="refresh"
+									checked={model.repeatStyle === 'refresh'}
+									disabled={!model.repeatPhrases}
+									on:change={e =>
+									{
+										model = {
+											...model,
+											repeatStyle: e.currentTarget.value
+										}
+									}}
+								/>
+								<span>Refresh each repeat</span>
+							</label>
 						</div>
 						<div class="phrase-length-wrap" class:dimmed={!model.repeatPhrases}>
 							<Slider
@@ -534,20 +532,11 @@
 		position: relative;
 	}
 
-	.repeat-controls {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		padding: 4px 6px;
-		border: 1px solid var(--border-main);
-		border-radius: 8px;
-		background: var(--bg-card);
-	}
-
 	.repeat-toggle {
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		padding: 0 6px;
 		font-size: 0.8rem;
 		font-weight: 600;
 		color: var(--text-heading);
@@ -561,8 +550,17 @@
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
+		margin: 0 6px;
+		padding: 6px 6px 2px;
+		border: 1px solid var(--border-main);
+		border-radius: 8px;
+		background: var(--bg-card);
 		padding-top: 2px;
-		border-top: 1px solid var(--border-main);
+		min-height: 76px;
+	}
+
+	.repeat-style-group.dimmed {
+		opacity: 0.4;
 	}
 
 	.repeat-style-label {
