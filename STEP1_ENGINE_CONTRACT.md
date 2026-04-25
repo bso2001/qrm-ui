@@ -106,3 +106,9 @@ Step 1 is complete when:
 - Invariant list and minimum scenario set are accepted.
 
 Any unresolved behavior is marked explicitly as TBD before implementation starts.
+
+## Current Prototype Harness
+
+- Runner command: `npm run trace:run`
+- Output directory: `logs/trace-runs/`
+- Summary file: `logs/trace-runs/summary.json`
