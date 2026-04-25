@@ -14,7 +14,9 @@
 		restLikelihood: 0.15,
 		noteLength: 0.5,
 		phraseLength: 4,
-		phrasePlayback: 'loop',
+		repeatPhrases: false,
+		repeatStyle: 'same',
+		phrasePlayback: 're-roll',
 		startRange: 'song-start',
 		startBar: 1,
 		endRange: 'song-end',
@@ -32,14 +34,33 @@
 	function clampModel()
 	{
 		if (
-			model.phrasePlayback !== 'one-shot'
-			&& model.phrasePlayback !== 'loop'
-			&& model.phrasePlayback !== 're-roll'
+			model.repeatStyle !== 'same'
+			&& model.repeatStyle !== 'refresh'
 		)
 		{
 			model = {
 				...model,
-				phrasePlayback: defaultState.phrasePlayback
+				repeatStyle: defaultState.repeatStyle
+			}
+		}
+
+		if (typeof model.repeatPhrases !== 'boolean')
+		{
+			model = {
+				...model,
+				repeatPhrases: defaultState.repeatPhrases
+			}
+		}
+
+		const phrasePlayback = model.repeatPhrases
+			? (model.repeatStyle === 'same' ? 'loop' : 're-roll')
+			: 're-roll';
+
+		if (model.phrasePlayback !== phrasePlayback)
+		{
+			model = {
+				...model,
+				phrasePlayback
 			}
 		}
 
@@ -93,13 +114,27 @@
 					'regenerate-per-cycle': 're-roll'
 				}
 
+				const mappedPhrasePlayback =
+					legacyPhrasePlaybackMap[savedState.phrasePlayback]
+					|| savedState.phrasePlayback
+					|| defaultState.phrasePlayback
+
+				const derivedRepeatPhrases =
+					typeof savedState.repeatPhrases === 'boolean'
+						? savedState.repeatPhrases
+						: mappedPhrasePlayback === 'loop'
+
+				const derivedRepeatStyle =
+					savedState.repeatStyle === 'refresh' || savedState.repeatStyle === 'same'
+						? savedState.repeatStyle
+						: mappedPhrasePlayback === 'loop' ? 'same' : 'refresh'
+
 				model = {
 					...defaultState,
 					...savedState,
-					phrasePlayback:
-						legacyPhrasePlaybackMap[savedState.phrasePlayback]
-						|| savedState.phrasePlayback
-						|| defaultState.phrasePlayback
+					repeatPhrases: derivedRepeatPhrases,
+					repeatStyle: derivedRepeatStyle,
+					phrasePlayback: mappedPhrasePlayback
 				}
 			}
 			catch
@@ -210,24 +245,61 @@
 
 				<div class="control phrase-group-control">
 					<div class="phrase-group">
-						<Choice
-							value={model.phrasePlayback}
-							label="PHRASE MODE"
-							options={[
-								{ value: 'one-shot', label: 'Play Once' },
-								{ value: 'loop', label: 'Repeat Same' },
-								{ value: 're-roll', label: 'Regenerate Each Loop' }
-							]}
-							on:change={e =>
-							{
-								model = {
-									...model,
-									phrasePlayback: e.detail
-								}
-							}}
-							width="140px"
-						/>
-						<div class="phrase-length-wrap" class:dimmed={model.phrasePlayback === 'one-shot'}>
+						<div class="repeat-controls">
+							<label class="repeat-toggle">
+								<input
+									type="checkbox"
+									checked={model.repeatPhrases}
+									on:change={e =>
+									{
+										model = {
+											...model,
+											repeatPhrases: e.currentTarget.checked
+										}
+									}}
+								/>
+								<span>Repeat phrases</span>
+							</label>
+
+							{#if model.repeatPhrases}
+								<div class="repeat-style-group">
+									<div class="repeat-style-label">Repeat style</div>
+									<label class="repeat-style-option">
+										<input
+											type="radio"
+											name="repeat-style"
+											value="same"
+											checked={model.repeatStyle === 'same'}
+											on:change={e =>
+											{
+												model = {
+													...model,
+													repeatStyle: e.currentTarget.value
+												}
+											}}
+										/>
+										<span>Keep same phrase</span>
+									</label>
+									<label class="repeat-style-option">
+										<input
+											type="radio"
+											name="repeat-style"
+											value="refresh"
+											checked={model.repeatStyle === 'refresh'}
+											on:change={e =>
+											{
+												model = {
+													...model,
+													repeatStyle: e.currentTarget.value
+												}
+											}}
+										/>
+										<span>Refresh each repeat</span>
+									</label>
+								</div>
+							{/if}
+						</div>
+						<div class="phrase-length-wrap" class:dimmed={!model.repeatPhrases}>
 							<Slider
 								value={model.phraseLength}
 								label="LENGTH (BARS)"
@@ -236,7 +308,7 @@
 								step={1}
 								on:change={e =>
 								{
-									if (model.phrasePlayback === 'one-shot')
+									if (!model.repeatPhrases)
 										return
 
 									model = {
@@ -452,14 +524,65 @@
 	.phrase-group {
 		width: 100%;
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 8px;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 10px;
 		padding: 8px 6px 6px;
 		border: 1.5px solid var(--border-main);
 		border-radius: 8px;
 		background: var(--bg-sub);
 		position: relative;
+	}
+
+	.repeat-controls {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		padding: 4px 6px;
+		border: 1px solid var(--border-main);
+		border-radius: 8px;
+		background: var(--bg-card);
+	}
+
+	.repeat-toggle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--text-heading);
+	}
+
+	.repeat-toggle input {
+		accent-color: var(--accent);
+	}
+
+	.repeat-style-group {
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		padding-top: 2px;
+		border-top: 1px solid var(--border-main);
+	}
+
+	.repeat-style-label {
+		font-size: 0.68rem;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		font-weight: 700;
+	}
+
+	.repeat-style-option {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 0.78rem;
+		color: var(--text-main);
+	}
+
+	.repeat-style-option input {
+		accent-color: var(--accent);
 	}
 
 	.phrase-length-wrap {
