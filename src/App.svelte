@@ -51,6 +51,7 @@
 	let activeNotes = []
 	let traceWindow = null
 	let traceWindowBlocked = false
+	let traceWindowOpen = false
 
 	$: tracePreview = traceEvents
 		.slice(-30)
@@ -368,10 +369,22 @@
       box-sizing: border-box;
       overflow: auto;
     }
+
+		.section-title {
+			margin: 10px 0 6px;
+			font-size: 11px;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			color: #b3b8c0;
+			font-weight: 700;
+		}
   </style>
 </head>
 <body>
   <div id="trace-meta" class="meta"></div>
+	<div class="section-title">VST Param Snapshot</div>
+	<pre id="model-output"></pre>
+	<div class="section-title">Trace Preview (Last 30 JSONL Events)</div>
   <pre id="trace-output"></pre>
 </body>
 </html>`)
@@ -383,6 +396,7 @@
 		if (!traceWindow || traceWindow.closed)
 		{
 			traceWindow = null
+			traceWindowOpen = false
 			return
 		}
 
@@ -390,12 +404,15 @@
 
 		const doc = traceWindow.document
 		const meta = doc.getElementById('trace-meta')
+		const modelOutput = doc.getElementById('model-output')
 		const output = doc.getElementById('trace-output')
-		if (!meta || !output)
+		if (!meta || !modelOutput || !output)
 			return
 
 		meta.textContent = `RUN: ${runId}\nSCENARIO: ${scenarioId}\nSEED: ${seed}\nSTATE: ${transportState.isPlaying ? 'PLAYING' : 'STOPPED'}\nBAR: ${transportState.bar} BEAT: ${transportState.beat} TICK: ${transportState.transportTick}\nEVENTS: ${traceEvents.length}`
+		modelOutput.textContent = JSON.stringify(model, null, 2)
 		output.textContent = tracePreview || 'No trace events yet.'
+		traceWindowOpen = true
 	}
 
 	function openTraceWindow()
@@ -407,15 +424,17 @@
 			return
 		}
 
-		const popup = window.open('', 'qrmTraceWindow', 'popup=yes,width=640,height=900,left=980,top=60')
+		const popup = window.open('', 'qrmTraceWindow', 'width=640,height=900,left=980,top=60')
 		if (!popup)
 		{
 			traceWindowBlocked = true
+			traceWindowOpen = false
 			return
 		}
 
 		traceWindowBlocked = false
 		traceWindow = popup
+		traceWindowOpen = true
 		syncTraceWindow()
 		traceWindow.focus()
 	}
@@ -513,6 +532,7 @@
 		runId
 		scenarioId
 		seed
+		model
 		syncTraceWindow()
 	}
 
@@ -545,6 +565,8 @@
 
 		if (traceWindow && !traceWindow.closed)
 			traceWindow.close()
+
+		traceWindowOpen = false
 	})
 </script>
 
@@ -841,21 +863,17 @@
 					<span>TICK: {transportState.transportTick}</span>
 					<span>EVENTS: {traceEvents.length}</span>
 					<span>RUN: {runId}</span>
+					<span>TRACE WINDOW: {traceWindowOpen ? 'OPEN' : 'CLOSED'}</span>
 					{#if traceWindowBlocked}
-						<span>TRACE WINDOW BLOCKED BY BROWSER POPUP SETTINGS</span>
+						<span>TRACE WINDOW BLOCKED BY BROWSER POPUP SETTINGS (TRY ALLOWING POPUPS FOR THIS SITE)</span>
 					{/if}
 				</div>
-			</div>
-
-			<div class="json-preview">
-				<div class="json-title">VST PARAM SNAPSHOT</div>
-				<pre>{JSON.stringify(model, null, 2)}</pre>
 			</div>
 
 			{#if traceWindowBlocked}
 				<div class="json-preview">
 					<div class="json-title">TRACE WINDOW</div>
-					<pre>Popup blocked. Enable popups for this app, then click OPEN TRACE WINDOW again.</pre>
+					<pre>Popup blocked or suppressed. Allow popups for this site, then click OPEN TRACE WINDOW again. Some browsers open it as a new tab instead of a floating window.</pre>
 				</div>
 			{/if}
 		</Card>
