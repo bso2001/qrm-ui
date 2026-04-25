@@ -1,11 +1,16 @@
 <script lang="js">
-	import { onMount } from 'svelte'
+	import { onMount, onDestroy } from 'svelte'
 	import Card from './lib/components/Card.svelte'
 	import Choice from './lib/components/Choice.svelte'
 	import Slider from './lib/components/Slider.svelte'
 	import { tonics } from './lib/constants'
 
 	const STORAGE_KEY = 'qrm_vst_scope_autosave'
+	const TRACE_SCHEMA_VERSION = 1
+	const BEATS_PER_BAR = 4
+	const PPQ_PER_BEAT = 960
+	const TICKS_PER_BEAT = 4
+	const TICK_INTERVAL_MS = 140
 
 	const defaultState = {
 		root: 'C',
@@ -25,10 +30,311 @@
 
 	let model = { ...defaultState }
 	let mounted = false
+	let scenarioId = 'manual'
+	let seed = 'fixed-001'
+	let runId = `run-${Date.now().toString(36)}`
+	let traceEvents = []
+	let seekBarInput = 1
+
+	let transportState = {
+		isPlaying: false,
+		transportTick: 0,
+		ppq: 0,
+		bar: 1,
+		beat: 1
+	}
+
+	let timerHandle = null
+	let phraseCounter = 0
+	let currentPhraseId = null
+	let wasInActiveRange = true
+	let activeNotes = []
+
+	$: tracePreview = traceEvents
+		.slice(-30)
+		.map(event => JSON.stringify(event))
+		.join('\n')
 
 	function resetModel()
 	{
 		model = { ...defaultState }
+	}
+
+	function makeRunId()
+	{
+		return `run-${Date.now().toString(36)}`
+	}
+
+	function rangeStartLabel()
+	{
+		return model.startRange === 'bar'
+			? `bar:${model.startBar}`
+			: 'song-start'
+	}
+
+	function rangeStopLabel()
+	{
+		return model.endRange === 'bar'
+			? `bar:${model.endBar}`
+			: 'song-end'
+	}
+
+	function getActiveRangeBars()
+	{
+		const startBar = model.startRange === 'bar' ? model.startBar : 1
+		const stopBar = model.endRange === 'bar' ? model.endBar : Number.POSITIVE_INFINITY
+
+		return {
+			startBar,
+			stopBar
+		}
+	}
+
+	function isInActiveRange(bar)
+	{
+		const activeRange = getActiveRangeBars()
+		return bar >= activeRange.startBar && bar <= activeRange.stopBar
+	}
+
+	function updatePositionFromTick(transportTick)
+	{
+		const beatIndex = Math.floor(transportTick / TICKS_PER_BEAT)
+		const bar = Math.floor(beatIndex / BEATS_PER_BAR) + 1
+		const beat = (beatIndex % BEATS_PER_BAR) + 1
+
+		transportState = {
+			...transportState,
+			transportTick,
+			ppq: beatIndex * PPQ_PER_BEAT,
+			bar,
+			beat
+		}
+	}
+
+	function logTrace(eventType, extra = {})
+	{
+		traceEvents = [
+			...traceEvents,
+			{
+				schemaVersion: TRACE_SCHEMA_VERSION,
+				runId,
+				scenarioId,
+				source: 'js',
+				timestampMs: Date.now(),
+				transportTick: transportState.transportTick,
+				ppq: transportState.ppq,
+				bar: transportState.bar,
+				beat: transportState.beat,
+				eventType,
+				note: null,
+				velocity: null,
+				phraseId: currentPhraseId,
+				repeatPhrases: model.repeatPhrases,
+				repeatStyle: model.repeatStyle,
+				phraseLengthBars: model.phraseLength,
+				rangeStart: rangeStartLabel(),
+				rangeStop: rangeStopLabel(),
+				seed,
+				...extra
+			}
+		]
+	}
+
+	function emitRangeTransitionIfNeeded()
+	{
+		const inRange = isInActiveRange(transportState.bar)
+
+		if (inRange !== wasInActiveRange)
+		{
+			logTrace(inRange ? 'range.enter' : 'range.exit', {
+				inRange
+			})
+			wasInActiveRange = inRange
+		}
+	}
+
+	function resetPhraseRuntime()
+	{
+		currentPhraseId = null
+		phraseCounter = 0
+	}
+
+	function flushActiveNotes(reason)
+	{
+		for (const note of activeNotes)
+		{
+			logTrace('note.off', {
+				note,
+				velocity: 0,
+				reason
+			})
+		}
+
+		activeNotes = []
+	}
+
+	function resolvePhraseIdForBeat(bar, beat)
+	{
+		if (!isInActiveRange(bar))
+			return null
+
+		if (!model.repeatPhrases)
+		{
+			if (beat === 1 || currentPhraseId == null)
+			{
+				currentPhraseId = `phrase-${phraseCounter++}`
+				logTrace('phrase.boundary', {
+					phraseId: currentPhraseId,
+					mode: 'invent'
+				})
+			}
+
+			return currentPhraseId
+		}
+
+		const phraseBars = Math.max(1, Math.round(model.phraseLength))
+		const isBoundary = beat === 1 && (bar - 1) % phraseBars === 0
+
+		if (isBoundary)
+		{
+			if (model.repeatStyle === 'refresh' || currentPhraseId == null)
+				currentPhraseId = `phrase-${phraseCounter++}`
+
+			logTrace('phrase.boundary', {
+				phraseId: currentPhraseId,
+				mode: model.repeatStyle
+			})
+		}
+
+		if (currentPhraseId == null)
+			currentPhraseId = `phrase-${phraseCounter++}`
+
+		return currentPhraseId
+	}
+
+	function chooseNote(bar, beat)
+	{
+		const scaleOffsets = [ 0, 2, 4, 5, 7, 9, 11 ]
+		const rootSemitone = Math.max(0, tonics.indexOf(model.root))
+		const baseNote = 24 + model.octave * 12 + rootSemitone
+		const degree = (bar + beat) % scaleOffsets.length
+		const note = baseNote + scaleOffsets[degree]
+
+		return Math.min(108, Math.max(24, note))
+	}
+
+	function runBeatIfNeeded()
+	{
+		if (transportState.transportTick % TICKS_PER_BEAT !== 0)
+			return
+
+		flushActiveNotes('beat-advance')
+
+		const phraseId = resolvePhraseIdForBeat(transportState.bar, transportState.beat)
+		if (phraseId == null)
+			return
+
+		const note = chooseNote(transportState.bar, transportState.beat)
+		activeNotes = [ note ]
+
+		logTrace('note.on', {
+			note,
+			velocity: model.velocity,
+			phraseId
+		})
+	}
+
+	function stepTransport()
+	{
+		updatePositionFromTick(transportState.transportTick + 1)
+		emitRangeTransitionIfNeeded()
+		runBeatIfNeeded()
+	}
+
+	function startTransport()
+	{
+		if (transportState.isPlaying)
+			return
+
+		transportState = {
+			...transportState,
+			isPlaying: true
+		}
+
+		logTrace('transport.start')
+
+		if (timerHandle == null)
+			timerHandle = setInterval(stepTransport, TICK_INTERVAL_MS)
+	}
+
+	function stopTransport()
+	{
+		if (!transportState.isPlaying)
+			return
+
+		flushActiveNotes('transport-stop')
+
+		transportState = {
+			...transportState,
+			isPlaying: false
+		}
+
+		if (timerHandle != null)
+		{
+			clearInterval(timerHandle)
+			timerHandle = null
+		}
+
+		logTrace('transport.stop')
+	}
+
+	function seekToBar(rawBar)
+	{
+		const requestedBar = Number.isFinite(rawBar)
+			? Math.max(1, Math.round(rawBar))
+			: 1
+
+		seekBarInput = requestedBar
+		flushActiveNotes('transport-seek')
+		resetPhraseRuntime()
+
+		const beatIndex = (requestedBar - 1) * BEATS_PER_BAR
+		updatePositionFromTick(beatIndex * TICKS_PER_BEAT)
+		emitRangeTransitionIfNeeded()
+
+		logTrace('transport.seek', {
+			requestedBar,
+			resolvedBar: transportState.bar
+		})
+	}
+
+	function rewindTransport()
+	{
+		seekToBar(1)
+	}
+
+	function clearTrace()
+	{
+		traceEvents = []
+		runId = makeRunId()
+	}
+
+	function downloadTrace()
+	{
+		if (traceEvents.length === 0)
+			return
+
+		const lines = traceEvents.map(event => JSON.stringify(event)).join('\n')
+		const blob = new Blob([ `${lines}\n` ], { type: 'application/x-ndjson' })
+		const url = URL.createObjectURL(blob)
+		const anchor = document.createElement('a')
+
+		anchor.href = url
+		anchor.download = `qrm-trace-${runId}.jsonl`
+		document.body.appendChild(anchor)
+		anchor.click()
+		document.body.removeChild(anchor)
+		URL.revokeObjectURL(url)
 	}
 
 	function clampModel()
@@ -118,6 +424,13 @@
 		}
 
 		mounted = true
+		wasInActiveRange = isInActiveRange(transportState.bar)
+	})
+
+	onDestroy(() =>
+	{
+		if (timerHandle != null)
+			clearInterval(timerHandle)
 	})
 </script>
 
@@ -374,9 +687,56 @@
 				</div>
 			</div>
 
+			<div class="transport-card">
+				<div class="transport-title">TRANSPORT HARNESS</div>
+				<div class="transport-controls">
+					<button class="transport-btn" on:click={startTransport} disabled={transportState.isPlaying}>START</button>
+					<button class="transport-btn" on:click={stopTransport} disabled={!transportState.isPlaying}>STOP</button>
+					<button class="transport-btn" on:click={rewindTransport}>RWD</button>
+
+					<label class="seek-input-wrap">
+						<span>SEEK BAR</span>
+						<input
+							type="number"
+							min="1"
+							step="1"
+							bind:value={seekBarInput}
+						/>
+					</label>
+					<button class="transport-btn" on:click={() => seekToBar(seekBarInput)}>SEEK</button>
+					<button class="transport-btn" on:click={clearTrace}>CLEAR TRACE</button>
+					<button class="transport-btn" on:click={downloadTrace} disabled={traceEvents.length === 0}>DOWNLOAD JSONL</button>
+				</div>
+
+				<div class="transport-controls transport-meta-row">
+					<label class="meta-field">
+						<span>SCENARIO</span>
+						<input type="text" bind:value={scenarioId} />
+					</label>
+					<label class="meta-field">
+						<span>SEED</span>
+						<input type="text" bind:value={seed} />
+					</label>
+				</div>
+
+				<div class="transport-status">
+					<span>STATE: {transportState.isPlaying ? 'PLAYING' : 'STOPPED'}</span>
+					<span>BAR: {transportState.bar}</span>
+					<span>BEAT: {transportState.beat}</span>
+					<span>TICK: {transportState.transportTick}</span>
+					<span>EVENTS: {traceEvents.length}</span>
+					<span>RUN: {runId}</span>
+				</div>
+			</div>
+
 			<div class="json-preview">
 				<div class="json-title">VST PARAM SNAPSHOT</div>
 				<pre>{JSON.stringify(model, null, 2)}</pre>
+			</div>
+
+			<div class="json-preview">
+				<div class="json-title">TRACE PREVIEW (LAST 30 JSONL EVENTS)</div>
+				<pre>{tracePreview || 'No trace events yet.'}</pre>
 			</div>
 		</Card>
 	</div>
@@ -598,6 +958,105 @@
 		display: grid;
 		grid-template-columns: repeat(2, minmax(200px, 1fr));
 		gap: 8px;
+	}
+
+	.transport-card {
+		margin-top: 8px;
+		padding: 10px;
+		border: 1.5px solid var(--border-main);
+		border-radius: 8px;
+		background: var(--bg-sub);
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	.transport-title {
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.transport-controls {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.transport-btn {
+		height: 30px;
+		padding: 0 10px;
+		border-radius: 6px;
+		border: 1px solid var(--border-input);
+		background: var(--bg-card);
+		color: var(--text-main);
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		cursor: pointer;
+		text-transform: uppercase;
+	}
+
+	.transport-btn:hover {
+		border-color: var(--accent);
+		background: var(--bg-hover);
+	}
+
+	.transport-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.seek-input-wrap,
+	.meta-field {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 0.68rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		font-weight: 700;
+	}
+
+	.seek-input-wrap input,
+	.meta-field input {
+		height: 28px;
+		padding: 0 8px;
+		border-radius: 6px;
+		border: 1px solid var(--border-input);
+		background: var(--bg-input);
+		color: var(--text-main);
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	.seek-input-wrap input {
+		width: 84px;
+	}
+
+	.meta-field input {
+		width: 140px;
+	}
+
+	.transport-meta-row {
+		padding-top: 2px;
+		border-top: 1px solid var(--border-main);
+	}
+
+	.transport-status {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+		font-size: 0.66rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		padding-top: 2px;
+		border-top: 1px solid var(--border-main);
 	}
 
 	.range-block {
