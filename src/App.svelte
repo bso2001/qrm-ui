@@ -302,6 +302,7 @@
 								value={model.phraseLength}
 								label="LENGTH"
 								compact={true}
+								singleLine={true}
 								min={1}
 								max={16}
 								step={1}

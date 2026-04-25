@@ -8,6 +8,7 @@
 	export let label = ''
 	export let inherited = false
 	export let compact = false
+	export let singleLine = false
 
 	const dispatch = createEventDispatcher()
 
@@ -22,7 +23,7 @@
 	}
 </script>
 
-<div class="slider-container" class:inherited class:compact>
+<div class="slider-container" class:inherited class:compact class:single-line={singleLine}>
 	{#if label}
 		<div class="header">
 			<span class="label">{label}</span>
@@ -59,6 +60,12 @@
 		min-width: 90px;
 	}
 
+	.slider-container.single-line {
+		flex-direction: row;
+		align-items: center;
+		gap: 8px;
+	}
+
 	.slider-container.inherited {
 		opacity: 0.5;
 	}
@@ -77,6 +84,14 @@
 
 	.compact .header {
 		margin-bottom: 4px;
+	}
+
+	.single-line .header {
+		margin-bottom: 0;
+		gap: 6px;
+		justify-content: flex-start;
+		white-space: nowrap;
+		flex: 0 0 auto;
 	}
 
 	.label {
@@ -113,6 +128,11 @@
 		outline: none;
 		opacity: 0.9;
 		transition: opacity 0.2s;
+	}
+
+	.single-line .slider {
+		flex: 1 1 auto;
+		min-width: 120px;
 	}
 
 	.slider:hover {
