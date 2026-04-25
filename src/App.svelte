@@ -49,6 +49,8 @@
 	let currentPhraseId = null
 	let wasInActiveRange = true
 	let activeNotes = []
+	let traceWindow = null
+	let traceWindowBlocked = false
 
 	$: tracePreview = traceEvents
 		.slice(-30)
@@ -319,6 +321,105 @@
 		runId = makeRunId()
 	}
 
+	function ensureTraceWindowContent(windowRef)
+	{
+		if (!windowRef || windowRef.closed)
+			return
+
+		const doc = windowRef.document
+		if (doc.getElementById('trace-output'))
+			return
+
+		doc.open()
+		doc.write(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>QRM Trace Window</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+      background: #151920;
+      color: #d7d9dd;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .meta {
+      font-size: 12px;
+      color: #b3b8c0;
+      margin-bottom: 8px;
+      white-space: pre-wrap;
+      border: 1px solid #353a45;
+      border-radius: 6px;
+      padding: 8px;
+      background: #1d2027;
+    }
+    pre {
+      margin: 0;
+      border: 1px solid #353a45;
+      border-radius: 6px;
+      padding: 10px;
+      background: #1d2027;
+      font-size: 12px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: calc(100vh - 80px);
+      box-sizing: border-box;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="trace-meta" class="meta"></div>
+  <pre id="trace-output"></pre>
+</body>
+</html>`)
+		doc.close()
+	}
+
+	function syncTraceWindow()
+	{
+		if (!traceWindow || traceWindow.closed)
+		{
+			traceWindow = null
+			return
+		}
+
+		ensureTraceWindowContent(traceWindow)
+
+		const doc = traceWindow.document
+		const meta = doc.getElementById('trace-meta')
+		const output = doc.getElementById('trace-output')
+		if (!meta || !output)
+			return
+
+		meta.textContent = `RUN: ${runId}\nSCENARIO: ${scenarioId}\nSEED: ${seed}\nSTATE: ${transportState.isPlaying ? 'PLAYING' : 'STOPPED'}\nBAR: ${transportState.bar} BEAT: ${transportState.beat} TICK: ${transportState.transportTick}\nEVENTS: ${traceEvents.length}`
+		output.textContent = tracePreview || 'No trace events yet.'
+	}
+
+	function openTraceWindow()
+	{
+		if (traceWindow && !traceWindow.closed)
+		{
+			traceWindow.focus()
+			syncTraceWindow()
+			return
+		}
+
+		const popup = window.open('', 'qrmTraceWindow', 'popup=yes,width=640,height=900,left=980,top=60')
+		if (!popup)
+		{
+			traceWindowBlocked = true
+			return
+		}
+
+		traceWindowBlocked = false
+		traceWindow = popup
+		syncTraceWindow()
+		traceWindow.focus()
+	}
+
 	function downloadTrace()
 	{
 		if (traceEvents.length === 0)
@@ -405,6 +506,16 @@
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(model))
 	}
 
+	$: if (mounted)
+	{
+		tracePreview
+		transportState
+		runId
+		scenarioId
+		seed
+		syncTraceWindow()
+	}
+
 	onMount(() =>
 	{
 		const saved = localStorage.getItem(STORAGE_KEY)
@@ -431,6 +542,9 @@
 	{
 		if (timerHandle != null)
 			clearInterval(timerHandle)
+
+		if (traceWindow && !traceWindow.closed)
+			traceWindow.close()
 	})
 </script>
 
@@ -706,6 +820,7 @@
 					<button class="transport-btn" on:click={() => seekToBar(seekBarInput)}>SEEK</button>
 					<button class="transport-btn" on:click={clearTrace}>CLEAR TRACE</button>
 					<button class="transport-btn" on:click={downloadTrace} disabled={traceEvents.length === 0}>DOWNLOAD JSONL</button>
+					<button class="transport-btn" on:click={openTraceWindow}>OPEN TRACE WINDOW</button>
 				</div>
 
 				<div class="transport-controls transport-meta-row">
@@ -726,6 +841,9 @@
 					<span>TICK: {transportState.transportTick}</span>
 					<span>EVENTS: {traceEvents.length}</span>
 					<span>RUN: {runId}</span>
+					{#if traceWindowBlocked}
+						<span>TRACE WINDOW BLOCKED BY BROWSER POPUP SETTINGS</span>
+					{/if}
 				</div>
 			</div>
 
