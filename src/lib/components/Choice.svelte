@@ -12,20 +12,47 @@
 
 	const dispatch = createEventDispatcher()
 
+	function optionValue(option)
+	{
+		if (typeof option === 'object' && option !== null && 'value' in option)
+			return option.value
+
+		return option
+	}
+
+	function optionLabel(option)
+	{
+		if (typeof option === 'object' && option !== null && 'label' in option)
+			return option.label
+
+		return option
+	}
+
+	function findIndexByValue(currentValue)
+	{
+		for (let i = 0; i < options.length; i += 1)
+		{
+			if (optionValue(options[i]) === currentValue)
+				return i
+		}
+
+		return 0
+	}
+
 	function next() 
 	{
-		const currentIndex = options.indexOf(value)
+		const currentIndex = findIndexByValue(value)
 		const nextIndex = (currentIndex + 1) % options.length
-		value = options[nextIndex]
+		value = optionValue(options[nextIndex])
 		dispatch('change', value)
 	}
 
 	function prev(e) 
 	{
 		e.preventDefault()
-		const currentIndex = options.indexOf(value)
+		const currentIndex = findIndexByValue(value)
 		const nextIndex = (currentIndex - 1 + options.length) % options.length
-		value = options[nextIndex]
+		value = optionValue(options[nextIndex])
 		dispatch('change', value)
 	}
 </script>
@@ -41,11 +68,11 @@
 
 	<div class="choice-box" on:click={next} on:contextmenu={prev}>
 		<div class="display">
-			{value}
+			{optionLabel(options[findIndexByValue(value)])}
 		</div>
 		<div class="indicators">
 			{#each options as opt}
-				<div class="dot" class:active={opt === value}></div>
+				<div class="dot" class:active={optionValue(opt) === value}></div>
 			{/each}
 		</div>
 	</div>

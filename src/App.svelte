@@ -213,8 +213,12 @@
 						<div class="phrase-group-label">PHRASE</div>
 						<Choice
 							value={model.phrasePlayback}
-							label="REPEAT MODE"
-							options={[ 'one-shot', 'loop', 're-roll' ]}
+							label="PHRASE MODE"
+							options={[
+								{ value: 'one-shot', label: 'Play Once' },
+								{ value: 'loop', label: 'Repeat Same' },
+								{ value: 're-roll', label: 'Regenerate Each Loop' }
+							]}
 							on:change={e =>
 							{
 								model = {
