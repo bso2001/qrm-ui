@@ -882,9 +882,9 @@
 					</div>
 				</div>
 
-				<div class="playback-pane gate-card">
+				<div class="playback-pane">
 					<div class="playback-pane-title">ACTIVE RANGE</div>
-					<div class="gate-grid">
+					<div class="gate-card gate-grid">
 						<div class="range-block">
 							<Choice
 								value={model.startRange}
