@@ -798,161 +798,167 @@
 					/>
 				</div>
 
-				<div class="control phrase-group-control">
-					<div class="phrase-group">
-						<label class="repeat-toggle">
-							<input
-								type="checkbox"
-								checked={model.repeatPhrases}
-								on:change={e =>
-								{
-									model = {
-										...model,
-										repeatPhrases: e.currentTarget.checked
-									}
-								}}
-							/>
-							<span>Repeat phrases</span>
-						</label>
-
-						<div class="repeat-style-group" class:dimmed={!model.repeatPhrases}>
-							<div class="repeat-style-label">Repeat style</div>
-							<label class="repeat-style-option">
+			<div class="playback-band">
+				<div class="playback-pane">
+					<div class="playback-pane-title">REPEAT</div>
+					<div class="control phrase-group-control">
+						<div class="phrase-group">
+							<label class="repeat-toggle">
 								<input
-									type="radio"
-									name="repeat-style"
-									value="same"
-									checked={model.repeatStyle === 'same'}
-									disabled={!model.repeatPhrases}
+									type="checkbox"
+									checked={model.repeatPhrases}
 									on:change={e =>
 									{
 										model = {
 											...model,
-											repeatStyle: e.currentTarget.value
+											repeatPhrases: e.currentTarget.checked
 										}
 									}}
 								/>
-								<span>Keep same phrase</span>
+								<span>Repeat phrases</span>
 							</label>
-							<label class="repeat-style-option">
-								<input
-									type="radio"
-									name="repeat-style"
-									value="refresh"
-									checked={model.repeatStyle === 'refresh'}
-									disabled={!model.repeatPhrases}
+
+							<div class="repeat-style-group" class:dimmed={!model.repeatPhrases}>
+								<div class="repeat-style-label">Repeat style</div>
+								<label class="repeat-style-option">
+									<input
+										type="radio"
+										name="repeat-style"
+										value="same"
+										checked={model.repeatStyle === 'same'}
+										disabled={!model.repeatPhrases}
+										on:change={e =>
+										{
+											model = {
+												...model,
+												repeatStyle: e.currentTarget.value
+											}
+										}}
+									/>
+									<span>Keep same phrase</span>
+								</label>
+								<label class="repeat-style-option">
+									<input
+										type="radio"
+										name="repeat-style"
+										value="refresh"
+										checked={model.repeatStyle === 'refresh'}
+										disabled={!model.repeatPhrases}
+										on:change={e =>
+										{
+											model = {
+												...model,
+												repeatStyle: e.currentTarget.value
+											}
+										}}
+									/>
+									<span>Refresh each repeat</span>
+								</label>
+							</div>
+
+							<div class="phrase-length-wrap" class:dimmed={!model.repeatPhrases}>
+								<Slider
+									value={model.phraseLength}
+									label="LENGTH"
+									compact={true}
+									singleLine={true}
+									min={1}
+									max={16}
+									step={1}
 									on:change={e =>
 									{
+										if (!model.repeatPhrases)
+											return
+
 										model = {
 											...model,
-											repeatStyle: e.currentTarget.value
+											phraseLength: e.detail
 										}
 									}}
 								/>
-								<span>Refresh each repeat</span>
-							</label>
-						</div>
-						<div class="phrase-length-wrap" class:dimmed={!model.repeatPhrases}>
-							<Slider
-								value={model.phraseLength}
-								label="LENGTH"
-								compact={true}
-								singleLine={true}
-								min={1}
-								max={16}
-								step={1}
-								on:change={e =>
-								{
-									if (!model.repeatPhrases)
-										return
-
-									model = {
-										...model,
-										phraseLength: e.detail
-									}
-								}}
-							/>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
-			<div class="gate-card">
-				<div class="gate-grid">
-					<div class="range-block">
-						<Choice
-							value={model.startRange}
-							label="START"
-							options={[ 'song-start', 'bar' ]}
-							fontSize="0.76rem"
-							on:change={e =>
-							{
-								model = {
-									...model,
-									startRange: e.detail
-								}
-							}}
-							width="142px"
-						/>
-
-						{#if model.startRange === 'bar'}
-							<Slider
-								value={model.startBar}
-								label="START BAR"
-								min={1}
-								max={512}
-								step={1}
+				<div class="playback-pane gate-card">
+					<div class="playback-pane-title">ACTIVE RANGE</div>
+					<div class="gate-grid">
+						<div class="range-block">
+							<Choice
+								value={model.startRange}
+								label="START"
+								options={[ 'song-start', 'bar' ]}
+								fontSize="0.76rem"
 								on:change={e =>
 								{
-									const startBar = e.detail
 									model = {
 										...model,
-										startBar,
-										endBar: model.endRange === 'bar'
-											? Math.max(model.endBar, startBar)
-											: model.endBar
+										startRange: e.detail
 									}
 								}}
+								width="142px"
 							/>
-						{/if}
-					</div>
 
-					<div class="range-block">
-						<Choice
-							value={model.endRange}
-							label="STOP"
-							options={[ 'song-end', 'bar' ]}
-							fontSize="0.76rem"
-							on:change={e =>
-							{
-								model = {
-									...model,
-									endRange: e.detail
-								}
-							}}
-							width="142px"
-						/>
+							{#if model.startRange === 'bar'}
+								<Slider
+									value={model.startBar}
+									label="START BAR"
+									min={1}
+									max={512}
+									step={1}
+									on:change={e =>
+									{
+										const startBar = e.detail
+										model = {
+											...model,
+											startBar,
+											endBar: model.endRange === 'bar'
+												? Math.max(model.endBar, startBar)
+												: model.endBar
+										}
+									}}
+								/>
+							{/if}
+						</div>
 
-						{#if model.endRange === 'bar'}
-							<Slider
-								value={model.endBar}
-								label="STOP BAR"
-								min={1}
-								max={512}
-								step={1}
+						<div class="range-block">
+							<Choice
+								value={model.endRange}
+								label="STOP"
+								options={[ 'song-end', 'bar' ]}
+								fontSize="0.76rem"
 								on:change={e =>
 								{
-									const endBar = e.detail
 									model = {
 										...model,
-										startBar: model.startRange === 'bar'
-											? Math.min(model.startBar, endBar)
-											: model.startBar,
-										endBar
+										endRange: e.detail
 									}
 								}}
+								width="142px"
 							/>
-						{/if}
+
+							{#if model.endRange === 'bar'}
+								<Slider
+									value={model.endBar}
+									label="STOP BAR"
+									min={1}
+									max={512}
+									step={1}
+									on:change={e =>
+									{
+										const endBar = e.detail
+										model = {
+											...model,
+											startBar: model.startRange === 'bar'
+												? Math.min(model.startBar, endBar)
+												: model.startBar,
+											endBar
+										}
+									}}
+								/>
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -1048,7 +1054,7 @@
 	}
 
 	.app-shell {
-		width: min(980px, 100%);
+		width: min(1040px, 100%);
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
@@ -1106,9 +1112,29 @@
 
 	.panel-grid {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(180px, 1fr));
-		gap: 6px;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 8px;
 		width: 100%;
+	}
+
+	.playback-band {
+		display: grid;
+		grid-template-columns: 1.2fr 1fr;
+		gap: 10px;
+		margin-top: 10px;
+	}
+
+	.playback-pane {
+		min-width: 0;
+	}
+
+	.playback-pane-title {
+		font-size: 0.66rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		margin: 0 0 6px 2px;
 	}
 
 	.control {
@@ -1123,8 +1149,8 @@
 
 	.phrase-group-control {
 		display: flex;
-		align-items: center;
-		justify-content: center;
+		align-items: stretch;
+		justify-content: stretch;
 	}
 
 	.phrase-group {
@@ -1219,7 +1245,6 @@
 	}
 
 	.gate-card {
-		margin-top: 8px;
 		padding: 10px;
 		border: 1.5px solid var(--border-main);
 		border-radius: 8px;
@@ -1376,9 +1401,13 @@
 		overflow: auto;
 	}
 
-	@media (max-width: 900px) {
+	@media (max-width: 980px) {
 		.panel-grid {
-			grid-template-columns: repeat(2, minmax(170px, 1fr));
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.playback-band {
+			grid-template-columns: 1fr;
 		}
 
 		.gate-grid {
@@ -1386,7 +1415,7 @@
 		}
 	}
 
-	@media (max-width: 600px) {
+	@media (max-width: 700px) {
 		.panel-grid {
 			grid-template-columns: 1fr;
 		}
