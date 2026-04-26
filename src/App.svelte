@@ -797,6 +797,7 @@
 						}}
 					/>
 				</div>
+			</div>
 
 			<div class="playback-band">
 				<div class="playback-pane">
