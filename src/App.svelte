@@ -683,7 +683,7 @@
 				<div class="control choice-control">
 					<Choice
 						value={model.partType}
-						label="PART TYPE"
+						label="MODE"
 						options={[ 'freeform', 'chordal', 'chords' ]}
 						on:change={e =>
 						{
