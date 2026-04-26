@@ -17,7 +17,8 @@
 		root: 'C',
 		octave: 3,
 		velocity: 90,
-		restLikelihood: 0.15,
+		restPct: 0.15,
+		tonicPct: 0,
 		noteLength: 0.5,
 		phraseLength: 4,
 		repeatPhrases: false,
@@ -251,6 +252,9 @@
 			note += scaleOffsets[(bar + beat) % scaleOffsets.length]
 		}
 
+		if (Math.random() < model.tonicPct)
+			note = baseNote
+
 		return Math.min(108, Math.max(24, note))
 	}
 
@@ -265,6 +269,9 @@
 			return
 
 		const phraseId = resolvePhraseIdForBeat(transportState.bar, transportState.beat)
+
+		if (Math.random() < model.restPct)
+			return
 
 		const note = chooseNote(transportState.bar, transportState.beat)
 		activeNotes = [ note ]
@@ -488,6 +495,22 @@
 
 	function clampModel()
 	{
+		if (model.restPct == null && Number.isFinite(model.restLikelihood))
+		{
+			model = {
+				...model,
+				restPct: model.restLikelihood
+			}
+		}
+
+		if (model.tonicPct == null)
+		{
+			model = {
+				...model,
+				tonicPct: 0
+			}
+		}
+
 		if (model.partType !== 'freeform' && model.partType !== 'chordal' && model.partType !== 'chords')
 		{
 			model = {
@@ -512,6 +535,38 @@
 			model = {
 				...model,
 				repeatPhrases: defaultState.repeatPhrases
+			}
+		}
+
+		if (!Number.isFinite(model.restPct))
+		{
+			model = {
+				...model,
+				restPct: defaultState.restPct
+			}
+		}
+
+		if (!Number.isFinite(model.tonicPct))
+		{
+			model = {
+				...model,
+				tonicPct: defaultState.tonicPct
+			}
+		}
+
+		if (model.restPct < 0 || model.restPct > 1)
+		{
+			model = {
+				...model,
+				restPct: Math.min(1, Math.max(0, model.restPct))
+			}
+		}
+
+		if (model.tonicPct < 0 || model.tonicPct > 1)
+		{
+			model = {
+				...model,
+				tonicPct: Math.min(1, Math.max(0, model.tonicPct))
 			}
 		}
 
@@ -553,6 +608,12 @@
 				...model,
 				endBar: model.startBar
 			}
+		}
+
+		if ('restLikelihood' in model)
+		{
+			const { restLikelihood, ...cleanModel } = model
+			model = cleanModel
 		}
 	}
 
@@ -688,8 +749,8 @@
 
 				<div class="control">
 					<Slider
-						value={model.restLikelihood}
-						label="REST LIKELIHOOD"
+						value={model.restPct}
+						label="REST %"
 						min={0}
 						max={1}
 						step={0.01}
@@ -697,7 +758,24 @@
 						{
 							model = {
 								...model,
-								restLikelihood: e.detail
+								restPct: e.detail
+							}
+						}}
+					/>
+				</div>
+
+				<div class="control">
+					<Slider
+						value={model.tonicPct}
+						label="TONIC %"
+						min={0}
+						max={1}
+						step={0.01}
+						on:change={e =>
+						{
+							model = {
+								...model,
+								tonicPct: e.detail
 							}
 						}}
 					/>
