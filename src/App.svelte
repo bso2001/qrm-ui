@@ -963,8 +963,9 @@
 					</div>
 				</div>
 			</div>
+		</Card>
 
-			<div class="transport-card">
+		<div class="transport-card">
 				<div class="transport-title">TRANSPORT SIMULATOR</div>
 				<div class="transport-controls">
 					<button class="transport-btn" on:click={startTransport} disabled={transportState.isPlaying}>START</button>
@@ -1012,12 +1013,11 @@
 			</div>
 
 			{#if traceWindowBlocked}
-				<div class="json-preview">
-					<div class="json-title">TRACE WINDOW</div>
-					<pre>Popup blocked or suppressed. Allow popups for this site, then click OPEN TRACE WINDOW again. Some browsers open it as a new tab instead of a floating window.</pre>
-				</div>
-			{/if}
-		</Card>
+			<div class="json-preview">
+				<div class="json-title">TRACE WINDOW</div>
+				<pre>Popup blocked or suppressed. Allow popups for this site, then click OPEN TRACE WINDOW again. Some browsers open it as a new tab instead of a floating window.</pre>
+			</div>
+		{/if}
 	</div>
 </main>
 
