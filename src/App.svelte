@@ -15,8 +15,10 @@
 	const defaultState = {
 		partType: 'freeform',
 		root: 'C',
+		keyQuality: 'major',
 		octave: 3,
-		velocity: 90,
+		velocityMin: 70,
+		velocityMax: 90,
 		restPct: 0.15,
 		tonicPct: 0,
 		noteLength: 0.5,
@@ -27,7 +29,8 @@
 		startRange: 'song-start',
 		startBar: 1,
 		endRange: 'song-end',
-		endBar: 64
+		endBar: 64,
+		inversionPct: 0
 	}
 
 	let model = { ...defaultState }
@@ -697,21 +700,26 @@
 					/>
 				</div>
 
-				<div class="control choice-control">
-					<Choice
-						value={model.root}
-						label="ROOT"
-						options={tonics}
-						on:change={e =>
-						{
-							model = {
-								...model,
-								root: e.detail
-							}
-						}}
-						width="92px"
-					/>
-				</div>
+					<div class="control choice-control key-row">
+						<Choice
+							value={model.root}
+							label="KEY"
+							options={tonics}
+							on:change={e => {
+								model = { ...model, root: e.detail }
+							}}
+							width="60px"
+						/>
+						<Choice
+							value={model.keyQuality}
+							label=""
+							options={[ 'major', 'minor' ]}
+							on:change={e => {
+								model = { ...model, keyQuality: e.detail }
+							}}
+							width="70px"
+						/>
+					</div>
 
 				<div class="control">
 					<Slider
@@ -730,22 +738,28 @@
 					/>
 				</div>
 
-				<div class="control">
-					<Slider
-						value={model.velocity}
-						label="VELOCITY"
-						min={1}
-						max={127}
-						step={1}
-						on:change={e =>
-						{
-							model = {
-								...model,
-								velocity: e.detail
-							}
-						}}
-					/>
-				</div>
+					<div class="control velocity-range-row">
+						<Slider
+							value={model.velocityMin}
+							label="MIN VELO"
+							min={1}
+							max={model.velocityMax}
+							step={1}
+							on:change={e => {
+								model = { ...model, velocityMin: Math.min(e.detail, model.velocityMax - 1) }
+							}}
+						/>
+						<Slider
+							value={model.velocityMax}
+							label="MAX VELO"
+							min={model.velocityMin}
+							max={127}
+							step={1}
+							on:change={e => {
+								model = { ...model, velocityMax: Math.max(e.detail, model.velocityMin + 1) }
+							}}
+						/>
+					</div>
 
 				<div class="control">
 					<Slider
@@ -764,39 +778,47 @@
 					/>
 				</div>
 
+					{#if model.partType === 'freeform' || model.partType === 'chordal'}
+						<div class="control">
+							<Slider
+								value={model.tonicPct}
+								label="TONIC %"
+								min={0}
+								max={1}
+								step={0.01}
+								on:change={e => {
+									model = { ...model, tonicPct: e.detail }
+								}}
+							/>
+						</div>
+					{/if}
+
+					<div class="control">
+						<Slider
+							value={model.noteLength}
+							label="NOTE LENGTH"
+							min={0.05}
+							max={1}
+							step={0.01}
+							on:change={e => {
+								model = { ...model, noteLength: e.detail }
+							}}
+						/>
+					</div>
+			{#if model.partType === 'chords'}
 				<div class="control">
 					<Slider
-						value={model.tonicPct}
-						label="TONIC %"
+						value={model.inversionPct}
+						label="INVERSION %"
 						min={0}
 						max={1}
 						step={0.01}
-						on:change={e =>
-						{
-							model = {
-								...model,
-								tonicPct: e.detail
-							}
+						on:change={e => {
+							model = { ...model, inversionPct: e.detail }
 						}}
 					/>
 				</div>
-
-				<div class="control">
-					<Slider
-						value={model.noteLength}
-						label="NOTE LENGTH"
-						min={0.05}
-						max={1}
-						step={0.01}
-						on:change={e =>
-						{
-							model = {
-								...model,
-								noteLength: e.detail
-							}
-						}}
-					/>
-				</div>
+			{/if}
 			</div>
 
 			<div class="playback-band">
