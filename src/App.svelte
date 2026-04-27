@@ -688,25 +688,27 @@
 					/>
 				</div>
 
-					   <div class="control key-row-align">
-						   <Choice
-							   value={model.root}
-							   label="KEY"
-							   options={tonics}
-							   on:change={e => {
-								   model = { ...model, root: e.detail }
-							   }}
-							   width="60px"
-						   />
-						   <Choice
-							   value={model.keyQuality}
-							   label=""
-							   options={[ 'major', 'minor' ]}
-							   on:change={e => {
-								   model = { ...model, keyQuality: e.detail }
-							   }}
-							   width="70px"
-						   />
+					   <div class="control">
+						   <div class="key-row-align">
+							   <Choice
+								   value={model.root}
+								   label="KEY"
+								   options={tonics}
+								   on:change={e => {
+									   model = { ...model, root: e.detail }
+								   }}
+								   width="60px"
+							   />
+							   <Choice
+								   value={model.keyQuality}
+								   label=""
+								   options={[ 'major', 'minor' ]}
+								   on:change={e => {
+									   model = { ...model, keyQuality: e.detail }
+								   }}
+								   width="70px"
+							   />
+						   </div>
 					   </div>
 
 				<div class="control">
@@ -1446,7 +1448,8 @@
 	/* Key row alignment for KEY and major/minor */
 	.key-row-align {
 		display: flex;
-		align-items: stretch;
+		flex-direction: row;
+		align-items: center;
 		gap: 8px;
 		width: 100%;
 	}
