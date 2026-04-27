@@ -1,3 +1,4 @@
+</style>
 <script lang="js">
 	import { onMount, onDestroy } from 'svelte'
 	import Card from './lib/components/Card.svelte'
@@ -94,6 +95,19 @@
 
 		return {
 			startBar,
+
+	/* Key row alignment for KEY and major/minor */
+
+.key-row-align {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.key-choice-wrap {
+  display: flex;
+  align-items: stretch;
+}
 			stopBar
 		}
 	}
@@ -372,19 +386,7 @@
 
 		doc.open()
 		doc.write(`<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>QRM Trace Window</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 10px;
-      background: #151920;
-      color: #d7d9dd;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    }
-    .meta {
+
       font-size: 12px;
       color: #b3b8c0;
       margin-bottom: 8px;
@@ -700,26 +702,41 @@
 					/>
 				</div>
 
-					<div class="control choice-control key-row">
-						<Choice
-							value={model.root}
-							label="KEY"
-							options={tonics}
-							on:change={e => {
-								model = { ...model, root: e.detail }
-							}}
-							width="60px"
-						/>
-						<Choice
-							value={model.keyQuality}
-							label=""
-							options={[ 'major', 'minor' ]}
-							on:change={e => {
-								model = { ...model, keyQuality: e.detail }
-							}}
-							width="70px"
-						/>
-					</div>
+					   <div class="control key-row-align">
+						   <div class="key-choice-wrap">
+							   <Choice
+								   value={model.root}
+								   label="KEY"
+								   options={tonics}
+								   on:change={e => {
+									   model = { ...model, root: e.detail }
+								   }}
+								   width="60px"
+							   />
+						   </div>
+						   <div class="key-choice-wrap">
+							   <Choice
+								   value={model.keyQuality}
+								   label=""
+								   options={[ 'major', 'minor' ]}
+								   on:change={e => {
+									   model = { ...model, keyQuality: e.detail }
+								   }}
+								   width="70px"
+							   />
+						   </div>
+					   </div>
+/* Key row alignment for KEY and major/minor */
+.key-row-align {
+	display: flex;
+	align-items: stretch;
+	gap: 8px;
+}
+
+.key-choice-wrap {
+	display: flex;
+	align-items: stretch;
+}
 
 				<div class="control">
 					<Slider
@@ -1448,5 +1465,16 @@
 			align-items: flex-start;
 			flex-direction: column;
 		}
+	}
+
+	/* Key row alignment for KEY and major/minor */
+	.key-row-align {
+		display: flex;
+		align-items: stretch;
+		gap: 8px;
+	}
+	.key-choice-wrap {
+		display: flex;
+		align-items: stretch;
 	}
 </style>
