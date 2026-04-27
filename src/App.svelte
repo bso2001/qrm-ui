@@ -1,4 +1,3 @@
-</style>
 <script lang="js">
 	import { onMount, onDestroy } from 'svelte'
 	import Card from './lib/components/Card.svelte'
@@ -95,19 +94,6 @@
 
 		return {
 			startBar,
-
-	/* Key row alignment for KEY and major/minor */
-
-.key-row-align {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-}
-
-.key-choice-wrap {
-  display: flex;
-  align-items: stretch;
-}
 			stopBar
 		}
 	}
@@ -726,17 +712,6 @@
 							   />
 						   </div>
 					   </div>
-/* Key row alignment for KEY and major/minor */
-.key-row-align {
-	display: flex;
-	align-items: stretch;
-	gap: 8px;
-}
-
-.key-choice-wrap {
-	display: flex;
-	align-items: stretch;
-}
 
 				<div class="control">
 					<Slider
