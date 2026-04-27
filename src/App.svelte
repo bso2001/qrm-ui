@@ -689,28 +689,24 @@
 				</div>
 
 					   <div class="control key-row-align">
-						   <div class="key-choice-wrap">
-							   <Choice
-								   value={model.root}
-								   label="KEY"
-								   options={tonics}
-								   on:change={e => {
-									   model = { ...model, root: e.detail }
-								   }}
-								   width="60px"
-							   />
-						   </div>
-						   <div class="key-choice-wrap">
-							   <Choice
-								   value={model.keyQuality}
-								   label=""
-								   options={[ 'major', 'minor' ]}
-								   on:change={e => {
-									   model = { ...model, keyQuality: e.detail }
-								   }}
-								   width="70px"
-							   />
-						   </div>
+						   <Choice
+							   value={model.root}
+							   label="KEY"
+							   options={tonics}
+							   on:change={e => {
+								   model = { ...model, root: e.detail }
+							   }}
+							   width="60px"
+						   />
+						   <Choice
+							   value={model.keyQuality}
+							   label=""
+							   options={[ 'major', 'minor' ]}
+							   on:change={e => {
+								   model = { ...model, keyQuality: e.detail }
+							   }}
+							   width="70px"
+						   />
 					   </div>
 
 				<div class="control">
@@ -1127,9 +1123,10 @@
 
 	.panel-grid {
 		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-columns: repeat(4, 1fr);
 		gap: 8px;
 		width: 100%;
+		align-items: stretch;
 	}
 
 	.playback-band {
@@ -1154,6 +1151,10 @@
 
 	.control {
 		min-width: 0;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: stretch;
 	}
 
 	.choice-control {
@@ -1447,9 +1448,6 @@
 		display: flex;
 		align-items: stretch;
 		gap: 8px;
-	}
-	.key-choice-wrap {
-		display: flex;
-		align-items: stretch;
+		width: 100%;
 	}
 </style>
